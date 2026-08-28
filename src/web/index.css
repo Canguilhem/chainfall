@@ -1,0 +1,32 @@
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "./styles/chrome.css";
+@import "./styles/table.css";
+@import "./styles/cards.css";
+@import "./styles/lobby.css";
+@import "./styles/vault.css";
+@import "./styles/marks.css";
+@import "./styles/sheet.css";
+@import "./styles/mobile.css";
+
+@source "./**/*.{ts,tsx}";
+
+@theme {
+  --color-ash: #241F1C;
+  --color-concrete: #302925;
+  --color-slab: #3F3730;
+  --color-edge: #544A41;
+  --color-bone: #E9E1D2;
+  --color-bone2: #D6CBB6;
+  --color-dim: #A2937E;
+  --color-oxide: #A34A22;
+  --color-ink: #3A5E76;
+  --color-amber: #E0A93B;
+  --color-sulfur: #B0AA45;
+  --color-blood: #93332F;
+  --font-display: "Big Shoulders Display", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+  --font-sans: "Archivo", system-ui, sans-serif;
+  --radius-sm: 3px;
+}

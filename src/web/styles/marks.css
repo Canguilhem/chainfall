@@ -1,0 +1,115 @@
+.fmark{flex:none;display:block}
+/* Cards carry their crew mark in the header band beside the name (see
+   cards.css); only an Asset on the board, which has no room for a band, still
+   tucks it into the corner. */
+.asset .fmark{position:absolute;top:3px;right:4px;padding:1px;border-radius:2px;background:rgba(36,31,28,.1)}
+.plate .fmark{margin-right:2px}
+.fmark-consortium{color:var(--ink)}
+.fmark-sovereign{color:var(--oxide)}
+.fmark-degen{color:var(--sulfur)}
+.fmark-neutral{color:var(--neutral)}
+.pick.c .fmark{color:var(--ink)} .pick.s .fmark{color:var(--oxide)} .pick.d .fmark{color:var(--sulfur)}
+.asset .stats{position:absolute;left:6px;right:6px;bottom:6px;margin:0;
+ display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none}
+.stat{display:inline-flex;flex-direction:row;align-items:center;justify-content:center;gap:.22em;line-height:1;
+ pointer-events:auto;cursor:help;position:relative;z-index:2;
+ font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:16px;
+ background:#1C1816;color:var(--bone);padding:.2em .44em .2em .32em;border-radius:3px;min-width:1.9em;
+ box-shadow:0 2px 0 rgba(0,0,0,.45)}
+/* On a card the chips scale with the face, and stay a step quieter than the
+   name — they are a check you make after reading what the card does. */
+.card .stat,.fcard .stat{font-size:clamp(10.5px,10cqi,17px)}
+.stat.atk{color:var(--amber)}
+.stat.hp{background:var(--blood);color:var(--bone)}
+.stat.hp.dmg{box-shadow:0 0 0 2px var(--amber)}
+.sico{width:.7em;height:.7em;flex:none;display:block}
+.pwr{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:10px 0 2px}
+.pwr-mark{flex:none;display:block;color:var(--amber)}
+.pwr-name{display:inline-flex;align-items:center;gap:6px;
+ font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:18px;letter-spacing:.1em;color:var(--amber)}
+.pwr-tag{display:inline-flex;align-items:center;gap:5px}
+.pwr-tag .pwr-mark{display:block}
+.power:hover:not(:disabled) .pwr-mark{color:var(--ash)}
+.pick .pwr{margin:12px 0 4px;flex-direction:column;align-items:flex-start;gap:8px}
+.pick .pwr-name{font-size:20px}
+.pick .pwr-mark{width:18px;height:18px}
+.pwr-gas{width:26px;height:26px;border-radius:50%;background:var(--amber);color:#241F1C;
+ display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:14px;border:1px solid #8A6416}
+.pwr-fx{font-family:'Archivo',system-ui,sans-serif;font-size:14px;line-height:1.45;color:var(--bone);width:100%}
+.pwr-once{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;color:var(--dim);width:100%}
+.pwr-stats{display:inline-flex;gap:4px;position:static;left:auto;right:auto;bottom:auto}
+.pwr .stat{font-size:16px;min-width:32px;padding:2px 6px 2px 4px}
+.power .pwr{margin:0;justify-content:center}
+.power .pwr-name{font-size:16px}
+.power .pwr-fx{font-size:10px}
+.power .stat{font-size:14px;min-width:28px}
+.plate .stat.hp{font-size:18px}
+.live-hp{position:relative;display:inline-flex;align-items:center;overflow:visible}
+.live-hp.up .stat.hp{animation:hp-up .45s ease}
+.live-hp.down .stat.hp{animation:hp-down .45s ease}
+.hp-delta{position:absolute;left:50%;bottom:calc(100% - 2px);transform:translateX(-50%);
+ font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;letter-spacing:.04em;
+ pointer-events:none;white-space:nowrap;animation:hp-float .68s ease forwards;z-index:4}
+.live-hp.up .hp-delta{color:#7FB0A2;text-shadow:0 1px 0 #1C1816}
+.live-hp.down .hp-delta{color:var(--blood);text-shadow:0 1px 0 var(--bone)}
+.plate .live-hp.up .hp-delta{color:#A8D4C8;text-shadow:0 1px 2px #1C1816}
+.plate .live-hp.down .hp-delta{color:#E8A09C;text-shadow:0 1px 2px #1C1816}
+@keyframes hp-up{
+  0%{transform:scale(1)}
+  35%{transform:scale(1.18);box-shadow:0 0 0 3px #7FB0A2,0 0 10px rgba(127,176,162,.5)}
+  100%{transform:scale(1)}
+}
+@keyframes hp-down{
+  0%{transform:scale(1)}
+  25%{transform:scale(1.2);box-shadow:0 0 0 3px var(--blood),0 0 12px rgba(147,51,47,.55)}
+  100%{transform:scale(1)}
+}
+@keyframes hp-float{
+  0%{opacity:1;transform:translateX(-50%) translateY(6px)}
+  100%{opacity:0;transform:translateX(-50%) translateY(-16px)}
+}
+.kwi,.card-consensus{cursor:help;pointer-events:auto;position:relative;z-index:2}
+.tip-hit{position:absolute;inset:0;z-index:1;border-radius:inherit;cursor:inherit}
+.asset .fmark{z-index:2}
+.slot{width:var(--asset-w,128px);height:var(--asset-h,142px);flex:none;border:1px dashed var(--edge);border-radius:var(--r);opacity:.4}
+#prompt{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 12px;flex:none;
+ padding:4px 12px;border-top:1px solid var(--edge);border-bottom:1px solid var(--edge);
+ font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.03em;color:var(--amber);text-align:center;line-height:1.4}
+#feed + #prompt{border-top:none}
+#prompt.wait,#prompt.idle{color:var(--dim)}
+#prompt.claim,#prompt.target,#prompt.strike{color:var(--amber)}
+.prompt-extra{display:block;width:100%;color:var(--bone2);font-size:11px;letter-spacing:.03em}
+#prompt .skip,.lex-head .skip{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+ color:var(--dim);border:1px solid var(--edge);padding:3px 8px;border-radius:var(--r)}
+#prompt .skip:hover,.lex-head .skip:hover{color:var(--bone);border-color:var(--dim)}
+#hand.locked{opacity:.55}
+.fpop{display:none;position:absolute;top:8px;left:calc(100% + 8px);transform:none;width:200px;
+ background:var(--concrete);color:var(--bone);border:1px solid var(--edge);border-radius:var(--r);padding:10px;
+ font-family:'Archivo',system-ui,sans-serif;font-size:12px;line-height:1.4;z-index:8;
+ box-shadow:0 8px 18px rgba(0,0,0,.45);pointer-events:none}
+.fpop strong{display:block;font-family:'Big Shoulders Display',sans-serif;font-size:15px;letter-spacing:.04em;margin-bottom:4px}
+.fpop p{margin-top:4px;color:var(--bone2)}
+#feed > :nth-last-child(-n+2) .fpop{left:auto;right:calc(100% + 8px)}
+.fcard.peek .fpop{display:block}
+@keyframes claimpulse{
+  0%,100%{outline-color:var(--amber);box-shadow:0 2px 0 rgba(0,0,0,.4)}
+  50%{outline-color:#F3D48A;box-shadow:0 0 14px rgba(224,169,59,.55)}
+}
+@keyframes sealpulse{
+  0%,100%{filter:brightness(1)}
+  50%{filter:brightness(1.22)}
+}
+#table[data-phase="play"] .card:not(.dead),
+#table[data-phase="act"] .card:not(.dead){outline:2px dashed var(--amber);outline-offset:2px}
+#table[data-phase="seal"] .seal:not(:disabled){animation:sealpulse 1.2s ease-in-out infinite;box-shadow:0 0 0 2px var(--bone)}
+/* Card type follows the card's own width now, so only the Asset name, which is
+   not on a container, still needs a height breakpoint. */
+@media (max-height:900px){
+  #table .asset .asset-name{font-size:15px}
+}
+@media (max-height:760px){
+  #prompt .prompt-extra{display:none}
+  .operator{min-height:36px;gap:8px}
+  .seal{padding:7px 14px;font-size:14px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}

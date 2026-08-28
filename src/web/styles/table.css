@@ -1,0 +1,113 @@
+#table{flex:1;position:relative;display:flex;flex-direction:column;padding:4px 12px 6px;min-width:0;min-height:0;gap:2px;overflow:hidden;container-type:size}
+
+/* Card sizes sit on the children rather than on #table itself, because a
+   container unit resolves against an *ancestor* container: a `cqh` written in
+   #table's own block means the viewport, not the table. One level down, `100cqh`
+   and `100cqw` are genuinely the table, which is what the sums below assume.
+
+   There is one driver — the height of a card in hand — and the Feed and the
+   board derive from it, so the three stay in proportion and there is a single
+   number to tune.
+
+   It is the smaller of two budgets. Height: both boards, the Feed and the hand
+   share the table, and about 280px of it goes to the two rails, the prompt, the
+   gaps and the padding; what is left divides by 3.2 because the four rows are
+   1 + 0.78 + 2 x 0.70 of the driver. Width: the board row is five Assets, four
+   gaps and the padding, which comes to the same 3.2 once the Asset aspect is
+   folded in. The floor is the old fixed size, so a laptop renders as before and
+   only a screen with room to spare grows into it — which also means the width
+   term only bites on a window that is tall and narrow.
+
+   A Feed card is a touch wider than a hand card relative to its height. It is
+   the same face, but it is the smallest one that still has to carry rules text,
+   and width is what buys a readable line. */
+#table > *{
+ --hand-h:clamp(184px,min(calc((100cqh - 280px) / 3.2),calc((100cqw - 56px) / 3.2)),264px);
+ --hand-w:calc(var(--hand-h)*0.72);
+ --feed-h:calc(var(--hand-h)*0.78);--feed-w:calc(var(--feed-h)*0.78);
+ --asset-h:calc(var(--hand-h)*0.70);--asset-w:calc(var(--asset-h)*0.91)}
+#ledger{width:238px;flex:none;border-left:1px solid var(--edge);display:flex;flex-direction:column;
+ background:repeating-linear-gradient(180deg,#2C2622 0 22px,#292320 22px 44px)}
+#ledger h2{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.2em;color:var(--dim);
+ padding:9px 12px;border-bottom:1px solid var(--edge);text-transform:uppercase}
+.rail.you .plate{border-color:#4A433C;box-shadow:inset 3px 0 0 var(--amber),inset 0 1px 0 rgba(255,255,255,.05)}
+.rail.them .callsign{color:var(--bone2)}
+#log{flex:1;overflow-y:auto;padding:6px 12px 24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.75}
+#log div{color:var(--bone2);word-break:break-word}
+#log div::before{content:'› ';color:var(--oxide)}
+#log div.blk{color:var(--amber);margin-top:6px}#log div.blk::before{content:'■ ';color:var(--amber)}
+#log div.hit::before{content:'× ';color:var(--blood)}
+.rail{flex:none;min-width:0}
+.rail.you{display:flex;flex-direction:column;gap:4px}
+.operator{display:flex;align-items:center;gap:10px;padding:2px;min-height:44px;min-width:0}
+.rail.them .operator{justify-content:flex-start}
+.rail.them .pwr-tag{margin-left:auto}
+.acts{display:flex;align-items:stretch;gap:8px;padding:0 2px 2px}
+.acts .power{display:inline-flex;align-items:center}
+.acts .seal{min-width:108px;padding:8px 16px}
+.plate{display:flex;align-items:center;gap:10px;padding:6px 12px;background:var(--slab);border:1px solid var(--edge);
+ border-radius:var(--r);box-shadow:inset 0 1px 0 rgba(255,255,255,.05);cursor:default;flex:none}
+.plate.is-targetable{cursor:crosshair}
+.callsign{font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:18px;letter-spacing:.08em;line-height:1;
+ display:flex;align-items:baseline;gap:7px}
+.callsign small{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.18em;font-weight:400;color:var(--dim)}
+.hp{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:19px;color:var(--blood);background:var(--bone);padding:1px 8px;border-radius:2px}
+.armor{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:13px;color:var(--ink);background:var(--bone2);padding:2px 7px;border-radius:2px}
+.gasbar{display:flex;gap:3px;align-items:center;flex:none}
+.pip{width:9px;height:14px;border:1px solid var(--edge);border-radius:1px}
+.pip.on{background:var(--amber);border-color:var(--amber);box-shadow:0 0 5px rgba(224,169,59,.5)}
+.gasnum{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);margin-left:5px;white-space:nowrap}
+.power{font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:15px;letter-spacing:.08em;
+ padding:6px 12px;border:1px solid var(--amber);color:var(--amber);border-radius:var(--r);flex:none}
+.power:hover:not(:disabled){background:var(--amber);color:var(--ash)}
+.power:hover:not(:disabled) .pwr-name,.power:hover:not(:disabled) .pwr-fx{color:var(--ash)}
+.power:disabled{opacity:.3;cursor:default;border-color:var(--edge);color:var(--dim)}
+#table .power .pwr-fx,#table .power .pwr-once{display:none}
+.seal{font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:16px;letter-spacing:.12em;
+ padding:9px 20px;border:1px solid var(--oxide);background:var(--oxide);color:var(--bone);border-radius:var(--r);flex:none}
+.seal:hover:not(:disabled){filter:brightness(1.15)}
+.seal:disabled{background:transparent;color:var(--dim);border-color:var(--edge);cursor:default}
+.board{flex:1 1 0;display:flex;justify-content:center;gap:10px;min-height:0;padding:4px;position:relative}
+.board.them{align-items:flex-end}
+.board.you{align-items:flex-start}
+.centerline{height:1px;background:linear-gradient(90deg,transparent,var(--edge) 20%,var(--edge) 80%,transparent)}
+.asset{position:relative;width:var(--asset-w,128px);height:var(--asset-h,142px);flex:none;background:linear-gradient(160deg,var(--bone),var(--bone2));
+ color:#241F1C;border-radius:var(--r);cursor:default;border-left:5px solid var(--neutral);
+ box-shadow:0 3px 0 rgba(0,0,0,.45),0 6px 14px rgba(0,0,0,.35);display:flex;flex-direction:column;padding:10px 10px 36px;transition:transform .12s}
+.asset .asset-name{font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:18px;line-height:1.05;padding-right:18px}
+.asset .asset-keywords{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.05em;color:#6B5E4E;margin-top:5px;line-height:1.3}
+.asset.ready,.asset.is-selected{cursor:pointer}
+.asset.ready{box-shadow:0 3px 0 rgba(0,0,0,.45),0 0 0 2px var(--amber),0 6px 14px rgba(0,0,0,.35)}
+.asset.is-selected{transform:translateY(-8px);box-shadow:0 3px 0 rgba(0,0,0,.45),0 0 0 3px var(--oxide)}
+.asset.shield{outline:2px solid #7FB0C9;outline-offset:2px}
+.asset.seized{filter:grayscale(.7) brightness(.8)}
+.is-targetable{cursor:crosshair;outline:2px dashed var(--oxide);outline-offset:3px}
+.faction-consortium{border-left-color:var(--ink)}.faction-sovereign{border-left-color:var(--oxide)}
+.faction-degen{border-left-color:var(--sulfur)}.faction-neutral{border-left-color:var(--neutral)}
+#feed{display:none;gap:12px;justify-content:center;align-items:center;flex:none;
+ padding:8px 0;border-top:1px solid var(--edge);border-bottom:1px solid var(--edge);position:relative;z-index:4}
+#feed.on{display:flex}
+#feed .fl{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;color:var(--dim);
+ display:flex;flex-direction:column;justify-content:center;gap:3px;min-width:86px;margin-right:6px;text-transform:uppercase}
+#feed .fl b{font-size:10px;font-weight:600;color:var(--bone2);letter-spacing:.12em}
+#feed .fl span{font-size:9px}
+#feed .fl em{font-style:normal;font-size:9px;opacity:.8}
+#feed .fl.go b,#feed .fl.go em{color:var(--amber)}
+#feed .fl-claim{display:inline-block;align-self:flex-start;margin:2px 0 1px;font-size:9px;letter-spacing:.16em;
+ background:var(--amber);color:var(--ash);padding:2px 8px;border-radius:1px}
+/* A Feed card is the same face as a hand card (cards.css), just smaller and
+   with claim chrome instead of play chrome. */
+.fcard{width:var(--feed-w,128px);height:var(--feed-h,158px);cursor:default;
+ box-shadow:0 2px 0 rgba(0,0,0,.4)}
+#feed > *:hover{z-index:6}
+#feed.claim .fcard{cursor:pointer;outline:2px dashed var(--amber);outline-offset:2px;animation:claimpulse 1.6s ease-in-out infinite}
+#feed.claim .fcard.peek{transform:translateY(-6px);animation:none}
+/* The face is a query container, which makes it a stacking context, so `.fpop`
+   can no longer out-stack the next card on its own. Hover has the rule above;
+   a tap-to-peek has no hover, so lift the card itself. */
+#feed .fcard.peek{z-index:7}
+#hand{display:flex;justify-content:center;align-items:flex-end;flex:none;position:relative;z-index:3;
+ height:calc(var(--hand-h) + 22px);padding:18px 8px 4px;gap:8px}
+#hand > * + *{margin-left:clamp(-32px, calc((var(--n, 4) - 4) * -7px), 0px)}
+#hand > *:hover,#hand > *:has(.is-selected){z-index:8}
+#table .card{width:var(--hand-w);height:var(--hand-h)}

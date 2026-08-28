@@ -1,0 +1,190 @@
+/* Pointer-fine: hover chrome. Coarse/touch uses .peek, tap tips, and swipe instead. */
+@media (hover: hover) and (pointer: fine) {
+  #hand .card:hover{transform:translateY(-14px)}
+  #hand.locked .card:hover{transform:none}
+  .card.dead:hover{transform:none}
+  .pick:hover{transform:translateY(-4px)}
+  .pick:hover .go{color:var(--bone)}
+  .asset.ready:hover,.asset.is-targetable:hover{transform:translateY(-4px)}
+  #feed.claim .fcard:hover{transform:translateY(-6px);animation:none}
+  .fcard:hover .fpop{display:block}
+  .blockpack.top:hover:not(:disabled){transform:translateY(-9px) scale(1.02)}
+}
+
+/* The aside is 238px this layout does not have. The ticker takes over at the
+   same width, so the ledger is narrowed rather than dropped. */
+@media (max-width: 900px) {
+  #ledger{display:none}
+  #ticker{display:flex}
+  #tick-log{display:block}
+  .stat{font-size:17px;min-width:30px}
+  .modes,.setup .picks{grid-template-columns:1fr}
+  .loop li{max-width:none}
+  .recap-hp{grid-template-columns:1fr}
+  .stash-grid{grid-template-columns:repeat(auto-fill,minmax(118px,1fr))}
+  .vault-pulls{flex-wrap:wrap}
+  .vault-flip{--side:clamp(128px,42vw,168px)}
+  .vault-stack{width:150px;height:210px}
+}
+
+/* ----------------------------------------------------------------- portrait
+   Below 720px the table stops being two armies across a table. The Feed leaves
+   the centreline for a sheet (see Sheet.tsx), which is what buys the room for
+   five Asset slots that fit without a sideways scroll. Keep the breakpoint in
+   step with PHONE_QUERY in media.ts — JS decides what renders, this decides
+   how it looks, and they have to agree.
+   -------------------------------------------------------------------------- */
+@media (max-width: 720px) {
+  #veil{padding:16px 16px 48px;padding-left:max(16px,env(safe-area-inset-left));
+    padding-right:max(16px,env(safe-area-inset-right));
+    padding-bottom:max(48px,env(safe-area-inset-bottom))}
+  /* Recap (and anything else with a .dock): the stats scroll, the actions stay
+     on the thumb. #veil is the scrollport everywhere else, so this only splits
+     the column when a dock is actually in the tree. */
+  #veil.has-dock{overflow:hidden;padding-bottom:0;display:flex;flex-direction:column}
+  #veil.has-dock .panel{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;
+    padding-bottom:12px}
+  #veil.has-dock .dock{flex:none;display:flex;flex-wrap:nowrap;gap:6px;margin:0;
+    padding:10px 10px max(14px,env(safe-area-inset-bottom));
+    background:var(--ash);border-top:1px solid var(--edge);
+    box-shadow:0 -16px 20px rgba(0,0,0,.35)}
+  #veil.has-dock .dock .again{flex:1 1 0;min-width:0;min-height:44px;padding:10px 6px;
+    font-size:13px;letter-spacing:.06em;white-space:nowrap}
+  #veil.has-dock .dock .again:first-child{flex:1.35 1 0}
+  .lede{font-size:12px;margin-bottom:20px}
+  .pick{padding:16px 14px 12px}
+  .pick h3{font-size:22px}
+  .vault-shop{gap:20px;flex-direction:column;align-items:center;text-align:center}
+  .vault-info{max-width:none}
+  .vault-btn{min-height:44px}
+  .revfoot .vault-btn{flex:1 1 140px}
+  .vault-reveal{padding:16px 12px 0;justify-content:flex-start;overflow:hidden}
+  .vault-reveal .revhead{flex:none}
+  .vault-reveal .vault-pulls{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;
+    align-content:flex-start}
+  .vault-reveal .revfoot{flex:none;width:100%;margin:0;
+    padding:12px 12px max(16px,env(safe-area-inset-bottom));
+    border-top:1px solid var(--edge);background:var(--ash)}
+  .vault-pulls{gap:10px 12px}
+  .vault-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+
+  /* All five slots across, derived from the container rather than guessed:
+     board padding (12) + four gaps (20) come off the width first. Declared on
+     the children for the same reason as the desktop block in table.css — a
+     container unit in #table's own block would mean the viewport. */
+  #table{padding:0 0 2px}
+  #table > *{
+    --hand-h:clamp(108px,19cqh,152px);--hand-w:calc(var(--hand-h)*0.72);
+    --asset-w:clamp(46px,calc((100cqw - 32px) / 5),92px);
+    --asset-h:clamp(56px,min(calc(var(--asset-w) * 1.24),19cqh),112px)}
+  #feedbtn{display:flex}
+
+  /* Desktop lets both boards grow so they meet at the centreline, which puts
+     slack above one and below the other. On a phone that reads as two holes.
+     Size the rows to their contents and pool the leftover in one gap, above
+     your own rail — so your bar, your buttons and your hand sit in the bottom
+     third, where a thumb is. */
+  .board{flex:0 1 auto;gap:5px;padding:3px 6px;overflow:visible}
+  .rail.you{margin-top:auto}
+  .asset{padding:7px 6px 26px;border-left-width:4px}
+  /* A 69px Asset leaves ~53px for the name, and "Surveillance Drone" wants 62.
+     Break the word rather than spill it past the card edge — the faction mark
+     and stat chips pin the box, so there is no width to win back. */
+  .asset .asset-name{font-size:12px;line-height:1.05;padding-right:12px;
+    overflow-wrap:anywhere;hyphens:auto}
+  .asset .asset-keywords{font-size:8px;margin-top:2px}
+  .asset .stats{left:3px;right:3px;bottom:3px}
+  .asset .stat{font-size:13px;min-width:24px;padding:2px 4px 2px 3px;gap:2px}
+  .asset .sico{width:9px;height:9px}
+  .slot{border-radius:2px}
+
+  .rail{padding:0 8px}
+  .rail.them .pwr-tag{display:none}
+  .gas-extra{display:none}
+  .operator{flex-wrap:wrap;gap:6px 8px;min-height:0;padding:3px 0}
+  .gasbar{flex:1 1 auto;min-width:0}
+  .plate{padding:5px 9px;gap:8px}
+  .callsign{font-size:15px}
+  .plate .stat.hp{font-size:16px}
+  .acts{padding:0 8px 2px;gap:8px}
+  .acts .power{min-height:44px}
+  .acts .seal{flex:none;min-height:40px;min-width:0;padding:7px 12px;font-size:13px;letter-spacing:.1em}
+
+  /* One line, and it has to hold the Cancel button during targeting. */
+  #prompt{padding:5px 10px;font-size:11.5px;gap:4px 10px}
+  #prompt .skip{min-height:34px;display:inline-flex;align-items:center;padding:4px 12px}
+
+  /* A strip, not a fan. Overlapped cards give ~34px of tappable width, and a
+     mis-tap here spends gas. Two-stage tap (Sheet.tsx) covers inspection, so
+     the card no longer needs to lift — which is good, because a scroller clips. */
+  #hand{
+    justify-content:flex-start;align-items:flex-end;gap:8px;
+    overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;
+    padding:10px 10px max(6px,env(safe-area-inset-bottom));
+    height:calc(var(--hand-h) + 18px)}
+  #hand::-webkit-scrollbar{display:none}
+  #hand > *{scroll-snap-align:center}
+  #hand > * + *{margin-left:0}
+  #hand .card.is-selected{transform:none}
+
+  /* This is the "be clever on mobile" half of putting rules text on the face.
+     An 81px card cannot hold a sentence without breaking it mid-word, so in hand
+     it stays a tab — cost, crew mark, name, stats — and the first tap opens the
+     sheet, where the same face renders at ~170px and does show the text. The
+     crew *name* goes too: at 7px it would eat the header and the left stripe and
+     the mark already say which crew it is. */
+  #table .card .card-body,#table .card .card-faction-name{display:none}
+  #table .card .card-name{font-size:14px;line-height:1.08;padding:6px 6px 0}
+  #table .card .cost{font-size:14px}
+  #table .card .stat{font-size:14px}
+
+  #lexicon{inset:auto 0 0;width:100%;max-height:min(78dvh,640px);
+    border-radius:var(--r) var(--r) 0 0;padding-bottom:max(22px,env(safe-area-inset-bottom))}
+}
+
+@media (max-width: 540px) {
+  header:has(.topnav){
+    display:grid;grid-template-columns:1fr auto;align-items:center;
+    gap:6px 10px;
+    grid-template-areas:"mark chip" "nav nav";
+    padding-left:max(12px,env(safe-area-inset-left));
+    padding-right:max(12px,env(safe-area-inset-right))}
+  header:has(.topnav) .wordmark{grid-area:mark;font-size:22px;justify-self:start}
+  header:has(.topnav) .spacer{display:none}
+  header:has(.topnav) .topnav{grid-area:nav;width:100%;justify-content:space-between;gap:0}
+  header:has(.topnav) .tag.chip{grid-area:chip}
+  header .nav{min-height:40px;padding:8px 8px}
+
+  header:not(:has(.topnav)){
+    display:grid;grid-template-columns:auto auto 1fr auto auto;align-items:center;
+    gap:4px 8px;
+    grid-template-areas:"mark blk . conn terms" "phase phase phase phase phase";
+    padding-left:max(12px,env(safe-area-inset-left));
+    padding-right:max(12px,env(safe-area-inset-right))}
+  header:not(:has(.topnav)) .wordmark{grid-area:mark;font-size:18px}
+  header:not(:has(.topnav)) .blk{grid-area:blk}
+  header:not(:has(.topnav)) .spacer{display:none}
+  header:not(:has(.topnav)) .conn{grid-area:conn}
+  header:not(:has(.topnav)) button.tag{grid-area:terms;min-height:36px;padding:6px 8px}
+  header:not(:has(.topnav)) .phase{grid-area:phase;justify-self:end;text-align:right}
+
+  .wordmark{font-size:22px;letter-spacing:.1em}
+  .sheet-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .sheet .card{min-height:172px}
+}
+
+/* Landscape on a phone: almost no height. The rails, Feed bar, prompt and hand
+   are 339px of fixed chrome and the table gets 333px, so both boards round to
+   nothing and the Assets spill over the rails. Trimming does not close a 100px
+   gap — two board rows need at least 112px — so a match asks for portrait
+   instead. The lobby and the recap scroll, and are left alone.
+
+   The trims below still apply: the overlay only covers a live match, and this
+   query also catches the short-and-wide window a desktop user can drag to. */
+@media (max-height: 460px) and (orientation: landscape) {
+  #ticker{display:none}
+  #prompt .prompt-extra{display:none}
+  #table > *{--hand-h:clamp(84px,30cqh,120px)}
+  #rotate{display:flex}
+}

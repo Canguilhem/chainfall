@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CHAINFALL — vault</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ash:#241F1C; --concrete:#302925; --slab:#3F3730; --edge:#544A41;
+  --bone:#E9E1D2; --bone2:#D6CBB6; --dim:#A2937E;
+  --oxide:#A34A22; --amber:#E0A93B; --blood:#93332F;
+  --r-common:#7A6C5D; --r-rare:#3A5E76; --r-epic:#3E7A6B; --r-legend:#E0A93B;
+  --r:3px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ash);color:var(--bone);font-family:'Archivo',system-ui,sans-serif;font-size:14px;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse at 50% 30%,rgba(224,169,59,.06),transparent 60%),
+             repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 2px,transparent 2px 4px)}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+#app{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 18px 60px}
+
+header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:14px 0 12px;border-bottom:1px solid var(--edge)}
+.wordmark{font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:26px;letter-spacing:.14em;line-height:1}
+.wordmark span{color:var(--oxide)}
+.spacer{flex:1}
+.wallet{display:flex;gap:8px;align-items:center}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;padding:6px 11px;
+  border:1px solid var(--edge);border-radius:var(--r);background:var(--concrete)}
+.chip b{color:var(--amber);font-weight:600}
+.chip.sv b{color:#7FB0A2}
+.tabs{display:flex;gap:2px;margin:16px 0 22px}
+.tab{font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:16px;letter-spacing:.12em;
+  padding:9px 20px;border:1px solid var(--edge);border-bottom:none;color:var(--dim);border-radius:var(--r) var(--r) 0 0}
+.tab.on{color:var(--bone);background:var(--concrete);border-color:var(--oxide)}
+.view{display:none} .view.on{display:block}
+
+/* ---- vault ---- */
+.vault{display:flex;gap:36px;align-items:center;flex-wrap:wrap;justify-content:center;padding:26px 0 8px}
+.stack{position:relative;width:190px;height:262px;flex:none}
+.blockpack{
+  position:absolute;inset:0;border-radius:5px;cursor:pointer;
+  background:linear-gradient(155deg,#4A3F35 0%,#2E2823 55%,#3B332B 100%);
+  border:1px solid var(--edge);box-shadow:0 10px 26px rgba(0,0,0,.55);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  transition:transform .18s ease-out;
+}
+.blockpack:nth-child(1){transform:rotate(-3.5deg) translate(-7px,5px)}
+.blockpack:nth-child(2){transform:rotate(2.5deg) translate(5px,2px)}
+.blockpack.top:hover{transform:translateY(-9px) scale(1.02)}
+.blockpack.empty{opacity:.28;cursor:default;filter:grayscale(1)}
+.blockpack .seal{width:60px;height:60px;border:2px solid var(--amber);border-radius:50%;display:grid;place-items:center;
+  font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:27px;color:var(--amber)}
+.blockpack .bt{font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:23px;letter-spacing:.16em}
+.blockpack .bs{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.2em;color:var(--dim)}
+.blockpack .hash{position:absolute;bottom:11px;left:0;right:0;text-align:center;
+  font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:.1em;color:#6E6152}
+.vaultinfo{max-width:330px}
+.vaultinfo h2{font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:34px;letter-spacing:.06em;line-height:1}
+.vaultinfo p{color:var(--bone2);font-size:12.5px;line-height:1.65;margin:10px 0 16px}
+.btn{font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:16px;letter-spacing:.12em;
+  padding:11px 22px;border:1px solid var(--oxide);background:var(--oxide);color:var(--bone);border-radius:var(--r);margin-right:8px}
+.btn:hover{filter:brightness(1.15)}
+.btn.ghost{background:transparent;color:var(--amber);border-color:var(--amber)}
+.btn:disabled{background:transparent;border-color:var(--edge);color:var(--dim);cursor:default;filter:none}
+.odds{font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.9;color:var(--dim);margin-top:16px}
+.odds b{color:var(--bone2);font-weight:500}
+
+/* ---- reveal ---- */
+#reveal{position:fixed;inset:0;z-index:40;background:rgba(18,15,13,.965);display:none;
+  flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:20px}
+#reveal.on{display:flex}
+.pulls{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;perspective:1400px}
+.flip{width:132px;height:186px;position:relative;transform-style:preserve-3d;
+  transition:transform .5s cubic-bezier(.2,.8,.3,1);cursor:pointer}
+.flip.up{transform:rotateY(180deg)}
+.flip .face{position:absolute;inset:0;backface-visibility:hidden;border-radius:4px;overflow:hidden}
+.flip .back{background:linear-gradient(155deg,#4A3F35,#2A241F);border:1px solid var(--edge);
+  display:grid;place-items:center;font-family:'Big Shoulders Display',sans-serif;font-weight:900;
+  font-size:30px;color:#6E6152;letter-spacing:.1em}
+.flip .front{transform:rotateY(180deg);background:linear-gradient(165deg,var(--bone),var(--bone2));
+  color:#241F1C;border-left:5px solid var(--r-common);padding:9px 9px 7px;display:flex;flex-direction:column}
+.flip.dealt{animation:deal .34s cubic-bezier(.2,.9,.3,1) backwards}
+@keyframes deal{from{opacity:0;transform:translateY(34px) scale(.9)}}
+.fname{font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:16px;line-height:1.05;margin-top:10px}
+.fser{font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:.12em;color:#8C7F6C;margin-top:2px}
+.frule{height:1px;background:#B9AC95;margin:6px 0}
+.ftext{font-size:9.5px;line-height:1.35;color:#3B322A;flex:1;overflow:hidden}
+.fstats{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px}
+.fcost{position:absolute;top:-8px;left:-9px;width:27px;height:27px;border-radius:50%;background:var(--amber);
+  color:#241F1C;display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;
+  border:1px solid #8A6416;box-shadow:0 2px 5px rgba(0,0,0,.5)}
+.ftag{position:absolute;bottom:0;left:0;right:0;text-align:center;font-family:'IBM Plex Mono',monospace;
+  font-size:8px;letter-spacing:.14em;padding:3px 0;background:rgba(36,31,28,.86);color:var(--bone2)}
+.ftag.new{background:var(--oxide);color:#fff}
+.r-common .front{border-left-color:var(--r-common)}
+.r-rare .front{border-left-color:var(--r-rare);box-shadow:inset 0 0 0 1px rgba(58,94,118,.5)}
+.r-epic .front{border-left-color:var(--r-epic);box-shadow:0 0 16px rgba(62,122,107,.55),inset 0 0 0 1px rgba(62,122,107,.6)}
+.r-legend .front{border-left-color:var(--r-legend);box-shadow:0 0 26px rgba(224,169,59,.75),inset 0 0 0 1px rgba(224,169,59,.8)}
+.flip.up.r-legend{animation:pop .45s ease-out}
+@keyframes pop{40%{transform:rotateY(180deg) scale(1.13)}}
+.revhead{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.22em;color:var(--dim);text-transform:uppercase}
+.revfoot{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
+.revsum{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--bone2)}
+
+/* ---- collection ---- */
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.fbtn{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;padding:6px 12px;
+  border:1px solid var(--edge);border-radius:var(--r);color:var(--dim);text-transform:uppercase}
+.fbtn.on{border-color:var(--amber);color:var(--amber)}
+.progress{height:5px;background:var(--concrete);border:1px solid var(--edge);border-radius:2px;overflow:hidden;margin-bottom:18px}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--oxide),var(--amber))}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:9px}
+.slot{background:var(--concrete);border:1px solid var(--edge);border-left:4px solid var(--r-common);
+  border-radius:var(--r);padding:9px 10px;position:relative}
+.slot.none{opacity:.36}
+.slot.legend{border-left-color:var(--r-legend)} .slot.epic{border-left-color:var(--r-epic)}
+.slot.rare{border-left-color:var(--r-rare)} .slot.common{border-left-color:var(--r-common)}
+.sn{font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:15px;line-height:1.1}
+.smeta{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:.06em;margin-top:3px}
+.scount{position:absolute;top:8px;right:9px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--amber)}
+.sact{display:flex;gap:5px;margin-top:8px}
+.sact button{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;padding:4px 8px;
+  border:1px solid var(--edge);border-radius:2px;color:var(--dim)}
+.sact button:hover:not(:disabled){border-color:var(--amber);color:var(--amber)}
+.sact button:disabled{opacity:.3;cursor:default}
+.note{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);line-height:1.8;margin-top:26px;
+  border-top:1px solid var(--edge);padding-top:14px}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:60;
+  font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--slab);border:1px solid var(--amber);
+  color:var(--bone);padding:9px 16px;border-radius:var(--r);opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="wordmark">CHAIN<span>FALL</span></div>
+    <div class="chip" style="border-color:var(--oxide)">VAULT</div>
+    <div class="spacer"></div>
+    <div class="wallet">
+      <div class="chip">SCRIP <b id="wScrip">0</b></div>
+      <div class="chip sv">SALVAGE <b id="wSalv">0</b></div>
+      <div class="chip">SEALED <b id="wPacks">0</b></div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab on" data-v="vault">VAULT</button>
+    <button class="tab" data-v="coll">COLLECTION</button>
+  </div>
+
+  <section class="view on" id="v-vault">
+    <div class="vault">
+      <div class="stack" id="stack"></div>
+      <div class="vaultinfo">
+        <h2>SEALED BLOCKS</h2>
+        <p>Five cards per block, at least one Rare or better. Salvaged from Consortium distribution depots, so the contents are whatever they were shipping that week.</p>
+        <button class="btn" id="buyBtn">BUY BLOCK · 100</button>
+        <button class="btn ghost" id="earnBtn">LOG MATCH WIN · +25</button>
+        <div class="odds" id="odds"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="v-coll">
+    <div class="progress"><i id="progBar" style="width:0%"></i></div>
+    <div class="filters" id="filters"></div>
+    <div class="grid" id="grid"></div>
+    <div class="note" id="collNote"></div>
+  </section>
+</div>
+
+<div id="reveal">
+  <div class="revhead" id="revHead">block sealed · tap to verify</div>
+  <div class="pulls" id="pulls"></div>
+  <div class="revfoot">
+    <div class="revsum" id="revSum"></div>
+    <button class="btn ghost" id="revAll">REVEAL ALL</button>
+    <button class="btn" id="revDone">CLOSE</button>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   CHAINFALL — collection economy prototype
+   Rarity follows design complexity, not power level.
+   ============================================================ */
+
+const RARITY = {
+  common:{label:'COMMON', cls:'common', weight:65, salvage:5,   craft:40,   max:2},
+  rare:{  label:'RARE',   cls:'rare',   weight:25, salvage:20,  craft:100,  max:2},
+  epic:{  label:'EPIC',   cls:'epic',   weight:7,  salvage:100, craft:400,  max:2},
+  legend:{label:'LEGEND', cls:'legend', weight:3,  salvage:400, craft:1600, max:1}
+};
+const PACK_COST=100, PACK_SIZE=5, PITY_EPIC=8, PITY_LEGEND=25;
+const EARN_WIN=25, EARN_LOSS=10;
+
+const C=(n,c,t,a,h,f,r,tx)=>({n,c,t,a,h,f,r,tx});
+const CARDS={
+ /* neutral */
+ seed_phrase_kid:C('Seed Phrase Kid',1,'asset',2,1,'neutral','common',''),
+ bagholder:C('Bagholder',1,'asset',1,2,'neutral','common','Firewall.'),
+ gas_leak:C('Gas Leak',1,'op',0,0,'neutral','common','Deal 2 damage to an Asset.'),
+ hopium:C('Hopium',1,'op',0,0,'neutral','common','Give an Asset +2/+1.'),
+ cold_wallet:C('Cold Wallet',2,'asset',2,2,'neutral','common','Cold Storage.'),
+ node_runner:C('Node Runner',2,'asset',3,2,'neutral','common',''),
+ paper_hands:C('Paper Hands',2,'asset',4,1,'neutral','common',''),
+ frontrunner:C('Frontrunner',2,'asset',2,1,'neutral','common','Zero-Conf.'),
+ ledger_sweep:C('Ledger Sweep',2,'op',0,0,'neutral','common','Deal 3 damage to an Asset.'),
+ scavenger_rig:C('Scavenger Rig',3,'asset',3,4,'neutral','common',''),
+ diamond_hands:C('Diamond Hands',3,'asset',2,5,'neutral','common','Firewall.'),
+ yield_miner:C('Yield Miner',3,'asset',2,3,'neutral','common','Yield.'),
+ sharded_rig:C('Sharded Rig',4,'asset',3,3,'neutral','common','Sharded.'),
+ salvage_crew:C('Salvage Crew',4,'asset',4,4,'neutral','common','On Deploy: Restore 3 HP to your Operator.'),
+ flash_loan:C('Flash Loan',3,'op',0,0,'neutral','rare','Draw 2 cards.'),
+ rug_pull:C('Rug Pull',3,'op',0,0,'neutral','rare','Destroy an Asset with 4 or less Attack.'),
+ bot_swarm:C('Bot Swarm',4,'op',0,0,'neutral','rare','Summon three 1/1 Bots.'),
+ exit_liquidity:C('Exit Liquidity',4,'asset',5,3,'neutral','rare','On Liquidation: 2 damage to the enemy Operator.'),
+ hardware_failure:C('Hardware Failure',4,'op',0,0,'neutral','rare','Destroy an Asset.'),
+ sentry_rig:C('Sentry Rig',5,'asset',4,6,'neutral','rare','Firewall.'),
+ cascade:C('Cascade',5,'op',0,0,'neutral','epic','Deal 2 damage to all enemy Assets.'),
+ bull_run:C('Bull Run',5,'op',0,0,'neutral','epic','Give your Assets +2/+2.'),
+ whale:C('Whale',6,'asset',7,6,'neutral','epic',''),
+ junkyard_titan:C('Junkyard Titan',7,'asset',8,8,'neutral','legend',''),
+ /* consortium */
+ kyc_checkpoint:C('KYC Checkpoint',1,'op',0,0,'consortium','common','Seize an enemy Asset. Draw a card.'),
+ private_security:C('Private Security',2,'asset',1,3,'consortium','common','Firewall.'),
+ surveillance_drone:C('Surveillance Drone',2,'asset',2,2,'consortium','common','On Deploy: 1 damage to an enemy Asset.'),
+ data_broker:C('Data Broker',3,'asset',2,3,'consortium','common','On Deploy: Draw a card.'),
+ compliance_officer:C('Compliance Officer',3,'asset',2,3,'consortium','rare','On Deploy: Seize an enemy Asset.'),
+ custodian_vault:C('Custodian Vault',4,'asset',3,5,'consortium','rare','Firewall.'),
+ bailout:C('Bailout',4,'op',0,0,'consortium','rare','Gain 5 Armor.'),
+ debt_collector:C('Debt Collector',4,'asset',3,4,'consortium','rare','On Deploy: Opponent discards a random card.'),
+ riot_enforcer:C('Riot Enforcer',5,'asset',5,4,'consortium','rare','Firewall.'),
+ asset_freeze:C('Asset Freeze',5,'op',0,0,'consortium','epic','Seize all enemy Assets.'),
+ liquidation_order:C('Liquidation Order',5,'op',0,0,'consortium','epic','Destroy an Asset. Gain 2 Armor.'),
+ board_member:C('Board Member',5,'asset',4,5,'consortium','epic','On Deploy: Give another friendly Asset +2/+2.'),
+ regulatory_capture:C('Regulatory Capture',6,'op',0,0,'consortium','epic','Take control of an enemy Asset with 4 or less Attack.'),
+ the_chairman:C('The Chairman',8,'asset',7,7,'consortium','legend','On Deploy: Seize all enemy Assets. Gain 3 Armor.'),
+ /* sovereign */
+ full_node:C('Full Node',1,'asset',1,2,'sovereign','common','On Liquidation: Summon a 1/1 Node.'),
+ self_custody:C('Self Custody',1,'op',0,0,'sovereign','common','Give an Asset Cold Storage.'),
+ airdrop:C('Airdrop',2,'op',0,0,'sovereign','common','Summon two 1/1 Nodes.'),
+ cypherpunk:C('Cypherpunk',3,'asset',2,3,'sovereign','common','Cold Storage.'),
+ sovereign_miner:C('Sovereign Miner',3,'asset',2,4,'sovereign','common','On Deploy: Gain 2 Gas this turn.'),
+ mesh_relay:C('Mesh Relay',2,'asset',1,3,'sovereign','rare','Your other Assets have +1 Attack.'),
+ torch_relay:C('Torch Relay',3,'asset',3,3,'sovereign','rare','On Liquidation: Give a random friendly Asset +2/+2.'),
+ node_cluster:C('Node Cluster',4,'asset',2,2,'sovereign','rare','On Deploy: Summon two 1/1 Nodes.'),
+ peer_enforcer:C('Peer Enforcer',4,'asset',4,3,'sovereign','rare','Zero-Conf.'),
+ open_source:C('Open Source',4,'op',0,0,'sovereign','rare','Give your Assets +1/+1. Draw a card.'),
+ the_whitepaper:C('The Whitepaper',6,'op',0,0,'sovereign','rare','Draw 3 cards.'),
+ hard_fork:C('Hard Fork',4,'op',0,0,'sovereign','epic','Summon a copy of a friendly Asset.'),
+ decentralized_swarm:C('Decentralized Swarm',5,'op',0,0,'sovereign','epic','Summon four 1/1 Nodes.'),
+ satoshis_ghost:C("Satoshi's Ghost",8,'asset',6,6,'sovereign','legend','Cold Storage. On Liquidation: Summon a copy of this.'),
+ /* degen */
+ leverage:C('Leverage',1,'op',0,0,'degen','common','Give an Asset +3 Attack this turn.'),
+ moonboy:C('Moonboy',1,'asset',3,1,'degen','common','On Deploy: 1 damage to your Operator.'),
+ rekt:C('Rekt',1,'op',0,0,'degen','common','Destroy a friendly Asset. Draw 2 cards.'),
+ pump:C('Pump',2,'op',0,0,'degen','common','Give a random friendly Asset +3/+3.'),
+ meme_coin:C('Meme Coin',2,'asset',2,1,'degen','common','On Liquidation: Draw a card.'),
+ bagchaser:C('Bagchaser',2,'asset',3,2,'degen','common',''),
+ signal_caller:C('Signal Caller',3,'asset',2,3,'degen','common','Overclock.'),
+ degen_trader:C('Degen Trader',3,'asset',3,4,'degen','rare','On Deploy: Draw a card, then discard a random card.'),
+ dump:C('Dump',3,'op',0,0,'degen','rare','Destroy a random enemy Asset.'),
+ hundred_x:C('100x Long',3,'op',0,0,'degen','rare',"Double an Asset's Attack."),
+ ponzi_engine:C('Ponzi Engine',5,'asset',6,6,'degen','rare','On Liquidation: 3 damage to your Operator.'),
+ casino_rig:C('Casino Rig',4,'asset',4,4,'degen','epic','On Deploy: 3 damage split randomly among enemies.'),
+ send_it:C('Send It',3,'op',0,0,'degen','rare','Deal 4 damage to the enemy Operator and 2 to yours.'),
+ liquidation_cascade:C('Liquidation Cascade',5,'op',0,0,'degen','epic','Deal 3 damage to all Assets.'),
+ the_influencer:C('The Influencer',5,'asset',4,4,'degen','legend','On Deploy: Draw 2 cards.')
+};
+const IDS=Object.keys(CARDS);
+const maxOf=id=>RARITY[CARDS[id].r].max;
+const TOTAL=IDS.reduce((s,id)=>s+maxOf(id),0);
+
+/* ---------- persistence (window.storage, memory fallback) ---------- */
+const KEY='chainfall:vault:v1';
+let mem=null;
+const store={
+  async get(){
+    try{ const r=await window.storage.get(KEY); return r?JSON.parse(r.value):null; }
+    catch(e){ return mem; }
+  },
+  async set(v){
+    mem=v;
+    try{ await window.storage.set(KEY,JSON.stringify(v)); }catch(e){}
+  }
+};
+let G={scrip:300,salvage:0,packs:2,owned:{},sinceEpic:0,sinceLegend:0,opened:0};
+
+/* ---------- pack generation ---------- */
+const rnd=n=>Math.floor(Math.random()*n);
+function eligible(rar,owned){
+  // duplicate protection: a card you are maxed on cannot be pulled again
+  const pool=IDS.filter(id=>CARDS[id].r===rar && (owned[id]||0)<maxOf(id));
+  return pool.length?pool:IDS.filter(id=>CARDS[id].r===rar);
+}
+const TIERS=['common','rare','epic','legend'];
+function rollRarity(min){
+  // `min` is a floor, not a fixed value: a guaranteed Rare can still come up Legend
+  const pool=TIERS.slice(TIERS.indexOf(min||'common'));
+  const total=pool.reduce((s,k)=>s+RARITY[k].weight,0);
+  let roll=Math.random()*total;
+  for(const k of pool){ roll-=RARITY[k].weight; if(roll<0) return k; }
+  return pool[pool.length-1];
+}
+function openPack(state){
+  const pulls=[], owned={...state.owned};
+  let gotRarePlus=false, gotEpicPlus=false, gotLegend=false;
+  for(let i=0;i<PACK_SIZE;i++){
+    let min=null;
+    const last=i===PACK_SIZE-1;
+    if(state.sinceLegend+1>=PITY_LEGEND && !gotLegend) min='legend';
+    else if(last && state.sinceEpic+1>=PITY_EPIC && !gotEpicPlus) min='epic';
+    else if(last && !gotRarePlus) min='rare';            // every block guarantees Rare or better
+    const rar=rollRarity(min);
+    if(rar!=='common') gotRarePlus=true;
+    if(rar==='epic'||rar==='legend') gotEpicPlus=true;
+    if(rar==='legend') gotLegend=true;
+    const pool=eligible(rar,owned);
+    const id=pool[rnd(pool.length)];
+    const have=owned[id]||0, dupe=have>=maxOf(id);
+    if(!dupe) owned[id]=have+1;
+    pulls.push({id,rar,dupe});
+  }
+  state.owned=owned;
+  state.sinceLegend = gotLegend?0:state.sinceLegend+1;
+  state.sinceEpic   = gotEpicPlus?0:state.sinceEpic+1;
+  state.opened++;
+  const refund=pulls.filter(p=>p.dupe).reduce((s,p)=>s+RARITY[p.rar].salvage,0);
+  state.salvage+=refund;
+  return {pulls,refund};
+}
+
+/* ---------- ui ---------- */
+const $=id=>document.getElementById(id);
+let toastT=null;
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('on'),1800); }
+const ownedCount=()=>IDS.reduce((s,id)=>s+Math.min(G.owned[id]||0,maxOf(id)),0);
+
+function paintWallet(){
+  $('wScrip').textContent=G.scrip; $('wSalv').textContent=G.salvage; $('wPacks').textContent=G.packs;
+  $('buyBtn').disabled=G.scrip<PACK_COST;
+}
+function paintStack(){
+  const s=$('stack'); s.innerHTML='';
+  const n=Math.min(3,Math.max(1,G.packs));
+  for(let i=0;i<n;i++){
+    const d=document.createElement('button'); d.className='blockpack'+(i===n-1?' top':'')+(G.packs?'':' empty');
+    d.innerHTML='<div class="seal">◆</div><div class="bt">SEALED</div><div class="bs">BLOCK · 5 CARDS</div>'+
+      '<div class="hash">'+Array.from({length:16},()=>'0123456789abcdef'[rnd(16)]).join('')+'</div>';
+    if(i===n-1&&G.packs) d.onclick=doOpen;
+    s.appendChild(d);
+  }
+  const odds=Object.entries(RARITY).map(([k,r])=>
+    '<b>'+r.label.padEnd(7)+'</b> '+String(r.weight).padStart(2)+'%   salvage '+String(r.salvage).padStart(3)+
+    '   craft '+String(r.craft).padStart(4)+'   max '+r.max).join('<br>');
+  $('odds').innerHTML=odds+'<br><br><b>PITY</b>  epic by '+PITY_EPIC+' blocks · legend by '+PITY_LEGEND+
+    '<br><b>DUPES</b> maxed cards never drop again';
+}
+function cardFace(id,rar,dupe){
+  const c=CARDS[id];
+  const el=document.createElement('div');
+  el.className='flip dealt r-'+RARITY[rar].cls;
+  el.innerHTML=
+    '<div class="face back">◆</div>'+
+    '<div class="face front"><div class="fcost">'+c.c+'</div>'+
+      '<div class="fname">'+c.n+'</div>'+
+      '<div class="fser">'+RARITY[rar].label+' · '+c.f.toUpperCase()+'</div>'+
+      '<div class="frule"></div>'+
+      '<div class="ftext">'+(c.tx||'—')+'</div>'+
+      (c.t==='asset'?'<div class="fstats"><span>'+c.a+'</span><span style="color:#93332F">'+c.h+'</span></div>':
+        '<div class="fser" style="text-align:right">OPERATION</div>')+
+      '<div class="ftag'+(dupe?'':' new')+'">'+(dupe?'DUPE · +'+RARITY[rar].salvage+' SALVAGE':'NEW')+'</div>'+
+    '</div>';
+  el.onclick=()=>el.classList.add('up');
+  return el;
+}
+function doOpen(){
+  if(!G.packs) return;
+  G.packs--;
+  const {pulls,refund}=openPack(G);
+  save();
+  const box=$('pulls'); box.innerHTML='';
+  pulls.forEach((p,i)=>{ const el=cardFace(p.id,p.rar,p.dupe); el.style.animationDelay=(i*70)+'ms'; box.appendChild(el); });
+  const nw=pulls.filter(p=>!p.dupe).length;
+  $('revSum').textContent=nw+' new · '+(pulls.length-nw)+' dupe'+(refund?' · +'+refund+' salvage':'');
+  $('revHead').textContent='block '+String(G.opened).padStart(4,'0')+' · tap to verify';
+  $('reveal').classList.add('on');
+  paintWallet(); paintStack();
+}
+$('revAll').onclick=()=>document.querySelectorAll('.flip').forEach((e,i)=>setTimeout(()=>e.classList.add('up'),i*90));
+$('revDone').onclick=()=>{ $('reveal').classList.remove('on'); paintAll(); };
+$('buyBtn').onclick=()=>{ if(G.scrip<PACK_COST) return; G.scrip-=PACK_COST; G.packs++; save(); paintWallet(); paintStack(); toast('block acquired'); };
+$('earnBtn').onclick=()=>{ const win=Math.random()<.5; const amt=win?EARN_WIN:EARN_LOSS;
+  G.scrip+=amt; save(); paintWallet(); toast((win?'match won':'match lost')+' · +'+amt+' scrip'); };
+
+let filter='all';
+function paintCollection(){
+  const have=ownedCount();
+  $('progBar').style.width=(100*have/TOTAL).toFixed(1)+'%';
+  const fl=$('filters'); fl.innerHTML='';
+  [['all','ALL'],['missing','MISSING'],['common','COMMON'],['rare','RARE'],['epic','EPIC'],['legend','LEGEND']]
+   .forEach(([k,l])=>{ const b=document.createElement('button'); b.className='fbtn'+(filter===k?' on':''); b.textContent=l;
+     b.onclick=()=>{filter=k;paintCollection();}; fl.appendChild(b); });
+  const g=$('grid'); g.innerHTML='';
+  IDS.filter(id=>{ const n=G.owned[id]||0;
+      if(filter==='all') return true;
+      if(filter==='missing') return n<maxOf(id);
+      return CARDS[id].r===filter; })
+    .sort((a,b)=>CARDS[a].c-CARDS[b].c||CARDS[a].n.localeCompare(CARDS[b].n))
+    .forEach(id=>{
+      const c=CARDS[id], R=RARITY[c.r], n=G.owned[id]||0;
+      const el=document.createElement('div');
+      el.className='slot '+R.cls+(n?'':' none');
+      el.innerHTML='<div class="scount">'+n+'/'+R.max+'</div>'+
+        '<div class="sn">'+c.n+'</div>'+
+        '<div class="smeta">'+c.c+' GAS · '+R.label+' · '+c.f.toUpperCase()+'</div>'+
+        '<div class="sact"></div>';
+      const act=el.querySelector('.sact');
+      const cr=document.createElement('button'); cr.textContent='CRAFT '+R.craft;
+      cr.disabled=n>=R.max||G.salvage<R.craft;
+      cr.onclick=()=>{ G.salvage-=R.craft; G.owned[id]=(G.owned[id]||0)+1; save(); paintAll(); toast('crafted '+c.n); };
+      const sv=document.createElement('button'); sv.textContent='SALVAGE '+R.salvage;
+      sv.disabled=n<=0;
+      sv.onclick=()=>{ G.owned[id]=n-1; G.salvage+=R.salvage; save(); paintAll(); toast('+'+R.salvage+' salvage'); };
+      act.append(cr,sv);
+      g.appendChild(el);
+    });
+  $('collNote').innerHTML='COLLECTION '+have+'/'+TOTAL+' ('+(100*have/TOTAL).toFixed(0)+'%) · '+
+    G.opened+' blocks opened<br>Starter decks are always playable in full — this collection unlocks deckbuilding options, not the ability to compete.';
+}
+function paintAll(){ paintWallet(); paintStack(); paintCollection(); }
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
+  t.classList.add('on'); $('v-'+t.dataset.v).classList.add('on');
+});
+let saveT=null;
+function save(){ clearTimeout(saveT); saveT=setTimeout(()=>store.set(G),200); mem=G; }
+
+(async function init(){
+  const loaded=await store.get();
+  if(loaded) G=Object.assign(G,loaded);
+  paintAll();
+})();
+
+window.__VAULT={CARDS,RARITY,openPack,IDS,maxOf,TOTAL,PACK_COST,get G(){return G}};
+</script>
+</body>
+</html>

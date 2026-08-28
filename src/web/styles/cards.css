@@ -1,0 +1,184 @@
+/* One card face at six sizes: the hand (~81px on a phone, ~132px on a desktop),
+   the Feed (80–116px), the stash and sheet grids (~140–190px), the vault
+   (150–192px) and the solo sheet (up to 260px). Rather than a breakpoint per
+   surface, the face is a container and its type and spacing scale with its own
+   width, so the same markup is legible at 260px and still assembled at 80px.
+
+   Note the one rule of container units: `cqi` resolves against the nearest
+   *ancestor* container, never the element that declared `container-type`. Every
+   `cqi` below therefore sits on a descendant of `.card` / `.fcard`, and those
+   two elements size themselves in px from the outside. */
+.card,
+.fcard {
+  flex: none;
+  position: relative;
+  container-type: inline-size;
+  background: linear-gradient(165deg, var(--bone), var(--bone2));
+  color: #241F1C;
+  border-radius: var(--r);
+  border-left: 5px solid var(--neutral);
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  cursor: pointer;
+  transition: transform .14s;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, .45), 0 8px 18px rgba(0, 0, 0, .4);
+}
+.card {
+  width: 140px;
+  height: 196px;
+}
+#hand .card.is-selected {
+  transform: translateY(-14px);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, .45), 0 0 0 3px var(--oxide), 0 8px 18px rgba(0, 0, 0, .4);
+}
+.card.dead {
+  opacity: .42;
+  cursor: not-allowed;
+}
+/* Drawn this step — from an effect or your kit, not a Feed claim (those fly in). */
+.card.just-drawn {
+  animation: draw-in 1.1s ease-out;
+}
+@keyframes draw-in {
+  0% {
+    box-shadow: 0 4px 0 rgba(0, 0, 0, .45), 0 0 0 3px var(--amber), 0 0 22px rgba(224, 169, 59, .55);
+    filter: brightness(1.12);
+  }
+  100% {
+    box-shadow: 0 4px 0 rgba(0, 0, 0, .45), 0 8px 18px rgba(0, 0, 0, .4);
+    filter: none;
+  }
+}
+
+/* The header band. The cost used to be a token pinned outside the top-left
+   corner, which read as something stuck onto the card; here it is a stamped
+   block flush with the card's own edges, sharing a band with the crew mark and
+   name. The band also absorbs the second faction icon the face used to carry. */
+.card-header {
+  flex: none;
+  display: flex;
+  align-items: stretch;
+  position: relative;
+  z-index: 2;
+  background: rgba(36, 31, 28, .07);
+  border-bottom: 1px solid rgba(36, 31, 28, .15);
+  border-top-right-radius: var(--r);
+}
+.cost {
+  flex: none;
+  display: grid;
+  place-items: center;
+  min-width: clamp(19px, 16cqi, 29px);
+  padding: clamp(2px, 2cqi, 4px) clamp(3px, 2.5cqi, 5px);
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 600;
+  font-size: clamp(11px, 11cqi, 18px);
+  color: #3A2A0C;
+  background: linear-gradient(#F0C264, #D2952A);
+  border-right: 1px solid rgba(36, 31, 28, .26);
+  border-top-left-radius: 1px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 -2px 3px rgba(122, 82, 12, .22);
+}
+.card-faction {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: clamp(2px, 2.5cqi, 5px);
+  padding: 0 clamp(4px, 4cqi, 7px);
+  overflow: hidden;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: clamp(7px, 5.4cqi, 10px);
+  letter-spacing: .1em;
+  color: #6B5E4E;
+}
+.card-faction .fmark {
+  flex: none;
+  width: clamp(9px, 7.5cqi, 13px);
+  height: clamp(9px, 7.5cqi, 13px);
+}
+.card-faction-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-name {
+  flex: none;
+  font-family: 'Big Shoulders Display', sans-serif;
+  font-weight: 700;
+  font-size: clamp(13px, 13.5cqi, 23px);
+  line-height: 1.06;
+  padding: clamp(4px, 4.5cqi, 9px) clamp(5px, 5cqi, 9px) 0;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+/* Rules text on the face, not only in a popover. 76% of the set carries text or
+   a Consensus clause, and a card you have to hover to read is a card you play
+   wrong. It gets a text box rather than a bare divider: the box takes whatever
+   height is left over, so a one-line card reads as a card with a quiet box
+   instead of a card with a hole in it. The keyword and Consensus lines are sized
+   in `em`, staying in proportion to the body text at every card size. */
+.card-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  margin-top: clamp(4px, 3.5cqi, 7px);
+  padding: clamp(4px, 3.5cqi, 7px) clamp(5px, 5cqi, 9px);
+  background: rgba(36, 31, 28, .075);
+  border-top: 1px solid rgba(36, 31, 28, .17);
+  border-bottom: 1px solid rgba(36, 31, 28, .12);
+  box-shadow: inset 0 1px 2px rgba(36, 31, 28, .07);
+  font-size: clamp(9.5px, 8.4cqi, 14px);
+  line-height: 1.36;
+  color: #3B322A;
+}
+.card-keywords {
+  display: block;
+  margin-bottom: .28em;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .84em;
+  color: #6B5E4E;
+}
+.card-consensus {
+  display: block;
+  margin-top: .32em;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .8em;
+  line-height: 1.3;
+  color: #3E7A6B;
+}
+
+/* The footer is in flow, so nothing needs a magic padding-bottom to stay clear
+   of it and an auto-height card in a sheet grows correctly. `margin-top:auto`
+   rather than leaning on the text box to push it down — the phone hides the text
+   box, and the footer still belongs at the bottom edge. */
+.card-stats {
+  flex: none;
+  margin-top: auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 4px;
+  padding: clamp(4px, 4cqi, 7px) clamp(4px, 4cqi, 6px);
+}
+.card-stats.card-stats-op {
+  justify-content: flex-end;
+}
+.ops-mark {
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
+  font-size: clamp(8px, 6.5cqi, 11px);
+  letter-spacing: .04em;
+  color: var(--bone2);
+  background: #1C1816;
+  padding: .35em .7em;
+  border-radius: 2px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, .45);
+}
+
+.faction-consortium { border-left-color: var(--ink); }
+.faction-sovereign { border-left-color: var(--oxide); }
+.faction-degen { border-left-color: var(--sulfur); }
+.faction-neutral { border-left-color: var(--neutral); }

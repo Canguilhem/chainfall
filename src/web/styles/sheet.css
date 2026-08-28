@@ -1,0 +1,87 @@
+/* Touch sheets, the ticker, and the phone-width Feed button.
+   Layout for these lives here; mobile.css only decides when they appear. */
+
+.sheet{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;
+ background:var(--ash);
+ padding-top:max(10px,env(safe-area-inset-top));
+ padding-left:max(10px,env(safe-area-inset-left));
+ padding-right:max(10px,env(safe-area-inset-right));
+ padding-bottom:max(10px,env(safe-area-inset-bottom))}
+.sheet-head{display:flex;align-items:baseline;gap:10px;flex:none;
+ padding:6px 6px 10px;border-bottom:1px solid var(--edge)}
+.sheet-head h2{font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:24px;
+ letter-spacing:.12em;line-height:1;color:var(--amber)}
+.card-sheet .sheet-head h2{color:var(--bone)}
+.sheet-count{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;
+ text-transform:uppercase;color:var(--dim)}
+.sheet-x{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;
+ text-transform:uppercase;color:var(--dim);border:1px solid var(--edge);border-radius:var(--r);
+ padding:8px 12px;min-height:36px}
+.sheet-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 6px 6px}
+.sheet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px}
+
+/* Cards in a sheet are fluid and as tall as their text needs — the whole point
+   of the sheet is that the rules text is legible, so nothing gets clipped. */
+.sheet .card{width:100%;height:auto;min-height:186px;cursor:pointer}
+.sheet .card .card-body{overflow:visible;min-height:3.4em}
+.sheet .card.is-selected{transform:none;box-shadow:0 4px 0 rgba(0,0,0,.45),0 0 0 3px var(--amber),0 8px 18px rgba(0,0,0,.4)}
+.card-sheet .sheet-body{display:flex;flex-direction:column;justify-content:center}
+.sheet-solo{display:flex;justify-content:center}
+.sheet-solo .card{width:min(260px,72vw);min-height:236px}
+.sheet-notes{margin-top:14px;background:var(--concrete);border:1px solid var(--edge);border-radius:var(--r);
+ padding:12px;font-size:13px;line-height:1.45;color:var(--bone2)}
+.sheet-notes strong{display:block;font-family:'Big Shoulders Display',sans-serif;font-weight:700;
+ font-size:18px;letter-spacing:.06em;color:var(--bone);margin-bottom:5px}
+.sheet-notes p{margin-top:5px}
+.sheet-notes b{color:var(--bone)}
+.sheet-notes .card-consensus{color:#7FC0AE;font-family:'IBM Plex Mono',monospace;font-size:11px}
+.sheet-foot{flex:none;display:flex;gap:8px;padding:10px 6px 4px;border-top:1px solid var(--edge)}
+.sheet-go{flex:1;min-height:52px;border-radius:var(--r);
+ font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:18px;letter-spacing:.12em;
+ background:var(--oxide);color:var(--bone);border:1px solid var(--oxide)}
+.sheet-go:disabled{background:transparent;color:var(--dim);border-color:var(--edge);cursor:default}
+.sheet-go.ghost{flex:0 1 34%;background:transparent;color:var(--dim);border-color:var(--edge)}
+
+/* The Feed, reduced to one line, at the place on the board the strip used to be. */
+#feedbtn{display:none;align-items:center;justify-content:center;gap:10px;flex:none;
+ min-height:38px;padding:6px 12px;border-top:1px solid var(--edge);border-bottom:1px solid var(--edge);
+ font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;color:var(--dim)}
+#feedbtn b{font-weight:600;letter-spacing:.14em;color:var(--bone2)}
+#feedbtn em{font-style:normal;font-size:9px;opacity:.8}
+#feedbtn.go{border-color:var(--amber)}
+#feedbtn.go b{color:var(--amber)}
+#feedbtn.go::after{content:'';width:7px;height:7px;border-radius:50%;background:var(--amber);
+ animation:claimdot 1.4s ease-in-out infinite}
+@keyframes claimdot{0%,100%{opacity:.35}50%{opacity:1}}
+
+/* The ledger, as one line. */
+#ticker{display:none;align-items:center;gap:8px;flex:none;width:100%;text-align:left;
+ min-height:30px;padding:5px 10px;border-bottom:1px solid var(--edge);background:var(--concrete);
+ font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.3;color:var(--bone2)}
+.tick-tag{flex:none;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+.tick-line{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tick-line.blk{color:var(--amber)}
+.tick-line.hit{color:#E8A09C}
+.tick-more{flex:none;color:var(--dim);letter-spacing:.08em}
+/* Absolute, not fixed: #table sets `container-type:size`, which makes it the
+   containing block for fixed descendants anyway. Anchoring to it is honest. */
+#tick-log{display:none;position:absolute;left:0;right:0;top:30px;z-index:35;
+ max-height:min(52cqh,420px);overflow-y:auto;
+ background:var(--concrete);border-bottom:1px solid var(--edge);box-shadow:0 12px 24px rgba(0,0,0,.5);
+ padding:8px 12px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.75}
+#tick-log div{color:var(--bone2);word-break:break-word}
+#tick-log div::before{content:'› ';color:var(--oxide)}
+#tick-log div.blk{color:var(--amber);margin-top:6px}
+#tick-log div.blk::before{content:'■ ';color:var(--amber)}
+#tick-log div.hit::before{content:'× ';color:var(--blood)}
+
+/* Targeting: everything that is not a legal target steps back, so a 70px slot
+   is picked out by contrast rather than by a 2px dashed outline alone. */
+#table.aiming .rail,#table.aiming #hand,#table.aiming #ticker,#table.aiming #feedbtn{opacity:.35}
+#table.aiming .asset:not(.is-targetable):not(.is-selected),#table.aiming .slot{opacity:.3}
+#table.aiming .plate:not(.is-targetable){opacity:.55}
+#table.aiming .rail:has(.plate.is-targetable){opacity:1}
+/* A card waiting on a target owns the input. Tapping a second card mid-resolve
+   only ever means a mis-tap, so the hand stops answering until Cancel or a hit. */
+#table.targeting #hand,#table.targeting #feedbtn{pointer-events:none}
+#prompt .cancel{color:var(--bone);border-color:var(--oxide);background:var(--oxide)}
