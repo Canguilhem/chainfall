@@ -1,13 +1,16 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useLocation } from 'react-router-dom';
 import {
-  CARDS, FNAME, PACK_COST, PACK_IDS, PITY_EPIC, PITY_LEGEND, PLAYSET, RARITY,
+  CARDS, PACK_COST, PACK_IDS, PITY_EPIC, PITY_LEGEND, PLAYSET, RARITY,
   maxOf, rarityOf, type CardId, type Pull, type Rarity
 } from '../../engine/index.ts';
+import { COLLECTABLE } from '../stash.ts';
 import { CardFace } from './Card.tsx';
+import { DiscoveredCards } from './DiscoveredCards.tsx';
 import type { Wallet } from '../stash.ts';
 
-type Tab = 'vault' | 'coll';
+type Tab = 'vault' | 'coll' | 'discovered';
 type Filter = 'all' | 'missing' | Rarity;
 
 const FILTERS: { id: Filter; label: string }[] = [
@@ -49,14 +52,19 @@ function Flip({ pull, delay, up, onFlip }: {
   );
 }
 
-export function Vault({ wallet, onBuy, onOpen, onCraft, onSalvage }: {
+export function Vault({ found, wallet, onBuy, onOpen, onCraft, onSalvage }: {
+  found: Set<CardId>;
   wallet: Wallet;
   onBuy: () => boolean;
   onOpen: () => { pulls: Pull[]; refund: number } | null;
   onCraft: (id: string) => boolean;
   onSalvage: (id: string) => boolean;
 }) {
-  const [tab, setTab] = useState<Tab>('vault');
+  const location = useLocation();
+  const [tab, setTab] = useState<Tab>(() => location.pathname === '/stash' ? 'discovered' : 'vault');
+  useEffect(() => {
+    if (location.pathname === '/stash') setTab('discovered');
+  }, [location.pathname]);
   const [filter, setFilter] = useState<Filter>('all');
   const [reveal, setReveal] = useState<{ pulls: Pull[]; refund: number; opened: number } | null>(null);
   const [flipped, setFlipped] = useState<boolean[]>([]);
@@ -106,7 +114,11 @@ export function Vault({ wallet, onBuy, onOpen, onCraft, onSalvage }: {
         </button>
         <button type="button" role="tab" aria-selected={tab === 'coll'}
                 className={`stash-tab${tab === 'coll' ? ' on' : ''}`} onClick={() => setTab('coll')}>
-          COLLECTION <em>{have}/{PLAYSET}</em>
+          COLLECTION <em>{have}/{PLAYSET} copies</em>
+        </button>
+        <button type="button" role="tab" aria-selected={tab === 'discovered'}
+                className={`stash-tab${tab === 'discovered' ? ' on' : ''}`} onClick={() => setTab('discovered')}>
+          DISCOVERED <em>{found.size}/{COLLECTABLE.length} seen</em>
         </button>
       </div>
 
@@ -156,7 +168,7 @@ export function Vault({ wallet, onBuy, onOpen, onCraft, onSalvage }: {
       {tab === 'coll' && (
         <div className="vault-coll">
           <div className="stash-count" aria-live="polite">
-            <b>{have}<span> / {PLAYSET}</span></b>
+            <b>{have}<span> / {PLAYSET} copies</span></b>
             <div className="recap-bar"><i style={{ width: `${have / PLAYSET * 100}%` }} /></div>
           </div>
           <div className="stash-tabs" role="tablist" aria-label="Rarity">
@@ -166,6 +178,9 @@ export function Vault({ wallet, onBuy, onOpen, onCraft, onSalvage }: {
                       onClick={() => setFilter(f.id)}>{f.label}</button>
             ))}
           </div>
+          <p className="vault-coll-hint">
+            Sell vault copies for salvage currency · craft spends it · 0/2 means none owned yet (starter decks are separate)
+          </p>
           <div className="vault-grid">
             {ids.map(id => {
               const c = CARDS[id as CardId];
@@ -173,30 +188,40 @@ export function Vault({ wallet, onBuy, onOpen, onCraft, onSalvage }: {
               const R = RARITY[rar];
               const n = wallet.owned[id] ?? 0;
               return (
-                <div key={id} className={`vault-slot r-${rar}${n ? '' : ' none'}`}>
-                  <div className="scount">{n}/{R.max}</div>
-                  <div className="sn">{c.n}</div>
-                  <div className="smeta">{c.c} GAS · {R.label} · {FNAME[c.f].toUpperCase()}</div>
-                  <div className="sact">
+                <article key={id} className={`vault-tile r-${rar}${n ? ' in' : ' none'}`}
+                         aria-label={`${c.n}, ${n} of ${R.max} vault copies`}>
+                  <CardFace id={id}
+                            footerMid={<span className="kit-copy-n" title="Vault copies owned">{n}<small>/{R.max}</small></span>} />
+                  <div className="vault-tile-act">
                     <button type="button" disabled={n >= R.max || wallet.salvage < R.craft}
-                            onClick={() => { if (onCraft(id)) ping(`crafted ${c.n}`); }}>
-                      CRAFT {R.craft}
+                            title={n >= R.max ? 'Playset full' : wallet.salvage < R.craft ? `Need ${R.craft} salvage` : `Spend ${R.craft} salvage to craft one copy`}
+                            onClick={() => {
+                              if (onCraft(id)) ping(`${c.n} crafted · −${R.craft} salvage`);
+                              else ping(`Can't craft — need ${R.craft} salvage and a free slot`);
+                            }}>
+                      CRAFT −{R.craft}
                     </button>
-                    <button type="button" disabled={n <= 0}
-                            onClick={() => { if (onSalvage(id)) ping(`+${R.salvage} salvage`); }}>
-                      SALVAGE {R.salvage}
+                    <button type="button" className="vault-act-sell" disabled={n <= 0}
+                            title={n <= 0 ? 'No vault copy to sell — open packs or craft first' : `Sell one copy for +${R.salvage} salvage`}
+                            onClick={() => {
+                              if (onSalvage(id)) ping(`${c.n} sold · +${R.salvage} salvage`);
+                              else ping(`Can't sell — you don't own a vault copy`);
+                            }}>
+                      SELL +{R.salvage}
                     </button>
                   </div>
-                </div>
+                </article>
               );
             })}
           </div>
           <p className="vault-note">
-            COLLECTION {have}/{PLAYSET} · {wallet.opened} {wallet.opened === 1 ? 'block' : 'blocks'} opened.
-            Starter kits stay playable in full — this unlocks deckbuilding, not the right to fight.
+            COLLECTION {have}/{PLAYSET} vault copies toward a full playset · {wallet.opened} {wallet.opened === 1 ? 'block' : 'blocks'} opened.
+            Duplicates from packs refund salvage automatically. Starter decks stay playable without vault copies — extras unlock custom lists on Deck.
           </p>
         </div>
       )}
+
+      {tab === 'discovered' && <DiscoveredCards found={found} />}
 
       {reveal && createPortal(
         <div className="vault-reveal" role="dialog" aria-labelledby="vault-rev-h">

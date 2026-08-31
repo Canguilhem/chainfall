@@ -27,7 +27,7 @@ export const CARD_RARITY = {
   asset_freeze: 'epic', liquidation_order: 'epic', board_member: 'epic', regulatory_capture: 'epic',
   the_chairman: 'legend',
 
-  full_node: 'common', self_custody: 'common', airdrop: 'common', cypherpunk: 'common', sovereign_miner: 'common',
+  full_node: 'common', self_custody: 'common', sunset_node: 'common', airdrop: 'common', cypherpunk: 'common', sovereign_miner: 'common',
   mesh_relay: 'rare', torch_relay: 'rare', node_cluster: 'rare', peer_enforcer: 'rare',
   open_source: 'rare', the_whitepaper: 'rare',
   hard_fork: 'epic', decentralized_swarm: 'epic', satoshis_ghost: 'legend',

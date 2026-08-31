@@ -8,7 +8,7 @@
    ========================================================================== */
 import {
   createMatch, applyAction, view, botAction, FACTIONS,
-  type Action, type MatchView, type Mode, type PlayableFaction, type ServerMessage
+  type Action, type KitCounts, type MatchView, type Mode, type PlayableFaction, type ServerMessage
 } from '../engine/index.ts';
 
 export interface Transport {
@@ -20,9 +20,15 @@ export interface Handlers {
   onMessage(m: ServerMessage): void;
 }
 
-export function localTransport(faction: PlayableFaction, mode: Mode, h: Handlers): Transport {
+export function localTransport(
+  faction: PlayableFaction, mode: Mode, h: Handlers, kit?: KitCounts,
+): Transport {
   const foes = (Object.keys(FACTIONS) as PlayableFaction[]).filter(f => f !== faction);
-  const S = createMatch({ mode, factions: [faction, foes[Math.floor(Math.random() * foes.length)]!] });
+  const S = createMatch({
+    mode,
+    factions: [faction, foes[Math.floor(Math.random() * foes.length)]!],
+    kits: kit ? [kit, undefined] : undefined,
+  });
   let dead = false;
   const timers: ReturnType<typeof setTimeout>[] = [];
 

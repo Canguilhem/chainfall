@@ -36,7 +36,7 @@ export function Glossary({ compact }: { compact?: boolean }) {
       {compact && (
         <p className="gloss-cap">
           Salvage Run: claim one card from the Feed each block.
-          Constructed: draw from your 25-card kit.
+          Constructed: draw from your 25-card deck.
         </p>
       )}
       <section className="gloss-sec">

@@ -48,7 +48,7 @@ export function OperatorBar({ player, isMine, mode, targetable, canPower, canEnd
           <Tip text={!canPower ? powerWhy : crew.power.text}>
           <button className="power" disabled={!canPower} onClick={onPower}
                   aria-label={`${crew.power.name}, ${crew.power.cost} gas, ${crew.power.text}`}>
-            <PowerPreview faction={player.faction} tips={false} />
+            <PowerPreview faction={player.faction} />
           </button>
           </Tip>
           <Tip text={!canEnd ? endWhy : 'Seal the block, end your turn'}>

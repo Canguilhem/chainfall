@@ -1,0 +1,73 @@
+/* Kit builder — split deck / collection, Hearthstone-style curve + compact list. */
+.kit-page{text-align:left;max-width:1240px;margin:0 auto}
+
+.kit-workspace{display:grid;grid-template-columns:minmax(280px,340px) 1fr;gap:20px;align-items:start}
+.kit-deck{position:sticky;top:12px;background:var(--concrete);border:1px solid var(--edge);border-radius:var(--r);
+ padding:14px 12px 16px;display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 140px)}
+.kit-deck-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.kit-deck-count b{font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:42px;line-height:1;color:var(--bone)}
+.kit-deck-count span{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--dim);margin-left:4px}
+.kit-deck-count .kit-status{margin:4px 0 0;font-size:10px}
+.kit-reset{padding:7px 12px !important;font-size:12px !important;margin:0 !important;flex:none}
+
+.kit-curve{display:flex;align-items:flex-end;gap:4px;height:52px;padding:0 2px;border-bottom:1px solid var(--edge)}
+.kit-curve-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%;min-width:0}
+.kit-curve-col i{display:block;width:100%;max-width:22px;min-height:2px;background:var(--amber);border-radius:2px 2px 0 0;transition:height .15s}
+.kit-curve-col em{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--dim);letter-spacing:.04em}
+
+.kit-deck-hint,.kit-coll-hint{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin:0}
+.kit-coll-hint{margin-bottom:14px}
+.kit-deck-list{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:4px;
+ scrollbar-width:thin;padding-right:2px}
+.kit-deck-row{display:grid;grid-template-columns:28px 1fr auto auto;gap:8px;align-items:center;width:100%;
+ padding:8px 10px;border:1px solid var(--edge);border-left:3px solid #7A6C5D;border-radius:var(--r);
+ background:var(--slab);color:var(--bone);text-align:left;cursor:pointer;transition:border-color .12s,background .12s}
+.kit-deck-row:hover{border-color:var(--amber);background:#3a342f}
+.kit-deck-row.r-legend{border-left-color:var(--amber)}
+.kit-deck-row.r-epic{border-left-color:#3E7A6B}
+.kit-deck-row.r-rare{border-left-color:var(--ink)}
+.kit-row-cost{font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:18px;color:var(--amber);text-align:center}
+.kit-row-name{font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:15px;letter-spacing:.04em;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kit-row-meta{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.08em;color:var(--dim);text-transform:uppercase}
+.kit-row-n{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--amber);white-space:nowrap}
+.kit-row-n small{font-weight:400;color:var(--dim)}
+
+.kit-coll{min-width:0}
+.kit-coll-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-bottom:8px}
+.kit-coll-tabs{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;flex:1;min-width:0}
+.kit-bar-sep{width:1px;height:22px;background:var(--edge);flex:none}
+.kit-filters,.kit-crews{margin:0 !important;justify-content:flex-start !important}
+.kit-search{flex:1;min-width:140px;max-width:280px;margin-left:auto;padding:8px 11px;border:1px solid var(--edge);border-radius:var(--r);
+ background:var(--concrete);color:var(--bone);font-family:'IBM Plex Mono',monospace;font-size:11px}
+.kit-search::placeholder{color:var(--dim)}
+.kit-search:focus{outline:none;border-color:var(--amber)}
+
+.kit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:14px 10px}
+.kit-tile{position:relative;border:none;background:transparent;padding:0;cursor:pointer;text-align:left}
+.kit-tile .card{width:100%;height:auto;aspect-ratio:5/7;margin:0;transition:transform .12s,box-shadow .12s}
+.kit-tile:hover:not(:disabled) .card{transform:translateY(-4px)}
+.kit-tile.in .card{box-shadow:0 4px 0 rgba(0,0,0,.45),0 0 0 2px var(--amber),0 8px 18px rgba(0,0,0,.4)}
+.kit-tile.full:not(.in){opacity:.38;cursor:not-allowed}
+.kit-tile:disabled{cursor:not-allowed}
+
+/* Copy count in the card footer, centered between atk and hp (or OP). */
+.kit-copy-n{display:inline-flex;align-items:baseline;gap:0;font-family:'IBM Plex Mono',monospace;
+ font-weight:600;font-size:clamp(9px,9cqi,14px);color:var(--amber);line-height:1;
+ padding:clamp(2px,2cqi,4px) clamp(5px,4cqi,8px);background:#1C1816;border-radius:2px;
+ box-shadow:0 2px 0 rgba(0,0,0,.45)}
+.kit-copy-n small{font-weight:400;color:var(--dim)}
+
+.kit-foot{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);line-height:1.6;margin:18px 0 0;
+ border-top:1px solid var(--edge);padding-top:12px}
+
+.kit-status{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--blood);margin:0;line-height:1.4}
+.kit-status.ok{color:var(--amber)}
+
+@media (max-width:720px){
+  .kit-workspace{grid-template-columns:1fr;gap:16px}
+  .kit-deck{position:static;max-height:none}
+  .kit-deck-list{max-height:240px}
+  .kit-coll-tabs{width:100%}
+  .kit-search{margin-left:0;max-width:none}
+}

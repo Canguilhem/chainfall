@@ -1,4 +1,4 @@
-import { useState, type MouseEvent, type ReactElement } from 'react';
+import { useState, type MouseEvent, type ReactElement, type ReactNode } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip.tsx';
 import { useCoarsePointer } from '../media.ts';
 
@@ -16,14 +16,16 @@ import { useCoarsePointer } from '../media.ts';
  *
  *  A disabled control is the exception. It has no action of its own to steal,
  *  and "why is SEAL greyed out" has nowhere else to be answered. */
-export function Tip({ text, side = 'top', children }: {
+export function Tip({ text, content, side = 'top', children }: {
   text?: string;
+  content?: ReactNode;
   side?: 'top' | 'bottom' | 'left' | 'right';
   children: ReactElement;
 }) {
+  const body = content ?? text;
   const coarse = useCoarsePointer();
   const [open, setOpen] = useState(false);
-  if (!text) return children;
+  if (!body) return children;
   const props = children.props as { disabled?: boolean };
   const disabled = Boolean(props.disabled);
   if (coarse && !disabled) return children;
@@ -36,7 +38,7 @@ export function Tip({ text, side = 'top', children }: {
       <TooltipTrigger asChild onClick={onClick}>
         {trigger}
       </TooltipTrigger>
-      <TooltipContent side={side}>{text}</TooltipContent>
+      <TooltipContent side={side}>{body}</TooltipContent>
     </Tooltip>
   );
 }

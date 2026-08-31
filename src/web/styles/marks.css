@@ -68,7 +68,7 @@
   0%{opacity:1;transform:translateX(-50%) translateY(6px)}
   100%{opacity:0;transform:translateX(-50%) translateY(-16px)}
 }
-.kwi,.card-consensus{cursor:help;pointer-events:auto;position:relative;z-index:2}
+.kwi,.card-consensus-row{cursor:help;pointer-events:auto;position:relative;z-index:2}
 .tip-hit{position:absolute;inset:0;z-index:1;border-radius:inherit;cursor:inherit}
 .asset .fmark{z-index:2}
 .slot{width:var(--asset-w,128px);height:var(--asset-h,142px);flex:none;border:1px dashed var(--edge);border-radius:var(--r);opacity:.4}

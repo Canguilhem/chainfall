@@ -32,20 +32,24 @@
 .vault-odds b{color:var(--bone2);font-weight:500}
 .vault-odds-note{margin-top:10px}
 .vault-coll{text-align:left}
-.vault-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:9px}
-.vault-slot{background:var(--concrete);border:1px solid var(--edge);border-left:4px solid #7A6C5D;
- border-radius:var(--r);padding:9px 10px;position:relative}
-.vault-slot.none{opacity:.36}
-.vault-slot.r-legend{border-left-color:var(--amber)} .vault-slot.r-epic{border-left-color:#3E7A6B}
-.vault-slot.r-rare{border-left-color:var(--ink)} .vault-slot.r-common{border-left-color:#7A6C5D}
-.vault-slot .sn{font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:15px;line-height:1.1;padding-right:36px;color:var(--bone)}
-.vault-slot .smeta{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:.06em;margin-top:3px}
-.vault-slot .scount{position:absolute;top:8px;right:9px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--amber)}
-.vault-slot .sact{display:flex;gap:5px;margin-top:8px}
-.vault-slot .sact button{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;padding:4px 8px;
- border:1px solid var(--edge);border-radius:2px;color:var(--dim)}
-.vault-slot .sact button:hover:not(:disabled){border-color:var(--amber);color:var(--amber)}
-.vault-slot .sact button:disabled{opacity:.3;cursor:default}
+.vault-coll-hint{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+ color:var(--dim);margin:0 0 14px;line-height:1.5}
+.vault-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:14px 10px}
+.vault-tile{display:flex;flex-direction:column;gap:6px;min-width:0}
+.vault-tile .card{width:100%;height:auto;aspect-ratio:5/7;margin:0}
+.vault-tile.none{opacity:.4}
+.vault-tile.none .card{filter:grayscale(.25)}
+.vault-tile.in .card{box-shadow:0 4px 0 rgba(0,0,0,.45),0 0 0 2px var(--amber),0 8px 18px rgba(0,0,0,.35)}
+.vault-tile-act{display:flex;gap:4px}
+.vault-tile-act button{flex:1;min-width:0;font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.04em;
+ padding:5px 4px;border:1px solid var(--edge);border-radius:2px;background:var(--slab);color:var(--dim);cursor:pointer}
+.vault-tile-act button:hover:not(:disabled){border-color:var(--amber);color:var(--amber)}
+.vault-tile-act button.vault-act-sell:not(:disabled){color:#7FB0A2;border-color:rgba(127,176,162,.35)}
+.vault-tile-act button.vault-act-sell:hover:not(:disabled){color:#9fd4c4;border-color:#7FB0A2}
+.vault-tile-act button:disabled{opacity:.35;cursor:default}
+.vault-tile.r-legend:not(.none) .card{box-shadow:0 4px 0 rgba(0,0,0,.45),0 0 0 1px var(--amber),0 8px 18px rgba(224,169,59,.22)}
+.vault-tile.r-epic:not(.none) .card{box-shadow:0 4px 0 rgba(0,0,0,.45),0 0 0 1px #3E7A6B,0 8px 18px rgba(62,122,107,.2)}
+.vault-tile.r-rare:not(.none) .card{box-shadow:0 4px 0 rgba(0,0,0,.45),0 0 0 1px var(--ink),0 8px 18px rgba(58,94,118,.18)}
 .vault-note{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);line-height:1.8;margin-top:26px;
  border-top:1px solid var(--edge);padding-top:14px}
 .vault-reveal{position:fixed;inset:0;z-index:40;background:var(--ash);display:flex;

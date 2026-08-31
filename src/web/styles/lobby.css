@@ -51,6 +51,10 @@ header .tag.chip b{color:var(--amber);font-weight:600;margin-left:4px}
 .mode h4{font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:17px;letter-spacing:.1em;display:flex;align-items:baseline;justify-content:space-between;gap:8px}
 .mode h4 em{font-family:'IBM Plex Mono',monospace;font-size:8px;font-style:normal;letter-spacing:.14em;color:var(--amber);font-weight:500}
 .mode p{font-size:11px;line-height:1.5;color:var(--bone2);margin-top:6px}
+.mode:disabled{opacity:.45;cursor:not-allowed}
+.setup-warn{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--blood);margin:10px 0 0;line-height:1.5}
+.deck-link{font-family:inherit;font-size:inherit;color:var(--amber);text-decoration:underline;background:none;border:none;padding:0;cursor:pointer}
+.deck-link:hover{color:var(--bone)}
 .picks{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
 .setup .picks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
 .pick{width:auto;min-width:0;text-align:left;padding:20px 18px 16px;border:1px solid var(--edge);border-radius:var(--r);
@@ -101,6 +105,7 @@ header button.tag{letter-spacing:.18em}
 .again:hover{filter:brightness(1.12)}
 .again.stash-link{background:transparent;color:var(--amber);border-color:var(--amber)}
 .panel.stash-panel{max-width:1240px;text-align:center}
+.panel.deck-panel{text-align:left}
 .stash-count{max-width:280px;margin:8px auto 22px}
 .stash-count b{display:block;font-family:'IBM Plex Mono',monospace;font-size:22px;color:var(--bone);letter-spacing:.04em;margin-bottom:8px}
 .stash-count b span{font-size:13px;color:var(--dim)}

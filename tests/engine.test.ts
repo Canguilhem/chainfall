@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  createMatch, applyAction, view, botAction, replay,
+  createMatch, applyAction, view, botAction, replay, DECKS, validateKit,
   type Action, type MatchState, type PlayableFaction, type Seat
 } from '../src/engine/index.ts';
 
@@ -179,5 +179,19 @@ describe('balance', () => {
       return vs.reduce((x, y) => x + y, 0) / vs.length;
     });
     expect(Math.max(...overall) - Math.min(...overall)).toBeLessThan(15);
+  });
+});
+
+describe('kits', () => {
+  it('validateKit accepts starter lists', () => {
+    for (const f of F) {
+      expect(validateKit(DECKS[f], f)).toBeNull();
+    }
+  });
+
+  it('createMatch uses a custom kit when provided', () => {
+    const valid = { ...DECKS.sovereign };
+    const S = createMatch({ factions: ['sovereign', 'degen'], kits: [valid, undefined] });
+    expect(S.p[0].deck.length + S.p[0].hand.length).toBe(25);
   });
 });

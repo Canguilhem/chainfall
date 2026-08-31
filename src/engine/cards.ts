@@ -53,9 +53,10 @@ export const CARDS = {
   regulatory_capture: { n: "Regulatory Capture", c: 6, t: "op", f: "consortium", tx: "Take control of an enemy Asset with 4 or less Attack.", fx: [{ op: "control", tgt: "choose-enemy-asset", maxAtk: 4 }] },
   the_chairman: { n: "The Chairman", c: 8, t: "asset", a: 7, h: 7, f: "consortium", tx: "On Deploy: Seize all enemy Assets. Gain 3 Armor.", fx: [{ op: "seize", tgt: "all-enemy-assets" }, { op: "armor", amt: 3, tgt: "self-hero" }] },
 
-  // ---- sovereign (14) ----
+  // ---- sovereign (15) ----
   full_node: { n: "Full Node", c: 1, t: "asset", a: 1, h: 2, f: "sovereign", tx: "On Liquidation: Summon a 1/1 Node.", dfx: [{ op: "summon", card: "node", count: 1 }] },
   self_custody: { n: "Self Custody", c: 1, t: "op", f: "sovereign", tx: "Give an Asset Cold Storage.", fx: [{ op: "grantShield", tgt: "choose-friendly-asset" }] },
+  sunset_node: { n: "Sunset Node", c: 1, t: "op", f: "sovereign", tx: "Destroy a friendly Asset. Draw a card.", fx: [{ op: "destroy", tgt: "choose-friendly-asset" }, { op: "draw", amt: 1 }] },
   airdrop: { n: "Airdrop", c: 2, t: "op", f: "sovereign", tx: "Summon two 1/1 Nodes.", fx: [{ op: "summon", card: "node", count: 2 }] },
   mesh_relay: { n: "Mesh Relay", c: 2, t: "asset", a: 1, h: 3, f: "sovereign", aura: 1, tx: "Your other Assets have +1 Attack." },
   cypherpunk: { n: "Cypherpunk", c: 3, t: "asset", a: 2, h: 3, f: "sovereign", kw: ["coldstorage"] },
@@ -117,10 +118,6 @@ export const CTEXT: Partial<Record<CardId, string>> = {
   casino_rig: "2 damage split randomly.",
 };
 
-/** Printed as CONSENSUS on cards. Fires if another card of the same crew already resolved this block. */
-export const CONSENSUS_HELP =
-  'If you already played another card of this crew this block, this line fires.';
-
 export const KWNAME: Record<Keyword, string> = {
   firewall: "FIREWALL",
   zeroconf: "ZERO-CONF",
@@ -145,6 +142,15 @@ export const FNAME: Record<Faction, string> = {
   degen: "Degens",
   neutral: "Neutral"
 };
+
+/** Shown on hover / in card notes beside the crew-mark consensus row. */
+export function consensusHelp(f: Faction): string {
+  return `Play another ${FNAME[f]} card first this block. This line fires on your second play.`;
+}
+
+/** @deprecated Use consensusHelp(faction) */
+export const CONSENSUS_HELP =
+  'Play another card of the same crew first this block. The bonus line fires on your second play.';
 
 export const FACTIONS = {
   consortium: {
@@ -232,6 +238,7 @@ export const DECKS: Record<PlayableFaction, Partial<Record<CardId, number>>> = {
     self_custody: 2,
     seed_phrase_kid: 2,
     bagholder: 1,
+    sunset_node: 1,
     airdrop: 2,
     mesh_relay: 2,
     cypherpunk: 2,
@@ -240,7 +247,6 @@ export const DECKS: Record<PlayableFaction, Partial<Record<CardId, number>>> = {
     peer_enforcer: 2,
     open_source: 1,
     hard_fork: 1,
-    decentralized_swarm: 1,
     torch_relay: 1,
     the_whitepaper: 1,
     satoshis_ghost: 1

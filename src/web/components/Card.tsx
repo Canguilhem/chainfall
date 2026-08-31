@@ -1,15 +1,45 @@
-import { CARDS, CONSENSUS_HELP, CTEXT, FNAME, KWHELP, KWNAME, type CardId } from '../../engine/index.ts';
-import { useState } from 'react';
+import { CARDS, consensusHelp, CTEXT, FNAME, KWHELP, KWNAME, type CardId, type Faction } from '../../engine/index.ts';
+import { useState, type ReactElement } from 'react';
 import { Fly } from '../anim.tsx';
 import { cn } from '../lib/utils.ts';
 import { useCoarsePointer } from '../media.ts';
-import { FactionMark, KwLine, StatPair } from './Marks.tsx';
+import { FactionMark, KwLine, StatChip, StatPair } from './Marks.tsx';
 import { Tip, TipHit } from './Tip.tsx';
 
 const cardKeywords = (id: string) => {
   const card = CARDS[id as CardId];
   return (('kw' in card ? card.kw : undefined) ?? []).filter(keyword => KWNAME[keyword]);
 };
+
+function ConsensusTip({ faction }: { faction: Faction }) {
+  return (
+    <div className="tip-consensus">
+      <div className="tip-consensus-h">
+        <FactionMark faction={faction} size={14} />
+        <span>Consensus</span>
+      </div>
+      <p>{consensusHelp(faction)}</p>
+    </div>
+  );
+}
+
+/** Hero Realms-style ally row: rule above, then a rule + crew mark + bonus text. */
+function ConsensusLine({ faction, text, tips = true }: { faction: Faction; text: string; tips?: boolean }) {
+  const row = (
+    <span className="card-consensus-row">
+      <span className="card-consensus-fx">
+        <FactionMark faction={faction} size={11} />
+        <span className="card-consensus-text">{text}</span>
+      </span>
+    </span>
+  );
+  if (!tips) return row;
+  return (
+    <Tip content={<ConsensusTip faction={faction} />}>
+      {row as ReactElement}
+    </Tip>
+  );
+}
 
 /** Whether CardNotes would say anything. `terse` is for callers that already
  *  render the card face beside the notes — there the rules text is on screen
@@ -34,8 +64,8 @@ export function CardNotes({ id, terse }: { id: string; terse?: boolean }) {
       {rulesText && <p>{rulesText}</p>}
       {consensus && (
         <>
-          <p className="card-consensus">CONSENSUS: {consensus}</p>
-          <p>{CONSENSUS_HELP}</p>
+          <ConsensusLine faction={card.f} text={consensus} tips={false} />
+          <p className="consensus-gloss">{consensusHelp(card.f)}</p>
         </>
       )}
       {!terse && !rulesText && !keywords.length && !consensus && card.t === 'asset' && <p>Vanilla Asset. No extra text.</p>}
@@ -46,7 +76,7 @@ export function CardNotes({ id, terse }: { id: string; terse?: boolean }) {
 
 /** The face itself, in reading order: cost and crew in a band across the top,
  *  then the name, then the rules text, then stats. */
-function CardBody({ id, missing, tips = true }: { id: string; missing?: boolean; tips?: boolean }) {
+function CardBody({ id, missing, tips = true, footerMid }: { id: string; missing?: boolean; tips?: boolean; footerMid?: ReactElement }) {
   const card = CARDS[id as CardId];
   const consensus = CTEXT[id as CardId];
   const keywords = 'kw' in card ? card.kw : undefined;
@@ -66,22 +96,35 @@ function CardBody({ id, missing, tips = true }: { id: string; missing?: boolean;
           : <>
               <KwLine keywords={keywords} tips={tips} />
               {'tx' in card ? card.tx : ''}
-              {consensus && (
-                <Tip text={tips ? CONSENSUS_HELP : undefined}>
-                  <span className="card-consensus">CONSENSUS: {consensus}</span>
-                </Tip>
-              )}
+              {consensus && <ConsensusLine faction={card.f} text={consensus} tips={tips} />}
             </>}
       </div>
       {card.t === 'asset'
-        ? <StatPair atk={card.a} hp={card.h} tips={tips} />
-        : <div className="card-stats card-stats-op"><span className="ops-mark">OP</span></div>}
+        ? footerMid
+          ? (
+            <div className="card-stats has-mid">
+              <StatChip kind="atk" n={card.a} tips={tips} />
+              {footerMid}
+              <StatChip kind="hp" n={card.h} tips={tips} />
+            </div>
+          )
+          : <StatPair atk={card.a} hp={card.h} tips={tips} />
+        : footerMid
+          ? (
+            <div className="card-stats card-stats-op has-mid">
+              <span className="card-stats-spacer" aria-hidden />
+              {footerMid}
+              <span className="ops-mark">OP</span>
+            </div>
+          )
+          : <div className="card-stats card-stats-op"><span className="ops-mark">OP</span></div>}
     </>
   );
 }
 
-export function CardFace({ id, missing, playable, selected, fresh, why, onClick }: {
-  id: string; missing?: boolean; playable?: boolean; selected?: boolean; fresh?: boolean; why?: string; onClick?: () => void;
+export function CardFace({ id, missing, playable, selected, fresh, why, footerMid, onClick }: {
+  id: string; missing?: boolean; playable?: boolean; selected?: boolean; fresh?: boolean; why?: string;
+  footerMid?: ReactElement; onClick?: () => void;
 }) {
   const card = CARDS[id as CardId];
   const interactive = !!onClick;
@@ -106,7 +149,7 @@ export function CardFace({ id, missing, playable, selected, fresh, why, onClick 
            }
          }}>
       <TipHit text={why} />
-      <CardBody id={id} missing={missing} />
+      <CardBody id={id} missing={missing} footerMid={footerMid} />
     </div>
   );
 }

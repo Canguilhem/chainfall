@@ -34,7 +34,8 @@
  font-size:18px;letter-spacing:.06em;color:var(--bone);margin-bottom:5px}
 .sheet-notes p{margin-top:5px}
 .sheet-notes b{color:var(--bone)}
-.sheet-notes .card-consensus{color:#7FC0AE;font-family:'IBM Plex Mono',monospace;font-size:11px}
+.sheet-notes .consensus-gloss{color:#7FC0AE;font-family:'IBM Plex Mono',monospace;font-size:11px}
+.sheet-notes .card-consensus-text{color:#7FC0AE}
 .sheet-foot{flex:none;display:flex;gap:8px;padding:10px 6px 4px;border-top:1px solid var(--edge)}
 .sheet-go{flex:1;min-height:52px;border-radius:var(--r);
  font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:18px;letter-spacing:.12em;

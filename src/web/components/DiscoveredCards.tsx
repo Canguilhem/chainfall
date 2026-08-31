@@ -15,7 +15,7 @@ const CREWS: { id: Faction | 'all'; label: string }[] = [
 function sortIds(ids: CardId[]): CardId[] {
   return [...ids].sort((a, b) => {
     const ca = CARDS[a], cb = CARDS[b];
-    return ca.c - cb.c || ca.n.localeCompare(cb.n);
+    return ca.c - CARDS[b].c || ca.n.localeCompare(cb.n);
   });
 }
 
@@ -28,22 +28,20 @@ function Grid({ ids, found }: { ids: CardId[]; found: Set<CardId> }) {
   );
 }
 
-export function Stash({ found }: { found: Set<CardId> }) {
+export function DiscoveredCards({ found }: { found: Set<CardId> }) {
   const [crew, setCrew] = useState<Faction | 'all'>('all');
   const pool = useMemo(() => sortIds(
-    COLLECTABLE.filter(id => crew === 'all' || CARDS[id].f === crew)
+    COLLECTABLE.filter(id => crew === 'all' || CARDS[id].f === crew),
   ), [crew]);
-  const pulled = pool.filter(id => found.has(id));
+  const seen = pool.filter(id => found.has(id));
   const missing = pool.filter(id => !found.has(id));
   const n = COLLECTABLE.length;
   const have = found.size;
 
   return (
-    <>
-      <h1>THE <span>STASH</span></h1>
-      <p className="lede">What you pulled from the wreck, and what is still out there. Salvage claims and cards from your kit stay here.</p>
+    <div className="vault-discovered">
       <div className="stash-count" aria-live="polite">
-        <b>{have}<span> / {n}</span></b>
+        <b>{have}<span> / {n} seen</span></b>
         <div className="recap-bar"><i style={{ width: `${have / n * 100}%` }} /></div>
       </div>
       <div className="stash-tabs" role="tablist" aria-label="Crew">
@@ -62,15 +60,18 @@ export function Stash({ found }: { found: Set<CardId> }) {
         })}
       </div>
       <section className="stash-sec">
-        <h2>Pulled <span>{pulled.length}</span></h2>
-        {pulled.length
-          ? <Grid ids={pulled} found={found} />
-          : <p className="stash-empty">Nothing in the bag yet. Claim from the Feed, or run a kit.</p>}
+        <h2>Seen <span>{seen.length}</span></h2>
+        {seen.length
+          ? <Grid ids={seen} found={found} />
+          : <p className="stash-empty">Nothing logged yet. Play a match, claim from the Feed, or open a pack.</p>}
       </section>
       <section className="stash-sec">
-        <h2>Still out <span>{missing.length}</span></h2>
+        <h2>Not yet <span>{missing.length}</span></h2>
         <Grid ids={missing} found={found} />
       </section>
-    </>
+      <p className="vault-note">
+        Card types you&apos;ve encountered at least once — not copy counts (see Collection) and not your deck list (see Deck).
+      </p>
+    </div>
   );
 }

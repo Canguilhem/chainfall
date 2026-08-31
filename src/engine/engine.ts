@@ -12,6 +12,7 @@ import type {
   TargetRef, TargetSpec, ChooseTarget
 } from './types.ts';
 import { CARDS, CONSENSUS, FACTIONS, DECKS, type CardId } from './cards.ts';
+import { kitToList, type KitCounts } from './deck.ts';
 
 export const MAXGAS = 8, BOARD = 5, HANDMAX = 8, STARTHP = 20, FEEDSIZE = 5;
 
@@ -75,12 +76,16 @@ function buildDeck(S: MatchState, faction: PlayableFaction): string[] {
   for (const [id, n] of Object.entries(DECKS[faction])) for (let i = 0; i < (n ?? 0); i++) d.push(id);
   return shuffle(S, d);
 }
+function buildKit(S: MatchState, counts: KitCounts): string[] {
+  return shuffle(S, kitToList(counts));
+}
 function refillFeed(S: MatchState): void {
   while (S.feed.length < FEEDSIZE && S.feedDeck.length) S.feed.push(S.feedDeck.pop()!);
 }
 
 export function createMatch(opts: {
   seed?: number; mode?: Mode; factions?: [PlayableFaction, PlayableFaction];
+  kits?: [KitCounts | undefined, KitCounts | undefined];
 } = {}): MatchState {
   const seed = (opts.seed ?? Math.floor(Math.random() * 0xFFFFFFFF)) >>> 0;
   const factions = opts.factions ?? (['sovereign', 'consortium'] as [PlayableFaction, PlayableFaction]);
@@ -104,8 +109,9 @@ export function createMatch(opts: {
     for (let i = 0; i < 4; i++) S.p[1].hand.push(cheap());
     refillFeed(S);
   } else {
-    S.p[0].deck = buildDeck(S, factions[0]);
-    S.p[1].deck = buildDeck(S, factions[1]);
+    const kits = opts.kits;
+    S.p[0].deck = kits?.[0] ? buildKit(S, kits[0]) : buildDeck(S, factions[0]);
+    S.p[1].deck = kits?.[1] ? buildKit(S, kits[1]) : buildDeck(S, factions[1]);
     for (let i = 0; i < 3; i++) draw(S, 0);
     for (let i = 0; i < 5; i++) draw(S, 1);
   }
@@ -479,11 +485,13 @@ function botTarget(S: MatchState, spec: ChooseTarget, e: Effect, seat: Seat): Ta
   const destructive = (['damage', 'destroy', 'seize', 'control'] as const).includes(e.op as never);
   const enemy = t.filter(r => r.p !== seat), mine = t.filter(r => r.p === seat);
   const score = (r: TargetRef) => { const a = findAsset(S, r); return a ? worth(S, a, r.p) : 0; };
-  if (destructive && !enemy.length) {           // Rekt: spend the cheapest body, not the best
+  const friendlyOnly = spec === 'choose-friendly-asset' || spec === 'choose-other-friendly-asset';
+  if (destructive && !enemy.length) {
+    if (!friendlyOnly) return null;             // Gas Leak with an empty enemy board — don't shoot our own
     const assets = mine.filter(r => r.kind === 'asset');
     return assets.length ? assets.sort((x, y) => score(x) - score(y))[0]! : (mine[0] ?? null);
   }
-  const pool = destructive ? (enemy.length ? enemy : t) : (mine.length ? mine : t);
+  const pool = destructive ? enemy : (mine.length ? mine : t);
   const assets = pool.filter(r => r.kind === 'asset');
   return assets.length ? assets.sort((x, y) => score(y) - score(x))[0]! : (pool[0] ?? null);
 }
@@ -562,10 +570,14 @@ export function botAction(S: MatchState, seat: Seat): Action | null {
 }
 
 export * from './types.ts';
-export { CARDS, CONSENSUS, CONSENSUS_HELP, CTEXT, KWNAME, KWHELP, FNAME, FACTIONS, DECKS, CARD_IDS, isToken } from './cards.ts';
+export { CARDS, CONSENSUS, CONSENSUS_HELP, CTEXT, KWNAME, KWHELP, FNAME, FACTIONS, DECKS, CARD_IDS, isToken, consensusHelp } from './cards.ts';
 export type { CardId } from './cards.ts';
 export {
   RARITY, CARD_RARITY, PACK_IDS, PACK_COST, PACK_SIZE, PITY_EPIC, PITY_LEGEND,
   EARN_WIN, EARN_LOSS, PLAYSET, rarityOf, maxOf, rollRarity, openPack, craftCard, salvageCard
 } from './packs.ts';
 export type { Rarity, PackState, Pull, PackCardId } from './packs.ts';
+export {
+  DECK_SIZE, kitToList, kitTotal, availableCopies, validateKit, legalPool,
+  type KitCounts
+} from './deck.ts';

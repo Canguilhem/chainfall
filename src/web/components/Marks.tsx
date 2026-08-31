@@ -133,15 +133,13 @@ export function PowerMark({ size = 16 }: { size?: number }) {
   );
 }
 
-export function PowerPreview({ faction, tips = true }: { faction: PlayableFaction; tips?: boolean }) {
+export function PowerPreview({ faction }: { faction: PlayableFaction }) {
   const power = FACTIONS[faction].power;
-  const gas = <span className="pwr-gas">{power.cost}</span>;
   return (
     <div className="pwr">
       <span className="pwr-name"><PowerMark size={15} />{power.name}</span>
-      {tips ? <Tip text="Gas cost">{gas}</Tip> : gas}
       <span className="pwr-fx">{power.text}</span>
-      <span className="pwr-once">Crew power · {power.cost} gas · once per block</span>
+      <span className="pwr-once">Crew power · once per block</span>
     </div>
   );
 }
