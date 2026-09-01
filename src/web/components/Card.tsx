@@ -122,9 +122,9 @@ function CardBody({ id, missing, tips = true, footerMid }: { id: string; missing
   );
 }
 
-export function CardFace({ id, missing, playable, selected, fresh, why, footerMid, onClick }: {
+export function CardFace({ id, missing, playable, selected, fresh, why, footerMid, tips = true, onClick }: {
   id: string; missing?: boolean; playable?: boolean; selected?: boolean; fresh?: boolean; why?: string;
-  footerMid?: ReactElement; onClick?: () => void;
+  footerMid?: ReactElement; tips?: boolean; onClick?: () => void;
 }) {
   const card = CARDS[id as CardId];
   const interactive = !!onClick;
@@ -149,7 +149,7 @@ export function CardFace({ id, missing, playable, selected, fresh, why, footerMi
            }
          }}>
       <TipHit text={why} />
-      <CardBody id={id} missing={missing} footerMid={footerMid} />
+      <CardBody id={id} missing={missing} tips={tips} footerMid={footerMid} />
     </div>
   );
 }

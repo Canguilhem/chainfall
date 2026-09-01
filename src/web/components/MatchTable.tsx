@@ -6,10 +6,10 @@ import type { Hint, Pending } from '../match/types.ts';
 import { HandCard, FeedCard } from './Card.tsx';
 import { BoardAsset } from './Board.tsx';
 import { OperatorBar } from './OperatorBar.tsx';
+import { LedgerLog, type LogLine } from './Ledger.tsx';
 import { Ticker } from './Ticker.tsx';
 
 type FlyLists = ReturnType<typeof useFlyLists>;
-type LogLine = { n: number; text: string; kind: string };
 
 type Props = {
   v: MatchView | null;
@@ -123,9 +123,7 @@ export function MatchTable({
       </div>
       <aside id="ledger">
         <h2>the ledger</h2>
-        <div id="log" ref={logRef}>
-          {lines.map(e => <div key={e.n} className={e.kind}>{e.text}</div>)}
-        </div>
+        <LedgerLog lines={lines} logRef={logRef} />
       </aside>
     </main>
   );

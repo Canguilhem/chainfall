@@ -33,10 +33,44 @@
 .rail.you .plate{border-color:#4A433C;box-shadow:inset 3px 0 0 var(--amber),inset 0 1px 0 rgba(255,255,255,.05)}
 .rail.them .callsign{color:var(--bone2)}
 #log{flex:1;overflow-y:auto;padding:6px 12px 24px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.75}
-#log div{color:var(--bone2);word-break:break-word}
-#log div::before{content:'› ';color:var(--oxide)}
-#log div.blk{color:var(--amber);margin-top:6px}#log div.blk::before{content:'■ ';color:var(--amber)}
-#log div.hit::before{content:'× ';color:var(--blood)}
+#log div,#tick-log div{color:var(--bone2);word-break:break-word}
+#log div:not(.blk),#tick-log div:not(.blk){padding-left:6px}
+#log div::before,#tick-log div::before{content:'› ';color:var(--oxide)}
+#log div.blk,#tick-log div.blk{color:var(--amber);margin-top:6px;padding-left:0}
+#log div.blk::before,#tick-log div.blk::before{content:'■ ';color:var(--amber)}
+#log div.hit::before,#tick-log div.hit::before{content:'× ';color:var(--blood)}
+.ledger-sep{color:var(--dim)}
+.ledger-actor.you{color:var(--amber);font-weight:600}
+.ledger-actor.foe{color:#E8A09C;font-weight:600}
+.ledger-verb{color:var(--bone);text-transform:uppercase;font-size:9px;letter-spacing:.08em}
+.ledger-gas{color:var(--dim);font-size:9.5px}
+.ledger-dmg{color:var(--blood);font-weight:600}
+.ledger-arrow{color:var(--dim)}
+.ledger-target.you{color:var(--amber)}
+.ledger-target.them{color:#E8A09C}
+.ledger-muted{color:var(--dim)}
+.ledger-block{font-weight:600;letter-spacing:.06em}
+.ledger-match{color:var(--bone);font-weight:600}
+.ledger-end.win{color:#7FC0AE;font-weight:600}
+.ledger-end.lose{color:var(--blood);font-weight:600}
+.ledger-consensus{color:#7FC0AE;text-transform:uppercase;font-size:9px;letter-spacing:.08em}
+.ledger-faction{color:var(--bone);text-transform:capitalize}
+.ledger-card{display:inline;padding:0 1px;margin:0 -1px;border:none;border-radius:2px;background:transparent;
+ font:inherit;color:inherit;text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--bone2) 35%,transparent);
+ text-underline-offset:2px;cursor:help}
+.ledger-card:hover,.ledger-card:focus-visible{color:var(--bone);text-decoration-color:var(--amber);
+ background:color-mix(in srgb,var(--amber) 12%,transparent);outline:none}
+.ledger-card-tip-wrap{max-width:220px;padding:0;overflow:hidden}
+.ledger-card-tip{display:flex;flex-direction:column;gap:0}
+.ledger-card-face{padding:8px 8px 0;background:var(--slab)}
+.ledger-card-face .card{width:168px;height:auto;min-height:0;pointer-events:none;cursor:default}
+.ledger-card-meta{padding:8px 10px 10px;font-size:10.5px;line-height:1.45}
+.ledger-card-meta strong{display:block;font-family:'Big Shoulders Display',sans-serif;font-weight:700;
+ font-size:14px;letter-spacing:.04em;color:var(--bone);margin-bottom:3px}
+.ledger-card-meta > span{display:block;color:var(--dim);font-size:9.5px;letter-spacing:.06em;margin-bottom:6px}
+.ledger-card-meta p{margin-top:4px;color:var(--bone2)}
+.ledger-card-meta b{color:var(--bone)}
+.ledger-card-meta .consensus-gloss{color:#7FC0AE;font-size:10px}
 .rail{flex:none;min-width:0}
 .rail.you{display:flex;flex-direction:column;gap:4px}
 .operator{display:flex;align-items:center;gap:10px;padding:2px;min-height:44px;min-width:0}
