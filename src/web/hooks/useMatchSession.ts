@@ -37,6 +37,7 @@ export function useMatchSession({
   const seenLog = useRef(0);
   const deal = useRef(true);
   const paid = useRef(false);
+  const connectTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const onAddCardsRef = useRef(onAddCards);
   onAddCardsRef.current = onAddCards;
   const walletRef = useRef(wallet);
@@ -65,9 +66,11 @@ export function useMatchSession({
 
   const begin = useCallback((faction: PlayableFaction) => {
     transport.current?.close();
+    clearTimeout(connectTimer.current);
     seenLog.current = 0;
     setLines([]);
     resetInput();
+    let gotServer = false;
     const handlers = {
       onView: (nv: MatchView) => {
         setV(nv);
@@ -85,6 +88,8 @@ export function useMatchSession({
         onAddCardsRef.current(matchCardIds);
       },
       onMessage: (message: ServerMessage) => {
+        gotServer = true;
+        clearTimeout(connectTimer.current);
         if (message.t === 'queued') setScreen({ id: 'queued' });
         else if (message.t === 'start') { setScreen({ id: 'match' }); setConn(opponent === 'bot' ? 'solo' : 'connected'); }
         else if (message.t === 'reject') flash(message.why);
@@ -93,16 +98,31 @@ export function useMatchSession({
         else if (message.t === 'opponentBack') setConn('connected');
         else if (message.t === 'resumeFailed') setScreen({ id: 'start' });
         else if (message.t === 'over') setScreen({ id: 'over', won: message.won, why: message.why });
-      }
+      },
+      onSocket: (s: 'connecting' | 'open' | 'closed') => {
+        if (opponent === 'human' && s === 'connecting') setConn('connecting…');
+        if (opponent === 'human' && s === 'closed' && !gotServer) setConn('offline');
+      },
     };
     const src = deckSourceRef.current;
     const kit = mode === 'constructed' ? kitForMatch(faction, walletRef.current, src) : undefined;
     transport.current = opponent === 'bot'
       ? localTransport(faction, mode, handlers, kit)
       : remoteTransport(faction, mode, handlers);
+    if (opponent === 'human') {
+      setConn('connecting…');
+      connectTimer.current = setTimeout(() => {
+        if (!gotServer) {
+          transport.current?.close();
+          setConn('offline');
+          flash('match server unreachable — solo still works');
+        }
+      }, 8000);
+    }
   }, [mode, opponent, flash, resetInput, clearPeek, onViewResetTargeting]);
 
   useEffect(() => () => transport.current?.close(), []);
+  useEffect(() => () => clearTimeout(connectTimer.current), []);
   useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight; }, [lines]);
   useEffect(() => { if (screen.id === 'match') deal.current = false; }, [screen.id]);
   useEffect(() => {

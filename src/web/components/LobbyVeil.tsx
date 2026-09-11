@@ -99,14 +99,16 @@ export function LobbyVeil({
             <section className="setup">
               <h2><span>{mode === 'constructed' ? '3' : '2'}</span> Who you face</h2>
               <div className="modes">
-                {(['bot', 'human'] as Opponent[]).map(o => (
-                  <button key={o} className={`mode${opponent === o ? ' on' : ''}`}
-                          aria-pressed={opponent === o} onClick={() => onOpponent(o)}>
-                    <h4>{o === 'bot' ? 'SOLO' : 'VERSUS'}
-                      {opponent === o && <em>selected</em>}</h4>
-                    <p>{o === 'bot' ? 'Play the engine locally. No server needed.' : 'Queue for the next crew. Server-authoritative.'}</p>
-                  </button>
-                ))}
+                <button type="button" className={`mode${opponent === 'bot' ? ' on' : ''}`}
+                        aria-pressed={opponent === 'bot'} onClick={() => onOpponent('bot')}>
+                  <h4>SOLO{opponent === 'bot' && <em>selected</em>}</h4>
+                  <p>Play the engine locally. No server needed.</p>
+                </button>
+                <button type="button" className="mode" aria-pressed={false} disabled
+                        aria-label="Versus, coming soon">
+                  <h4>VERSUS<em>coming soon</em></h4>
+                  <p>Server matchmaking is on hold until the match host is up. Solo still works.</p>
+                </button>
               </div>
             </section>
             <section className="setup">

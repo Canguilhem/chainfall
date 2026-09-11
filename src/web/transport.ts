@@ -10,6 +10,7 @@ import {
   createMatch, applyAction, view, botAction, FACTIONS,
   type Action, type KitCounts, type MatchView, type Mode, type PlayableFaction, type ServerMessage
 } from '../engine/index.ts';
+import { wsUrl } from './serverOrigin.ts';
 
 export interface Transport {
   send(a: Action): void;
@@ -18,6 +19,7 @@ export interface Transport {
 export interface Handlers {
   onView(v: MatchView): void;
   onMessage(m: ServerMessage): void;
+  onSocket?(s: 'connecting' | 'open' | 'closed'): void;
 }
 
 export function localTransport(
@@ -71,9 +73,10 @@ export function remoteTransport(faction: PlayableFaction, mode: Mode, h: Handler
   const open = () => {
     clearTimeout(retry); retry = undefined;
     if (closed || ws?.readyState === 0 || ws?.readyState === 1) return;
-    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-    ws = new WebSocket(`${proto}://${location.host}/ws`);
+    h.onSocket?.('connecting');
+    ws = new WebSocket(wsUrl());
     ws.onopen = () => {
+      h.onSocket?.('open');
       if (session) ws!.send(JSON.stringify({ t: 'resume', ...session }));
       else ws!.send(JSON.stringify({ t: 'queue', faction, mode }));
     };
@@ -84,7 +87,10 @@ export function remoteTransport(faction: PlayableFaction, mode: Mode, h: Handler
       if (m.t === 'state') h.onView(m.view);
       h.onMessage(m);
     };
-    ws.onclose = () => { if (!closed) retry = setTimeout(open, 1200); };   // the token gets us the seat back
+    ws.onclose = () => {
+      h.onSocket?.('closed');
+      if (!closed) retry = setTimeout(open, 1200);
+    };   // the token gets us the seat back
   };
 
   // A backgrounded phone has its socket closed out from under it and its timers

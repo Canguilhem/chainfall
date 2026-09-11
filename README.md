@@ -20,6 +20,45 @@ npm run balance    # 3,600 AI-vs-AI games, ~3s
 Open two tabs and pick VERSUS in both to play against yourself. SOLO needs no
 server at all — it runs the engine in the tab.
 
+## Deploying
+
+**Versus needs the Node match server** (`src/server/index.ts`) with WebSocket
+support. A static host (Vercel, Netlify, GitHub Pages) serves only the client —
+SOLO works there; Versus does not, unless you point the client at a running API.
+
+### Option A — one service (recommended)
+
+Build and run everything together:
+
+```bash
+npm run build
+npm start          # serves ./dist + /api + /ws on :8787
+```
+
+Or use the included `Dockerfile` on Railway, Fly.io, Render, etc. Set `PORT` if
+the platform requires it.
+
+### Option B — split client + server
+
+1. Deploy the server (`npm run build && npm start` or Docker) somewhere with a
+   public HTTPS URL.
+2. Build the client with the server URL baked in:
+
+```bash
+VITE_SERVER_ORIGIN=https://your-api.example.com npm run build
+```
+
+3. Deploy `./dist` to Vercel (or any static host).
+
+Versus is currently marked coming soon in the lobby until a match host is
+deployed. The client can still target a separate API via `VITE_SERVER_ORIGIN`.
+
+### Option C — existing EC2 (e.g. t2.micro)
+
+If you already have a micro instance, that is often the **cheapest** path
+(Free Tier = $0). One process serves client + API + WebSocket. See
+[`docs/deploy-ec2.md`](docs/deploy-ec2.md) and the files in `deploy/`.
+
 ## Documentation
 
 | | |

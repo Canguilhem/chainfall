@@ -92,11 +92,8 @@ export function App() {
   useEffect(() => { if (!actions.awaitingClaim) setFeedShut(false); }, [actions.awaitingClaim, setFeedShut]);
 
   useEffect(() => {
-    if (opponent === 'human' && deckSource === 'custom') {
-      setDeckSource('starter');
-      saveDeckSource('starter');
-    }
-  }, [opponent, deckSource]);
+    if (opponent === 'human') setOpponent('bot');
+  }, [opponent]);
 
   const pickDeckSource = (source: DeckSource) => {
     setDeckSource(source);
@@ -104,6 +101,7 @@ export function App() {
   };
 
   const startMatch = (faction: PlayableFaction) => {
+    if (opponent === 'human') return flash('versus coming soon — play solo for now');
     if (mode === 'constructed' && deckSource === 'custom') {
       const err = customKitError(faction, wallet);
       if (err) return flash(err);

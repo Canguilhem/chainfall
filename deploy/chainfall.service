@@ -1,0 +1,16 @@
+[Unit]
+Description=Chainfall match server
+After=network.target
+
+[Service]
+Type=simple
+User=chainfall
+WorkingDirectory=/opt/chainfall
+Environment=NODE_ENV=production
+Environment=PORT=8787
+ExecStart=/usr/bin/env pnpm start
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
