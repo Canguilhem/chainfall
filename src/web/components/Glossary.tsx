@@ -18,11 +18,15 @@ const TABLE_TERMS: { t: string; d: string }[] = [
 
 const KW_ORDER = Object.keys(KWHELP) as Keyword[];
 
+function termId(name: string): string {
+  return `term-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+}
+
 function Cards({ items }: { items: { t: string; d: string; kw?: Keyword }[] }) {
   return (
     <dl className="gloss">
       {items.map(e => (
-        <div key={e.t} className="gloss-item">
+        <div key={e.t} id={e.kw ? `kw-${e.kw}` : termId(e.t)} className="gloss-item">
           <dt>
             {e.kw && <KwMark keyword={e.kw} size={14} />}
             {e.t}
@@ -34,7 +38,7 @@ function Cards({ items }: { items: { t: string; d: string; kw?: Keyword }[] }) {
   );
 }
 
-export function Glossary({ compact }: { compact?: boolean }) {
+export function Glossary({ compact, keywords = true }: { compact?: boolean; keywords?: boolean }) {
   return (
     <div className={`glossary${compact ? ' compact' : ''}`}>
       {compact && (
@@ -48,15 +52,17 @@ export function Glossary({ compact }: { compact?: boolean }) {
         {!compact && <p className="gloss-cap">Verbs on the table and on the ledger.</p>}
         <Cards items={TABLE_TERMS} />
       </section>
-      <section className="gloss-sec">
-        <h2>Keywords</h2>
-        {!compact && (
-          <p className="gloss-cap">
-            Printed as marks on Assets. Hover or tap a keyword chip or CONSENSUS line for the same text.
-          </p>
-        )}
-        <Cards items={KW_ORDER.map(k => ({ t: KWNAME[k], d: KWHELP[k], kw: k }))} />
-      </section>
+      {keywords && (
+        <section className="gloss-sec">
+          <h2>Keywords</h2>
+          {!compact && (
+            <p className="gloss-cap">
+              Printed as marks on Assets. Hover or tap a keyword chip or CONSENSUS line for the same text.
+            </p>
+          )}
+          <Cards items={KW_ORDER.map(k => ({ t: KWNAME[k], d: KWHELP[k], kw: k }))} />
+        </section>
+      )}
     </div>
   );
 }

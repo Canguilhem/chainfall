@@ -13,7 +13,7 @@ export function Ticker({ lines }: { lines: Line[] }) {
   const lastActor = last ? blockActorAt(lines, lines.length - 1) : null;
 
   useEffect(() => {
-    if (open && logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
+    if (open && logRef.current) logRef.current.scrollTop = 0;
   }, [open, lines]);
 
   return (

@@ -211,19 +211,46 @@ function LedgerEntry({ text, kind, blockActor }: { text: string; kind: string; b
   return <div className={kind}>{renderLine(text, kind, blockActor)}</div>;
 }
 
+const BLOCK_HEAD = /^block \d{3}/;
+
+/** Newest block first. Lines inside a block stay in the order they happened. */
+function blocksNewestFirst(lines: LogLine[]): LogLine[][] {
+  const groups: LogLine[][] = [];
+  let cur: LogLine[] = [];
+  for (const e of lines) {
+    if (e.kind === 'blk' && BLOCK_HEAD.test(e.text)) {
+      if (cur.length) groups.push(cur);
+      cur = [e];
+    } else {
+      cur.push(e);
+    }
+  }
+  if (cur.length) groups.push(cur);
+  const preamble = groups[0]?.[0] && !(groups[0][0].kind === 'blk' && BLOCK_HEAD.test(groups[0][0].text))
+    ? groups[0]
+    : null;
+  const blocks = preamble ? groups.slice(1) : groups;
+  const newest = [...blocks].reverse();
+  return preamble ? [preamble, ...newest] : newest;
+}
+
 export function LedgerLog({ lines, logRef, id = 'log' }: {
   lines: LogLine[];
   logRef?: RefObject<HTMLDivElement | null>;
   id?: string;
 }) {
+  const actors = new Map<number, ActorId | null>();
   let blockActor: ActorId | null = null;
+  for (const e of lines) {
+    const next = parseBlockActor(e.text, e.kind);
+    if (next) blockActor = next;
+    actors.set(e.n, blockActor);
+  }
   return (
     <div id={id} ref={logRef}>
-      {lines.map(e => {
-        const next = parseBlockActor(e.text, e.kind);
-        if (next) blockActor = next;
-        return <LedgerEntry key={e.n} text={e.text} kind={e.kind} blockActor={blockActor} />;
-      })}
+      {blocksNewestFirst(lines).flat().map(e => (
+        <LedgerEntry key={e.n} text={e.text} kind={e.kind} blockActor={actors.get(e.n) ?? null} />
+      ))}
     </div>
   );
 }

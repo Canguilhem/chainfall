@@ -32,6 +32,9 @@ header .tag.chip b{color:var(--amber);font-weight:600;margin-left:4px}
 .play-modes .mode p + p{margin-top:8px;color:var(--dim)}
 
 .rules{max-width:820px;margin:0 auto}
+.rules [id]{scroll-margin-top:16px}
+.rules a{color:var(--amber);text-decoration:underline;text-underline-offset:2px}
+.rules a:hover{color:var(--bone)}
 .rules .lede{margin-left:auto;margin-right:auto}
 .rules-block .loop{justify-content:stretch;margin-top:4px}
 .rules-essentials{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -39,6 +42,32 @@ header .tag.chip b{color:var(--amber);font-weight:600;margin-left:4px}
  display:flex;flex-direction:column;gap:6px;text-align:left}
 .rules-essentials b{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber)}
 .rules-essentials span{font-size:13px;line-height:1.5;color:var(--bone2)}
+.read-grid{display:grid;grid-template-columns:minmax(0,1fr) 220px minmax(0,1fr);grid-template-areas:
+ "gas card crew"
+ "name card kw"
+ "rules card stats";column-gap:36px;row-gap:12px;align-items:center;margin-top:4px}
+.read-specimen{grid-area:card;justify-self:center}
+.read-specimen .card{width:220px;height:308px;cursor:default}
+.read-specimen .card:hover{transform:none}
+.read-callout{position:relative;padding:10px 12px;background:var(--concrete);border:1px solid var(--edge);
+ border-radius:var(--r);border-top-width:3px}
+.read-callout b{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;
+ text-transform:uppercase;font-weight:600;margin-bottom:4px}
+.read-callout p{margin:0;font-size:13px;line-height:1.45;color:var(--bone2)}
+.read-callout.gas{grid-area:gas;border-top-color:var(--amber);color:var(--amber)}
+.read-callout.crew{grid-area:crew;border-top-color:var(--oxide);color:var(--oxide)}
+.read-callout.name{grid-area:name;border-top-color:var(--bone);color:var(--bone)}
+.read-callout.kw{grid-area:kw;border-top-color:var(--sulfur);color:var(--sulfur)}
+.read-callout.rules{grid-area:rules;border-top-color:var(--bone2);color:var(--bone)}
+.read-callout.stats{grid-area:stats;border-top-color:var(--blood);color:var(--blood)}
+.read-callout::after{content:'';position:absolute;top:50%;width:36px;border-top:1px solid var(--dim)}
+.read-callout.gas::after,.read-callout.name::after,.read-callout.rules::after{right:-36px}
+.read-callout.crew::after,.read-callout.kw::after,.read-callout.stats::after{left:-36px}
+.rules-also{margin:16px 0 0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.rules-also li{padding:12px 14px;background:var(--concrete);border:1px solid var(--edge);border-radius:var(--r);
+ display:flex;flex-direction:column;gap:6px}
+.rules-also b{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber)}
+.rules-also span{font-size:13px;line-height:1.5;color:var(--bone2)}
 .rules-keywords{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .rules-keywords li{padding:12px 14px;background:var(--concrete);border:1px solid var(--edge);border-radius:var(--r);
  display:flex;flex-direction:column;gap:6px}
@@ -66,6 +95,9 @@ header .tag.chip b{color:var(--amber);font-weight:600;margin-left:4px}
 .rules-ref .gloss-sec + .gloss-sec{border-top:none;padding-top:0}
 
 @media (max-width:640px){
+  .read-grid{grid-template-columns:1fr;grid-template-areas:"card" "gas" "crew" "name" "kw" "rules" "stats";column-gap:0}
+  .read-callout::after{display:none}
+  .rules-also{grid-template-columns:1fr}
   .rules-essentials{grid-template-columns:1fr}
   .rules-keywords{grid-template-columns:1fr}
   .rules-powers{grid-template-columns:1fr}

@@ -123,7 +123,7 @@ export function useMatchSession({
 
   useEffect(() => () => transport.current?.close(), []);
   useEffect(() => () => clearTimeout(connectTimer.current), []);
-  useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight; }, [lines]);
+  useEffect(() => { if (logRef.current) logRef.current.scrollTop = 0; }, [lines]);
   useEffect(() => { if (screen.id === 'match') deal.current = false; }, [screen.id]);
   useEffect(() => {
     if (screen.id === 'match') { paid.current = false; setPayout(null); }
