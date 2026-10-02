@@ -71,31 +71,39 @@
   .vault-pulls{gap:10px 12px}
   .vault-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
 
-  /* All five slots across, derived from the container rather than guessed:
-     board padding (12) + four gaps (20) come off the width first. Declared on
-     the children for the same reason as the desktop block in table.css — a
-     container unit in #table's own block would mean the viewport. */
-  #table{padding:0 0 2px}
+  /* Five slots across the full table. Side chrome is stacked above/below
+     the board on a phone, so the width budget is the table, not a middle column. */
+  /* Size to content and scroll. A flex-shrink lane was crushing the board into
+     the plate and the flags into the next row. */
+  #table{padding:0 0 2px;overflow-x:hidden;overflow-y:auto}
+  .lane,#prompt,#feedbtn,#hand{flex:0 0 auto}
   #table > *{
     --hand-h:clamp(108px,19cqh,152px);--hand-w:calc(var(--hand-h)*0.72);
-    --asset-w:clamp(46px,calc((100cqw - 32px) / 5),92px);
-    --asset-h:clamp(56px,min(calc(var(--asset-w) * 1.24),19cqh),112px)}
+    --asset-w:clamp(52px,calc((100cqw - 28px) / 5),88px);
+    --asset-h:clamp(64px,min(calc(var(--asset-w) * 1.28),18cqh),108px)}
   #feedbtn{display:flex}
 
-  /* Desktop lets both boards grow so they meet at the centreline, which puts
-     slack above one and below the other. On a phone that reads as two holes.
-     Size the rows to their contents and pool the leftover in one gap, above
-     your own rail — so your bar, your buttons and your hand sit in the bottom
-     third, where a thumb is. */
-  .board{flex:0 1 auto;gap:5px;padding:3px 6px;overflow:visible}
-  .lane{flex:0 1 auto;grid-template-columns:minmax(110px,1fr) minmax(0,2.4fr) minmax(72px,.85fr);
-    gap:6px 8px;padding:2px 0}
-  .lane.you{margin-top:auto;padding-bottom:8px}
-  .lane-gas{padding:6px 7px;gap:4px}
-  .plate{height:36px;padding:0 9px;column-gap:8px}
+  /* One column per seat. Identity, gas and the board each get a full-width
+     row so plates, buttons and Assets stop sharing a line they cannot fit. */
+  .lane{display:grid;grid-template-columns:minmax(0,1fr);align-items:stretch;
+    gap:6px;padding:4px 8px 8px;min-height:0}
+  .lane-id{display:contents}
+  .lane.them{grid-template-areas:"pwr" "plate" "gas" "board"}
+  .lane.you{grid-template-areas:"board" "plate" "gas" "acts";margin-top:auto;padding-bottom:6px}
+  .lane-opp-pwr{grid-area:pwr;width:100%;min-height:36px}
+  .plate{grid-area:plate;height:40px;padding:0 10px;column-gap:8px}
+  .lane-gas{grid-area:gas;width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;
+    justify-content:space-between;gap:4px 10px;padding:6px 10px;align-self:stretch}
+  .lane-gas .gasbar{flex-wrap:nowrap}
+  .lane-gas .handnum{margin-left:auto}
+  .acts{grid-area:acts}
+  .lane .board{grid-area:board;width:100%;height:auto;min-height:min-content;flex:none;
+    gap:4px;padding:2px 0 18px;justify-content:center;overflow:visible}
   .callsign{overflow:hidden;min-width:0}
-  .callsign-name{font-size:15px;overflow:hidden;text-overflow:ellipsis}
-  .asset{padding:0 0 26px}
+  .callsign-name{font-size:16px;overflow:hidden;text-overflow:ellipsis}
+  .asset{padding:0 0 22px}
+  .asset-flags{flex-direction:column;align-items:center;gap:2px;max-width:100%}
+  .asset-flag{font-size:7px;padding:3px 4px}
   .asset-header{padding:3px 6px;gap:4px}
   .asset-faction{font-size:7px;letter-spacing:.08em}
   /* A 69px Asset leaves little room for the name, and "Surveillance Drone" wants
@@ -113,13 +121,12 @@
   .rail{padding:0 8px}
   .rail.them .pwr-tag{display:none}
   .operator{flex-wrap:wrap;gap:6px 8px;min-height:0;padding:3px 0}
-  .gasbar{flex:1 1 auto;min-width:0}
-  .plate{padding:0 9px;gap:8px}
-  .callsign-name{font-size:13px}
+  .lane-gas .gasbar{flex:none;min-width:0}
   .plate .stat.hp{font-size:16px}
-  .acts{padding:0;gap:6px}
+  .acts{padding:0;gap:8px}
   .acts .power,.lane-opp-pwr{min-height:40px}
-  .acts .seal{flex:none;min-height:40px;min-width:0;padding:7px 10px;font-size:13px;letter-spacing:.1em}
+  .acts .seal{flex:none;min-height:40px;min-width:72px;padding:7px 12px;font-size:14px;letter-spacing:.1em}
+  .asset .asset-keywords .kw-label{display:none}
 
   /* One line, and it has to hold the Cancel button during targeting. */
   #prompt{padding:5px 10px;font-size:11.5px;gap:4px 10px}
