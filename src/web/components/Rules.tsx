@@ -1,8 +1,9 @@
-import { FACTIONS, type PlayableFaction } from '../../engine/index.ts';
-import { FactionMark } from './Marks.tsx';
+import { FACTIONS, KWHELP, KWNAME, type Keyword, type PlayableFaction } from '../../engine/index.ts';
+import { FactionMark, KwMark } from './Marks.tsx';
 import { Glossary } from './Glossary.tsx';
 
 const CREWS = Object.keys(FACTIONS) as PlayableFaction[];
+const KEYWORDS = Object.keys(KWHELP) as Keyword[];
 
 export function Rules() {
   return (
@@ -43,6 +44,22 @@ export function Rules() {
             <b>Crew power</b>
             <span>2 gas, once per block. The button under your name.</span>
           </li>
+        </ul>
+      </section>
+
+      <section className="how">
+        <h2>Keyword marks</h2>
+        <p className="how-note">Same glyphs on the card face, the board, and every hover tip.</p>
+        <ul className="rules-keywords">
+          {KEYWORDS.map(k => (
+            <li key={k}>
+              <span className="rules-kw-name">
+                <KwMark keyword={k} size={16} />
+                {KWNAME[k]}
+              </span>
+              <span className="rules-kw-fx">{KWHELP[k]}</span>
+            </li>
+          ))}
         </ul>
       </section>
 

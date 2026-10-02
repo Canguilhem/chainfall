@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
-  CARD_IDS, CARD_RARITY, PACK_IDS, PACK_SIZE, PITY_LEGEND, RARITY, isToken,
-  maxOf, openPack, rarityOf, type PackState, type Rarity
+  CARD_IDS, CARD_RARITY, PACK_IDS, PACK_SIZE, PITY_LEGEND, isToken,
+  craftCard, maxOf, openPack, rarityOf, type PackState
 } from '../src/engine/index.ts';
 
 function rng(seed: number): () => number {
@@ -44,13 +44,26 @@ describe('packs', () => {
     expect(s.sinceLegend).toBe(0);
   });
 
-  it('refunds salvage when a maxed card drops again', () => {
+  it('keeps extras when a playset-complete card drops again', () => {
     const s = fresh();
     for (const id of PACK_IDS) s.owned[id] = maxOf(id);
+    const before = { ...s.owned };
     const { pulls, refund } = openPack(s, zero);
     expect(pulls.every(p => p.dupe)).toBe(true);
-    expect(refund).toBe(pulls.reduce((n, p) => n + RARITY[p.rar as Rarity].salvage, 0));
-    expect(s.salvage).toBe(refund);
+    expect(refund).toBe(0);
+    expect(s.salvage).toBe(0);
+    for (const p of pulls) {
+      expect(s.owned[p.id]).toBe((before[p.id] ?? 0) + pulls.filter(x => x.id === p.id).length);
+    }
+  });
+
+  it('lets craft exceed the playset soft cap', () => {
+    const s = fresh();
+    s.salvage = 10_000;
+    const id = PACK_IDS[0]!;
+    s.owned[id] = maxOf(id);
+    expect(craftCard(s, id)).toBe(true);
+    expect(s.owned[id]).toBe(maxOf(id) + 1);
   });
 
   it('is deterministic for a given rng', () => {

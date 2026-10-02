@@ -281,8 +281,26 @@ function resolve(S: MatchState, fx: Effect[], seat: Seat, chosen: TargetRef | nu
       case 'summon': summon(S, seat, e.card, e.count); break;
       case 'draw': draw(S, seat, amt); break;
       case 'gas': me.gas += amt; break;
-      case 'discardEnemy': for (let i = 0; i < amt; i++) if (them.hand.length) them.hand.splice(rndInt(S, them.hand.length), 1); break;
-      case 'discardSelf': for (let i = 0; i < amt; i++) if (me.hand.length) me.hand.splice(rndInt(S, me.hand.length), 1); break;
+      case 'discardEnemy':
+        for (let i = 0; i < amt; i++) {
+          if (!them.hand.length) {
+            log(S, (other(seat) ? 'foe' : 'you') + ' · discard fizzled · empty hand');
+            break;
+          }
+          const dumped = them.hand.splice(rndInt(S, them.hand.length), 1)[0]!;
+          log(S, (other(seat) ? 'foe' : 'you') + ' · discard ' + card(dumped).n.toLowerCase());
+        }
+        break;
+      case 'discardSelf':
+        for (let i = 0; i < amt; i++) {
+          if (!me.hand.length) {
+            log(S, (seat ? 'foe' : 'you') + ' · discard fizzled · empty hand');
+            break;
+          }
+          const dumped = me.hand.splice(rndInt(S, me.hand.length), 1)[0]!;
+          log(S, (seat ? 'foe' : 'you') + ' · discard ' + card(dumped).n.toLowerCase());
+        }
+        break;
       case 'splitDamage':
         for (let i = 0; i < amt; i++) {
           const pool: TargetRef[] = [
@@ -578,6 +596,6 @@ export {
 } from './packs.ts';
 export type { Rarity, PackState, Pull, PackCardId } from './packs.ts';
 export {
-  DECK_SIZE, kitToList, kitTotal, availableCopies, validateKit, legalPool,
+  DECK_SIZE, kitToList, kitTotal, availableCopies, validateKit, legalPool, brewPool,
   type KitCounts
 } from './deck.ts';

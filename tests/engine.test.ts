@@ -85,6 +85,31 @@ describe('match stats', () => {
   });
 });
 
+describe('discard', () => {
+  it('logs which card discardEnemy dumps', () => {
+    const S = createMatch({ seed: 1, mode: 'constructed', factions: ['consortium', 'degen'] });
+    S.awaitingClaim = false;
+    S.p[0].hand = ['debt_collector'];
+    S.p[0].gas = 4;
+    S.p[0].board = [];
+    S.p[1].hand = ['hopium', 'gas_leak', 'rekt'];
+    const before = S.p[1].hand.length;
+    expect(applyAction(S, 0, { t: 'play', i: 0 }).ok).toBe(true);
+    expect(S.p[1].hand.length).toBe(before - 1);
+    expect(S.log.some(e => /^foe · discard /.test(e.text))).toBe(true);
+  });
+  it('logs when discard finds an empty hand', () => {
+    const S = createMatch({ seed: 1, mode: 'constructed', factions: ['consortium', 'degen'] });
+    S.awaitingClaim = false;
+    S.p[0].hand = ['debt_collector'];
+    S.p[0].gas = 4;
+    S.p[0].board = [];
+    S.p[1].hand = [];
+    expect(applyAction(S, 0, { t: 'play', i: 0 }).ok).toBe(true);
+    expect(S.log.some(e => e.text === 'foe · discard fizzled · empty hand')).toBe(true);
+  });
+});
+
 describe('draw', () => {
   it('takes from the kit in constructed', () => {
     const S = createMatch({ seed: 7, mode: 'constructed', factions: ['sovereign', 'degen'] });

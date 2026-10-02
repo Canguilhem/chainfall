@@ -3,7 +3,7 @@ import { useState, type ReactElement } from 'react';
 import { Fly } from '../anim.tsx';
 import { cn } from '../lib/utils.ts';
 import { useCoarsePointer } from '../media.ts';
-import { FactionMark, KwLine, StatChip, StatPair } from './Marks.tsx';
+import { FactionMark, KwLine, KwMark, StatChip, StatPair } from './Marks.tsx';
 import { Tip, TipHit } from './Tip.tsx';
 
 const cardKeywords = (id: string) => {
@@ -35,7 +35,7 @@ function ConsensusLine({ faction, text, tips = true }: { faction: Faction; text:
   );
   if (!tips) return row;
   return (
-    <Tip content={<ConsensusTip faction={faction} />}>
+    <Tip content={<ConsensusTip faction={faction} />} sideOffset={20} contentClassName="tip-panel">
       {row as ReactElement}
     </Tip>
   );
@@ -60,7 +60,12 @@ export function CardNotes({ id, terse }: { id: string; terse?: boolean }) {
   const rulesText = terse ? '' : ('tx' in card ? card.tx : '');
   return (
     <>
-      {keywords.map(keyword => <p key={keyword}><b>{KWNAME[keyword]}.</b> {KWHELP[keyword]}</p>)}
+      {keywords.map(keyword => (
+        <p key={keyword} className="note-kw">
+          <KwMark keyword={keyword} size={13} />
+          <span><b>{KWNAME[keyword]}.</b> {KWHELP[keyword]}</span>
+        </p>
+      ))}
       {rulesText && <p>{rulesText}</p>}
       {consensus && (
         <>

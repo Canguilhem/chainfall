@@ -1,6 +1,90 @@
-import { useRef, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type Ref } from 'react';
 import { motion, useReducedMotion, type Transition } from 'motion/react';
 import type { MatchView } from '../engine/index.ts';
+
+export type FlashKind = '' | 'hit' | 'heal';
+
+/** One-shot class when a numeric value moves — damage = hit, gain = heal. */
+export function useValueFlash(n: number, ms = 420): FlashKind {
+  const prev = useRef(n);
+  const [flash, setFlash] = useState<FlashKind>('');
+  useEffect(() => {
+    const d = n - prev.current;
+    prev.current = n;
+    if (!d) return;
+    setFlash(d < 0 ? 'hit' : 'heal');
+    const t = window.setTimeout(() => setFlash(''), ms);
+    return () => window.clearTimeout(t);
+  }, [n, ms]);
+  return flash;
+}
+
+/** True for `ms` after `flag` rises false → true (e.g. your turn starts). */
+export function useRisingEdge(flag: boolean | undefined, ms = 720): boolean {
+  const prev = useRef(false);
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    const now = !!flag;
+    if (now && !prev.current) {
+      setOn(true);
+      const t = window.setTimeout(() => setOn(false), ms);
+      prev.current = now;
+      return () => window.clearTimeout(t);
+    }
+    prev.current = now;
+  }, [flag, ms]);
+  return on;
+}
+
+/** Uids of Assets that just struck — driven by fresh ledger hit lines. */
+export function useStrikeFlash(
+  lines: { n: number; text: string; kind: string }[],
+  v: MatchView | null,
+  ms = 340,
+): Set<number> {
+  const seen = useRef(0);
+  const primed = useRef(false);
+  const [uids, setUids] = useState(() => new Set<number>());
+  useEffect(() => {
+    if (!v) {
+      seen.current = 0;
+      primed.current = false;
+      return;
+    }
+    // Skip the backlog on first paint / reconnect — only animate new strikes.
+    if (!primed.current) {
+      primed.current = true;
+      if (lines.length) seen.current = lines[lines.length - 1]!.n + 1;
+      return;
+    }
+    const fresh = lines.filter(e => e.n >= seen.current);
+    if (!fresh.length) return;
+    seen.current = fresh[fresh.length - 1]!.n + 1;
+
+    const struck = new Set<number>();
+    for (const h of fresh) {
+      if (h.kind !== 'hit') continue;
+      const m = h.text.match(/^(.+?) (?:→|×) /);
+      if (!m) continue;
+      const name = m[1]!;
+      let actor: 'you' | 'foe' | null = null;
+      for (const e of lines) {
+        if (e.n > h.n) break;
+        const blk = e.kind === 'blk' && e.text.match(/^block \d{3} · (you|foe) ·/);
+        if (blk) actor = blk[1] as 'you' | 'foe';
+      }
+      const primary = actor === 'foe' ? v.them.board : v.you.board;
+      const secondary = actor === 'foe' ? v.you.board : v.them.board;
+      const hit = primary.find(a => a.name === name) ?? secondary.find(a => a.name === name);
+      if (hit) struck.add(hit.uid);
+    }
+    if (!struck.size) return;
+    setUids(struck);
+    const t = window.setTimeout(() => setUids(new Set()), ms);
+    return () => window.clearTimeout(t);
+  }, [lines, v, ms]);
+  return uids;
+}
 
 export type Keyed = { key: string; id: string };
 
@@ -83,12 +167,15 @@ export function useFlyLists(v: MatchView | null, live: boolean) {
         if (hit) {
           used.add(hit.key);
           uidLayout.current.set(a.uid, hit.key);
-          deployed.add(a.uid);
         } else uidLayout.current.set(a.uid, 'a' + a.uid);
+        deployed.add(a.uid);
       }
     }
     for (const a of v.them.board) {
-      if (!uidLayout.current.has(a.uid)) uidLayout.current.set(a.uid, 'a' + a.uid);
+      if (!uidLayout.current.has(a.uid)) {
+        uidLayout.current.set(a.uid, 'a' + a.uid);
+        deployed.add(a.uid);
+      }
     }
 
     feed.current = nextFeed;
@@ -99,19 +186,20 @@ export function useFlyLists(v: MatchView | null, live: boolean) {
   return { ...snap.current, fly: (uid: number) => uidLayout.current.get(uid) ?? ('a' + uid) };
 }
 
-export function Fly({ id, shared, first, children }: {
-  id: string; shared?: boolean; first?: boolean; children: ReactNode;
+export function Fly({ id, shared, first, children, flyRef }: {
+  id: string; shared?: boolean; first?: boolean; children: ReactNode; flyRef?: Ref<HTMLDivElement>;
 }) {
   const quiet = !!useReducedMotion();
   const still = quiet || first;
   const style: CSSProperties = { flex: 'none', position: 'relative', zIndex: shared ? 8 : undefined };
   return (
     <motion.div
+      ref={flyRef}
       layout={!quiet}
       layoutId={quiet ? undefined : id}
       initial={still || shared ? false : { y: 18, opacity: 0, scale: 0.92 }}
       animate={{ y: 0, opacity: 1, scale: 1 }}
-      exit={quiet ? undefined : { opacity: 0, scale: 0.86, y: 8 }}
+      exit={quiet ? undefined : { opacity: 0, scale: 0.82, y: 10, transition: { duration: 0.22 } }}
       transition={SPRING}
       style={style}
     >

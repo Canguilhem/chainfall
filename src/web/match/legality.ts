@@ -80,14 +80,14 @@ export function tableHint(v: MatchView | null, pending: Pending, sel: number | n
       text: walls
         ? `Firewall up — ${tap} the highlighted Asset. It must be hit first.`
         : `${Tap} a highlighted enemy Asset, or their HP box, to attack.`,
-      extra: 'Amber ring means it can attack. Newly deployed Assets wait one block unless they have Zero-Conf.',
+      extra: 'READY badge means it can attack. Newly deployed Assets wait one block unless they have Zero-Conf.',
     };
   }
   const ready = v.you.board.some(a => a.canAttack);
   const playable = (v.you.hand ?? []).some(id => isPlayable(v, id));
   if (playable && ready) return {
     phase: 'act',
-    text: `Play a lit card, ${tap} a ready Asset to attack, or seal the block.`,
+    text: `Play a lit card, ${tap} a READY Asset to attack, or seal the block.`,
     extra: 'Grey cards cost more gas than you have. Unspent gas is lost when you seal.',
   };
   if (playable) return {
@@ -99,7 +99,7 @@ export function tableHint(v: MatchView | null, pending: Pending, sel: number | n
   };
   if (ready) return {
     phase: 'attack',
-    text: `${Tap} a ready Asset (amber ring), then ${tap} what it hits.`,
+    text: `${Tap} a READY Asset, then ${tap} what it hits.`,
     extra: 'Assets cannot attack the block they are deployed unless they have Zero-Conf.',
   };
   return {

@@ -135,11 +135,76 @@
   color: #3B322A;
 }
 .card-keywords {
-  display: block;
-  margin-bottom: .28em;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .28em .42em;
+  margin-bottom: .32em;
   font-family: 'IBM Plex Mono', monospace;
   font-size: .84em;
   color: #6B5E4E;
+}
+.kw-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .28em;
+  max-width: 100%;
+  padding: .12em .42em .12em .28em;
+  border-radius: 2px;
+  background: rgba(36, 31, 28, .1);
+  border: 1px solid rgba(36, 31, 28, .16);
+  color: #3B322A;
+  line-height: 1.2;
+}
+.kw-chip .kw-mark { color: #241F1C; }
+.kw-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: .04em;
+}
+.note-kw {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 6px;
+}
+.note-kw:first-child { margin-top: 0; }
+.note-kw .kw-mark {
+  flex: none;
+  margin-top: 2px;
+  color: var(--amber);
+}
+.kw-tip { text-align: left; min-width: 200px; max-width: 260px; }
+.kw-tip-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 0 0 10px;
+  border-bottom: 1px solid var(--edge);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+.kw-tip-h .kw-mark { color: var(--amber); }
+.kw-tip p {
+  margin: 0;
+  font-family: 'Archivo', system-ui, sans-serif;
+  font-size: 12.5px;
+  line-height: 1.5;
+  letter-spacing: 0;
+  color: var(--bone2);
+}
+/* Rich tips: strip the mono chrome padding and let the panel own the inset. */
+[data-slot="tooltip-content"].tip-panel {
+  padding: 14px 16px 16px;
+  font-family: 'Archivo', system-ui, sans-serif;
+  letter-spacing: 0;
+  max-width: 280px;
 }
 .card-consensus-row {
   display: block;
@@ -169,13 +234,13 @@
   color: #6B5E4E;
 }
 
-.tip-consensus { text-align: left; }
+.tip-consensus { text-align: left; min-width: 200px; max-width: 260px; }
 .tip-consensus-h {
   display: flex;
   align-items: center;
-  gap: 7px;
-  margin-bottom: 7px;
-  padding-bottom: 6px;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 0 0 10px;
   border-bottom: 1px solid var(--edge);
   font-family: 'IBM Plex Mono', monospace;
   font-size: 9px;
@@ -186,8 +251,10 @@
 }
 .tip-consensus p {
   margin: 0;
-  font-size: 11px;
+  font-family: 'Archivo', system-ui, sans-serif;
+  font-size: 12.5px;
   line-height: 1.5;
+  letter-spacing: 0;
   color: var(--bone2);
 }
 

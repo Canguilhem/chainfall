@@ -1,5 +1,4 @@
 import { type Wallet } from '../stash.ts';
-import type { CardId } from '../../engine/index.ts';
 import type { MatchView } from '../../engine/index.ts';
 import type { Screen } from '../match/types.ts';
 import type { LobbyId } from '../match/routes.ts';
@@ -13,14 +12,13 @@ type Props = {
   phase: string;
   lexicon: boolean;
   onLexicon: () => void;
-  found: Set<CardId>;
   wallet: Wallet;
   onGoLobby: (id: LobbyId) => void;
 };
 
 export function AppHeader({
   fighting, screen, v, conn, notice, phase, lexicon, onLexicon,
-  found, wallet, onGoLobby,
+  wallet, onGoLobby,
 }: Props) {
   return (
     <header>
@@ -46,15 +44,12 @@ export function AppHeader({
             <button type="button" className={`nav${screen.id === 'docs' ? ' on' : ''}`}
                     aria-current={screen.id === 'docs' ? 'page' : undefined}
                     onClick={() => onGoLobby('docs')}>Rules</button>
-            <button type="button" className={`nav${screen.id === 'vault' ? ' on' : ''}`}
-                    aria-current={screen.id === 'vault' ? 'page' : undefined}
-                    onClick={() => onGoLobby('vault')}
-                    title="Packs, owned copies, and discovered card types">
-              Vault <em>{wallet.packs} sealed · {found.size} seen</em>
-            </button>
             <button type="button" className={`nav${screen.id === 'deck' ? ' on' : ''}`}
                     aria-current={screen.id === 'deck' ? 'page' : undefined}
-                    onClick={() => onGoLobby('deck')}>Deck</button>
+                    onClick={() => onGoLobby('deck')}
+                    title="Build custom lists · buy and open packs · craft copies">
+              Deck{wallet.packs > 0 ? <em>{wallet.packs} sealed</em> : null}
+            </button>
           </nav>
           <div className="tag chip">scrip <b>{wallet.scrip}</b></div>
         </>

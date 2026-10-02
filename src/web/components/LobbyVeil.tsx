@@ -1,4 +1,4 @@
-import { FACTIONS, type Mode, type PlayableFaction, type Pull, type MatchView, type CardId } from '../../engine/index.ts';
+import { FACTIONS, type Mode, type PlayableFaction, type Pull, type MatchView } from '../../engine/index.ts';
 import type { DeckSource, Opponent, Screen } from '../match/types.ts';
 import type { LobbyId } from '../match/routes.ts';
 import type { Wallet } from '../stash.ts';
@@ -7,7 +7,6 @@ import { FactionMark, PowerPreview } from './Marks.tsx';
 import { KitBuilder } from './KitBuilder.tsx';
 import { Recap } from './Recap.tsx';
 import { Rules } from './Rules.tsx';
-import { Vault } from './Vault.tsx';
 
 type Props = {
   screen: Screen;
@@ -16,7 +15,6 @@ type Props = {
   mode: Mode;
   opponent: Opponent;
   deckSource: DeckSource;
-  found: Set<CardId>;
   wallet: Wallet;
   onMode: (mode: Mode) => void;
   onOpponent: (opponent: Opponent) => void;
@@ -30,7 +28,7 @@ type Props = {
 };
 
 export function LobbyVeil({
-  screen, v, payout, mode, opponent, deckSource, found, wallet,
+  screen, v, payout, mode, opponent, deckSource, wallet,
   onMode, onOpponent, onDeckSource, onBegin, onGoLobby,
   onBuyPack, onOpenPack, onCraft, onSalvage,
 }: Props) {
@@ -40,7 +38,7 @@ export function LobbyVeil({
   const canCustom = opponent === 'bot';
   return (
     <div id="veil" className={[screen.id === 'match' ? 'off' : '', screen.id === 'over' ? 'has-dock' : ''].filter(Boolean).join(' ')}>
-      <div className={`panel${screen.id === 'vault' || screen.id === 'deck' ? ' stash-panel' : ''}${screen.id === 'deck' ? ' deck-panel' : ''}`}>
+      <div className={`panel${screen.id === 'deck' ? ' stash-panel deck-panel' : ''}`}>
         {screen.id === 'queued' && (
           <>
             <h1>QUEUED</h1>
@@ -130,18 +128,21 @@ export function LobbyVeil({
             </section>
           </>
         )}
-        {screen.id === 'vault' && (
-          <Vault found={found} wallet={wallet} onBuy={onBuyPack} onOpen={onOpenPack}
-                 onCraft={onCraft} onSalvage={onSalvage} />
+        {screen.id === 'deck' && (
+          <KitBuilder
+            wallet={wallet}
+            onBuyPack={onBuyPack}
+            onOpenPack={onOpenPack}
+            onCraft={onCraft}
+            onSalvage={onSalvage}
+          />
         )}
-        {screen.id === 'deck' && <KitBuilder wallet={wallet} />}
         {screen.id === 'docs' && <Rules />}
       </div>
       {screen.id === 'over' && (
         <div className="dock">
           <button className="again" type="button" onClick={() => onGoLobby('start')}>RUN IT BACK</button>
           <button className="again stash-link" type="button" onClick={() => onGoLobby('deck')}>YOUR DECK</button>
-          <button className="again stash-link" type="button" onClick={() => onGoLobby('vault')}>THE VAULT</button>
         </div>
       )}
     </div>

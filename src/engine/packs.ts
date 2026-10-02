@@ -76,12 +76,12 @@ export function rollRarity(rng: () => number, min: Rarity = 'common'): Rarity {
 
 export const PLAYSET = PACK_IDS.reduce((n, id) => n + maxOf(id), 0);
 
+/** Soft cap: craft always adds a copy. Deck building still uses maxOf(). */
 export function craftCard(state: PackState, id: string): boolean {
-  const have = state.owned[id] ?? 0;
   const cost = RARITY[rarityOf(id)].craft;
-  if (have >= maxOf(id) || state.salvage < cost) return false;
+  if (state.salvage < cost) return false;
   state.salvage -= cost;
-  state.owned[id] = have + 1;
+  state.owned[id] = (state.owned[id] ?? 0) + 1;
   return true;
 }
 
@@ -111,14 +111,13 @@ export function openPack(state: PackState, rng: () => number): { pulls: Pull[]; 
     const id = pool[Math.floor(rng() * pool.length)]!;
     const have = owned[id] ?? 0;
     const dupe = have >= maxOf(id);
-    if (!dupe) owned[id] = have + 1;
+    owned[id] = have + 1;
     pulls.push({ id, rar, dupe });
   }
   state.owned = owned;
   state.sinceLegend = gotLegend ? 0 : state.sinceLegend + 1;
   state.sinceEpic = gotEpicPlus ? 0 : state.sinceEpic + 1;
   state.opened++;
-  const refund = pulls.filter(p => p.dupe).reduce((s, p) => s + RARITY[p.rar].salvage, 0);
-  state.salvage += refund;
-  return { pulls, refund };
+  // Soft cap: extras stay in the stash. Sell for salvage when you want.
+  return { pulls, refund: 0 };
 }

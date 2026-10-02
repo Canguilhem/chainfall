@@ -2,7 +2,7 @@
    have, but hiding it outright loses the only record of what just happened on
    a turn you were not watching. One line, tap for the rest. */
 import { useEffect, useRef, useState } from 'react';
-import { LedgerLog, LedgerPreview, type LogLine } from './Ledger.tsx';
+import { LedgerLog, LedgerPreview, blockActorAt, type LogLine } from './Ledger.tsx';
 
 export type Line = LogLine;
 
@@ -10,6 +10,7 @@ export function Ticker({ lines }: { lines: Line[] }) {
   const [open, setOpen] = useState(false);
   const logRef = useRef<HTMLDivElement>(null);
   const last = lines[lines.length - 1];
+  const lastActor = last ? blockActorAt(lines, lines.length - 1) : null;
 
   useEffect(() => {
     if (open && logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
@@ -21,7 +22,7 @@ export function Ticker({ lines }: { lines: Line[] }) {
               aria-expanded={open} aria-label="The ledger">
         <span className="tick-tag">ledger</span>
         {last
-          ? <LedgerPreview text={last.text} kind={last.kind} />
+          ? <LedgerPreview text={last.text} kind={last.kind} blockActor={lastActor} />
           : <span className="tick-line">standing by</span>}
         <span className="tick-more" aria-hidden>{open ? '×' : '···'}</span>
       </button>

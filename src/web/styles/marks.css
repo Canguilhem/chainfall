@@ -1,8 +1,5 @@
 .fmark{flex:none;display:block}
-/* Cards carry their crew mark in the header band beside the name (see
-   cards.css); only an Asset on the board, which has no room for a band, still
-   tucks it into the corner. */
-.asset .fmark{position:absolute;top:3px;right:4px;padding:1px;border-radius:2px;background:rgba(36,31,28,.1)}
+/* Crew mark lives in the Asset header band, same as the card face. */
 .plate .fmark{margin-right:2px}
 .fmark-consortium{color:var(--ink)}
 .fmark-sovereign{color:var(--oxide)}
@@ -12,7 +9,7 @@
 .asset .stats{position:absolute;left:6px;right:6px;bottom:6px;margin:0;
  display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none}
 .stat{display:inline-flex;flex-direction:row;align-items:center;justify-content:center;gap:.22em;line-height:1;
- pointer-events:auto;cursor:help;position:relative;z-index:2;
+ pointer-events:auto;cursor:default;position:relative;z-index:2;
  font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:16px;
  background:#1C1816;color:var(--bone);padding:.2em .44em .2em .32em;border-radius:3px;min-width:1.9em;
  box-shadow:0 2px 0 rgba(0,0,0,.45)}
@@ -69,6 +66,8 @@
   100%{opacity:0;transform:translateX(-50%) translateY(-16px)}
 }
 .kwi,.card-consensus-row{cursor:help;pointer-events:auto;position:relative;z-index:2}
+.kwi{display:inline-flex;max-width:100%}
+.kw-mark{flex:none;display:block;color:currentColor}
 .tip-hit{position:absolute;inset:0;z-index:1;border-radius:inherit;cursor:inherit}
 .asset .fmark{z-index:2}
 .slot{width:var(--asset-w,128px);height:var(--asset-h,142px);flex:none;border:1px dashed var(--edge);border-radius:var(--r);opacity:.4}
@@ -78,18 +77,30 @@
 #feed + #prompt{border-top:none}
 #prompt.wait,#prompt.idle{color:var(--dim)}
 #prompt.claim,#prompt.target,#prompt.strike{color:var(--amber)}
+#prompt.flash{animation:your-block .72s ease-out}
+#table.your-block{animation:table-turn .72s ease-out}
+@keyframes your-block{
+  0%{background:rgba(224,169,59,.18);color:var(--amber);box-shadow:inset 0 0 0 1px rgba(224,169,59,.45)}
+  100%{background:transparent;box-shadow:none}
+}
+@keyframes table-turn{
+  0%{box-shadow:inset 0 0 40px rgba(224,169,59,.12)}
+  100%{box-shadow:none}
+}
 .prompt-extra{display:block;width:100%;color:var(--bone2);font-size:11px;letter-spacing:.03em}
 #prompt .skip,.lex-head .skip{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;
  color:var(--dim);border:1px solid var(--edge);padding:3px 8px;border-radius:var(--r)}
 #prompt .skip:hover,.lex-head .skip:hover{color:var(--bone);border-color:var(--dim)}
 #hand.locked{opacity:.55}
-.fpop{display:none;position:absolute;top:8px;left:calc(100% + 8px);transform:none;width:200px;
- background:var(--concrete);color:var(--bone);border:1px solid var(--edge);border-radius:var(--r);padding:10px;
- font-family:'Archivo',system-ui,sans-serif;font-size:12px;line-height:1.4;z-index:8;
- box-shadow:0 8px 18px rgba(0,0,0,.45);pointer-events:none}
-.fpop strong{display:block;font-family:'Big Shoulders Display',sans-serif;font-size:15px;letter-spacing:.04em;margin-bottom:4px}
-.fpop p{margin-top:4px;color:var(--bone2)}
-#feed > :nth-last-child(-n+2) .fpop{left:auto;right:calc(100% + 8px)}
+.fpop{display:none;position:absolute;top:0;left:calc(100% + 14px);transform:none;width:220px;
+ background:var(--concrete);color:var(--bone);border:1px solid var(--edge);border-radius:var(--r);padding:12px 14px;
+ font-family:'Archivo',system-ui,sans-serif;font-size:12px;line-height:1.45;z-index:8;
+ box-shadow:0 10px 24px rgba(0,0,0,.5);pointer-events:none}
+.fpop strong{display:block;font-family:'Big Shoulders Display',sans-serif;font-size:15px;letter-spacing:.04em;margin-bottom:8px}
+.fpop p{margin-top:6px;color:var(--bone2)}
+.fpop .note-kw{margin-top:8px}
+.fpop .note-kw:first-child{margin-top:0}
+#feed > :nth-last-child(-n+2) .fpop{left:auto;right:calc(100% + 14px)}
 .fcard.peek .fpop{display:block}
 @keyframes claimpulse{
   0%,100%{outline-color:var(--amber);box-shadow:0 2px 0 rgba(0,0,0,.4)}

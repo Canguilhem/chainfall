@@ -1,4 +1,5 @@
 import { KWHELP, KWNAME, type Keyword } from '../../engine/index.ts';
+import { KwMark } from './Marks.tsx';
 
 const TABLE_TERMS: { t: string; d: string }[] = [
   { t: 'Block', d: 'Your turn. Gas refills, you act, then you seal. Unspent gas is gone.' },
@@ -17,12 +18,15 @@ const TABLE_TERMS: { t: string; d: string }[] = [
 
 const KW_ORDER = Object.keys(KWHELP) as Keyword[];
 
-function Cards({ items }: { items: { t: string; d: string }[] }) {
+function Cards({ items }: { items: { t: string; d: string; kw?: Keyword }[] }) {
   return (
     <dl className="gloss">
       {items.map(e => (
         <div key={e.t} className="gloss-item">
-          <dt>{e.t}</dt>
+          <dt>
+            {e.kw && <KwMark keyword={e.kw} size={14} />}
+            {e.t}
+          </dt>
           <dd>{e.d}</dd>
         </div>
       ))}
@@ -46,8 +50,12 @@ export function Glossary({ compact }: { compact?: boolean }) {
       </section>
       <section className="gloss-sec">
         <h2>Keywords</h2>
-        {!compact && <p className="gloss-cap">Printed on Assets. Hover or tap a keyword or CONSENSUS line for the same text.</p>}
-        <Cards items={KW_ORDER.map(k => ({ t: KWNAME[k], d: KWHELP[k] }))} />
+        {!compact && (
+          <p className="gloss-cap">
+            Printed as marks on Assets. Hover or tap a keyword chip or CONSENSUS line for the same text.
+          </p>
+        )}
+        <Cards items={KW_ORDER.map(k => ({ t: KWNAME[k], d: KWHELP[k], kw: k }))} />
       </section>
     </div>
   );

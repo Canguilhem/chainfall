@@ -20,7 +20,10 @@
   .stat{font-size:17px;min-width:30px}
   .modes,.setup .picks{grid-template-columns:1fr}
   .loop li{max-width:none}
-  .recap-hp{grid-template-columns:1fr}
+  .recap-arena{grid-template-columns:1fr;gap:10px}
+  .recap-vs{flex-direction:row;gap:8px;justify-self:center;min-width:0;padding:8px 14px}
+  .recap-vs b{font-size:22px}
+  .recap-hero b{font-size:44px}
   .stash-grid{grid-template-columns:repeat(auto-fill,minmax(118px,1fr))}
   .vault-pulls{flex-wrap:wrap}
   .vault-flip{--side:clamp(128px,42vw,168px)}
@@ -85,14 +88,23 @@
      your own rail — so your bar, your buttons and your hand sit in the bottom
      third, where a thumb is. */
   .board{flex:0 1 auto;gap:5px;padding:3px 6px;overflow:visible}
-  .rail.you{margin-top:auto}
-  .asset{padding:7px 6px 26px;border-left-width:4px}
-  /* A 69px Asset leaves ~53px for the name, and "Surveillance Drone" wants 62.
-     Break the word rather than spill it past the card edge — the faction mark
-     and stat chips pin the box, so there is no width to win back. */
-  .asset .asset-name{font-size:12px;line-height:1.05;padding-right:12px;
+  .lane{flex:0 1 auto;grid-template-columns:minmax(110px,1fr) minmax(0,2.4fr) minmax(72px,.85fr);
+    gap:6px 8px;padding:2px 0}
+  .lane.you{margin-top:auto;padding-bottom:8px}
+  .lane-gas{padding:6px 7px;gap:4px}
+  .plate{height:36px;padding:0 9px;column-gap:8px}
+  .callsign{overflow:hidden;min-width:0}
+  .callsign-name{font-size:15px;overflow:hidden;text-overflow:ellipsis}
+  .asset{padding:0 0 26px}
+  .asset-header{padding:3px 6px;gap:4px}
+  .asset-faction{font-size:7px;letter-spacing:.08em}
+  /* A 69px Asset leaves little room for the name, and "Surveillance Drone" wants
+     more. Break the word rather than spill it past the card edge. */
+  .asset .asset-name{font-size:12px;line-height:1.05;padding:5px 6px 0;
     overflow-wrap:anywhere;hyphens:auto}
-  .asset .asset-keywords{font-size:8px;margin-top:2px}
+  .asset .asset-keywords{font-size:7px;margin-top:2px;padding:0 5px;gap:2px}
+  .asset .asset-keywords .kw-chip{padding:1px 4px 1px 2px}
+  .asset .asset-keywords .kw-label{max-width:7.5em}
   .asset .stats{left:3px;right:3px;bottom:3px}
   .asset .stat{font-size:13px;min-width:24px;padding:2px 4px 2px 3px;gap:2px}
   .asset .sico{width:9px;height:9px}
@@ -100,15 +112,14 @@
 
   .rail{padding:0 8px}
   .rail.them .pwr-tag{display:none}
-  .gas-extra{display:none}
   .operator{flex-wrap:wrap;gap:6px 8px;min-height:0;padding:3px 0}
   .gasbar{flex:1 1 auto;min-width:0}
-  .plate{padding:5px 9px;gap:8px}
-  .callsign{font-size:15px}
+  .plate{padding:0 9px;gap:8px}
+  .callsign-name{font-size:13px}
   .plate .stat.hp{font-size:16px}
-  .acts{padding:0 8px 2px;gap:8px}
-  .acts .power{min-height:44px}
-  .acts .seal{flex:none;min-height:40px;min-width:0;padding:7px 12px;font-size:13px;letter-spacing:.1em}
+  .acts{padding:0;gap:6px}
+  .acts .power,.lane-opp-pwr{min-height:40px}
+  .acts .seal{flex:none;min-height:40px;min-width:0;padding:7px 10px;font-size:13px;letter-spacing:.1em}
 
   /* One line, and it has to hold the Cancel button during targeting. */
   #prompt{padding:5px 10px;font-size:11.5px;gap:4px 10px}

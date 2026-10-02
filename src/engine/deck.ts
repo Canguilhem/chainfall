@@ -18,7 +18,7 @@ export function kitTotal(counts: KitCounts): number {
   return Object.values(counts).reduce((s, n) => s + (n ?? 0), 0);
 }
 
-/** Starter copies are always legal; vault copies stack up to the rarity cap. */
+/** Starter copies are always legal; owned extras stack but deck use caps at maxOf. */
 export function availableCopies(
   faction: PlayableFaction,
   id: CardId,
@@ -27,6 +27,15 @@ export function availableCopies(
   const starter = DECKS[faction][id] ?? 0;
   const have = owned[id] ?? 0;
   return Math.min(maxOf(id), starter + have);
+}
+
+/** Every non-token card legal for this crew — including unowned (craft targets). */
+export function brewPool(faction: PlayableFaction): CardId[] {
+  return (Object.keys(CARDS) as CardId[]).filter(id => {
+    if (isToken(id)) return false;
+    const c = CARDS[id];
+    return c.f === 'neutral' || c.f === faction;
+  });
 }
 
 export function validateKit(
@@ -46,17 +55,12 @@ export function validateKit(
     const cap = maxOf(id);
     if (copies > cap) return `Too many copies of ${c.n} (max ${cap})`;
     if (copies > availableCopies(faction, id as CardId, owned)) {
-      return `Not enough copies of ${c.n} in your vault`;
+      return `Not enough copies of ${c.n} — open packs or craft`;
     }
   }
   return null;
 }
 
 export function legalPool(faction: PlayableFaction, owned: Record<string, number>): CardId[] {
-  return (Object.keys(CARDS) as CardId[]).filter(id => {
-    if (isToken(id)) return false;
-    const c = CARDS[id];
-    if (c.f !== 'neutral' && c.f !== faction) return false;
-    return availableCopies(faction, id, owned) > 0;
-  });
+  return brewPool(faction).filter(id => availableCopies(faction, id, owned) > 0);
 }

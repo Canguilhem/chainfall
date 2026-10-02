@@ -93,7 +93,7 @@ export function useStash() {
     const next: Wallet = { ...w, packs: w.packs - 1, owned: { ...w.owned } };
     const result = rollPack(next, Math.random);
     commit(next);
-    add(result.pulls.filter(p => !p.dupe).map(p => p.id));
+    add(result.pulls.map(p => p.id));
     return result;
   }, [add, commit]);
 

@@ -24,7 +24,7 @@ export function App() {
 
   const phone = usePhoneLayout();
   const coarse = useCoarsePointer();
-  const { found, add, wallet, buyPack, openPack, craft, salvage, awardScrip } = useStash();
+  const { add, wallet, buyPack, openPack, craft, salvage, awardScrip } = useStash();
 
   const inputCallbacks = useRef({
     resetInput: () => {},
@@ -83,7 +83,7 @@ export function App() {
       if (e.key !== 'Escape') return;
       resetInput();
       setLexicon(false);
-      if (screen.id === 'docs' || screen.id === 'vault' || screen.id === 'deck') goLobby('start');
+      if (screen.id === 'docs' || screen.id === 'deck') goLobby('start');
     };
     window.addEventListener('keydown', esc);
     return () => window.removeEventListener('keydown', esc);
@@ -125,7 +125,6 @@ export function App() {
         phase={actions.phase}
         lexicon={lexicon}
         onLexicon={() => setLexicon(on => !on)}
-        found={found}
         wallet={wallet}
         onGoLobby={goLobby}
       />
@@ -171,7 +170,6 @@ export function App() {
         mode={mode}
         opponent={opponent}
         deckSource={deckSource}
-        found={found}
         wallet={wallet}
         onMode={setMode}
         onOpponent={setOpponent}

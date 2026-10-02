@@ -1,7 +1,6 @@
 export const LOBBY_PATHS = {
   start: '/',
   docs: '/rules',
-  vault: '/vault',
   deck: '/deck',
 } as const;
 
@@ -10,10 +9,11 @@ export type LobbyId = keyof typeof LOBBY_PATHS;
 const PATH_TO_LOBBY: Record<string, LobbyId> = {
   '/': 'start',
   '/rules': 'docs',
-  '/vault': 'vault',
   '/deck': 'deck',
   '/kit': 'deck',
-  '/stash': 'vault',
+  // Retired vault routes → Deck (packs live there now)
+  '/vault': 'deck',
+  '/stash': 'deck',
 };
 
 export function lobbyFromPath(path: string): LobbyId | undefined {

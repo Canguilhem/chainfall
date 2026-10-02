@@ -16,10 +16,12 @@ import { useCoarsePointer } from '../media.ts';
  *
  *  A disabled control is the exception. It has no action of its own to steal,
  *  and "why is SEAL greyed out" has nowhere else to be answered. */
-export function Tip({ text, content, side = 'top', children }: {
+export function Tip({ text, content, side = 'top', sideOffset = 12, contentClassName, children }: {
   text?: string;
   content?: ReactNode;
   side?: 'top' | 'bottom' | 'left' | 'right';
+  sideOffset?: number;
+  contentClassName?: string;
   children: ReactElement;
 }) {
   const body = content ?? text;
@@ -38,7 +40,14 @@ export function Tip({ text, content, side = 'top', children }: {
       <TooltipTrigger asChild onClick={onClick}>
         {trigger}
       </TooltipTrigger>
-      <TooltipContent side={side}>{body}</TooltipContent>
+      <TooltipContent
+        side={side}
+        sideOffset={sideOffset}
+        collisionPadding={24}
+        className={contentClassName}
+      >
+        {body}
+      </TooltipContent>
     </Tooltip>
   );
 }

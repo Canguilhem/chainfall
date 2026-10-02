@@ -1,5 +1,21 @@
 /* Kit builder — split deck / collection, Hearthstone-style curve + compact list. */
 .kit-page{text-align:left;max-width:1240px;margin:0 auto}
+.kit-lede{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--bone2);line-height:1.65;margin:0 0 16px;max-width:52em}
+
+.kit-supply{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 20px;padding:12px 14px;
+ background:var(--concrete);border:1px solid var(--edge);border-radius:var(--r)}
+.kit-supply-chips{display:flex;flex-wrap:wrap;gap:8px}
+.kit-supply-chips .vault-chip{margin:0}
+.kit-supply-acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-left:auto}
+.kit-supply-acts .vault-btn{margin:0;padding:8px 14px;font-size:14px}
+.kit-supply-more{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+ background:transparent;border:none;color:var(--dim);cursor:pointer;padding:6px 4px}
+.kit-supply-more:hover{color:var(--amber)}
+.kit-supply-detail{flex:1 1 100%;display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;padding-top:12px;
+ border-top:1px solid var(--edge);margin-top:4px}
+.kit-supply-stack{transform:scale(.72);transform-origin:top left;margin-bottom:-40px}
+.kit-supply-detail .vault-odds{margin-top:0;max-width:420px}
+.kit-supply-detail .vault-odds p{color:var(--bone2);font-size:11px;line-height:1.55;margin:0 0 10px}
 
 .kit-workspace{display:grid;grid-template-columns:minmax(280px,340px) 1fr;gap:20px;align-items:start}
 .kit-deck{position:sticky;top:12px;background:var(--concrete);border:1px solid var(--edge);border-radius:var(--r);
@@ -44,12 +60,23 @@
 .kit-search:focus{outline:none;border-color:var(--amber)}
 
 .kit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:14px 10px}
-.kit-tile{position:relative;border:none;background:transparent;padding:0;cursor:pointer;text-align:left}
+.kit-tile-wrap{display:flex;flex-direction:column;gap:6px;min-width:0}
+.kit-tile-wrap.locked{opacity:.72}
+.kit-tile-wrap.locked .card{filter:grayscale(.35)}
+.kit-tile-wrap.extra .kit-tile-act .vault-act-sell:not(:disabled){border-color:var(--amber)}
+.kit-tile{position:relative;border:none;background:transparent;padding:0;cursor:pointer;text-align:left;width:100%}
 .kit-tile .card{width:100%;height:auto;aspect-ratio:5/7;margin:0;transition:transform .12s,box-shadow .12s}
 .kit-tile:hover:not(:disabled) .card{transform:translateY(-4px)}
-.kit-tile.in .card{box-shadow:0 4px 0 rgba(0,0,0,.45),0 0 0 2px var(--amber),0 8px 18px rgba(0,0,0,.4)}
+.kit-tile.in .card,.kit-tile-wrap.in .kit-tile .card{box-shadow:0 4px 0 rgba(0,0,0,.45),0 0 0 2px var(--amber),0 8px 18px rgba(0,0,0,.4)}
 .kit-tile.full:not(.in){opacity:.38;cursor:not-allowed}
 .kit-tile:disabled{cursor:not-allowed}
+.kit-tile-act{display:flex;gap:4px}
+.kit-tile-act button{flex:1;min-width:0;font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.04em;
+ padding:5px 4px;border:1px solid var(--edge);border-radius:var(--r);background:var(--slab);color:var(--bone2);cursor:pointer}
+.kit-tile-act button:hover:not(:disabled){border-color:var(--amber);color:var(--amber)}
+.kit-tile-act button.vault-act-sell:not(:disabled){color:#7FB0A2;border-color:rgba(127,176,162,.35)}
+.kit-tile-act button.vault-act-sell:hover:not(:disabled){color:#9fd4c4;border-color:#7FB0A2}
+.kit-tile-act button:disabled{opacity:.35;cursor:default}
 
 /* Copy count in the card footer, centered between atk and hp (or OP). */
 .kit-copy-n{display:inline-flex;align-items:baseline;gap:0;font-family:'IBM Plex Mono',monospace;
@@ -70,4 +97,6 @@
   .kit-deck-list{max-height:240px}
   .kit-coll-tabs{width:100%}
   .kit-search{margin-left:0;max-width:none}
+  .kit-supply-acts{margin-left:0;width:100%}
+  .kit-supply-stack{margin-bottom:0}
 }

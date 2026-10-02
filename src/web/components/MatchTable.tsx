@@ -1,11 +1,12 @@
-import { LayoutGroup, motion } from 'motion/react';
+import { AnimatePresence, LayoutGroup, motion } from 'motion/react';
 import { type Action, type MatchView, type ViewAsset } from '../../engine/index.ts';
-import { useFlyLists } from '../anim.tsx';
+import { useFlyLists, useRisingEdge, useStrikeFlash } from '../anim.tsx';
+import { cn } from '../lib/utils.ts';
 import { deadWhy, isPlayable, powerWhy, boardSlots } from '../match/legality.ts';
 import type { Hint, Pending } from '../match/types.ts';
 import { HandCard, FeedCard } from './Card.tsx';
 import { BoardAsset } from './Board.tsx';
-import { OperatorBar } from './OperatorBar.tsx';
+import { OperatorLane } from './OperatorBar.tsx';
 import { LedgerLog, type LogLine } from './Ledger.tsx';
 import { Ticker } from './Ticker.tsx';
 
@@ -49,19 +50,40 @@ export function MatchTable({
   canPower, canEnd, endWhy,
   onCancelTarget, onAsset, onPlayerTarget, onPower, onEnd, onCard, onFeedOpen, send,
 }: Props) {
+  const yourBlock = useRisingEdge(inMatch ? v?.yourTurn : false);
+  const striking = useStrikeFlash(inMatch ? lines : [], v);
+
   return (
     <main>
       <div id="table" data-phase={hint.phase}
-           className={`${claiming ? 'claiming' : ''}${aiming ? ' aiming' : ''}${pending ? ' targeting' : ''}`.trim()}>
+           className={cn(
+             claiming && 'claiming',
+             aiming && 'aiming',
+             pending && 'targeting',
+             yourBlock && 'your-block',
+           )}>
         <LayoutGroup>
         {inMatch && <Ticker lines={lines} />}
-        {v && <OperatorBar player={v.them} isMine={false} mode={v.mode} targetable={marked.heroes.has(1 - seat)} onPlayer={() => onPlayerTarget(false)} />}
-        <div className="board them">
-          {boardSlots(v?.them.board).map((a, i) => a
-            ? <BoardAsset key={a.uid} flyId={fly.fly(a.uid)} first={first} asset={a} isMine={false} isReady={false} isSelected={false}
-                     isTargetable={marked.assets.has(a.uid)} onClick={() => onAsset(a, false)} />
-            : <motion.div key={`them-${i}`} layout className="slot" aria-hidden />)}
-        </div>
+        {v ? (
+          <OperatorLane
+            player={v.them} isMine={false} mode={v.mode}
+            targetable={marked.heroes.has(1 - seat)}
+            onPlayer={() => onPlayerTarget(false)}
+          >
+            <AnimatePresence mode="popLayout">
+              {boardSlots(v.them.board).map((a, i) => a
+                ? <BoardAsset key={a.uid} flyId={fly.fly(a.uid)} first={first} fresh={fly.deployed.has(a.uid)}
+                         asset={a} isMine={false} isReady={false} isSelected={false}
+                         striking={striking.has(a.uid)}
+                         isTargetable={marked.assets.has(a.uid)} onClick={() => onAsset(a, false)} />
+                : <motion.div key={`them-${i}`} layout className="slot" aria-hidden />)}
+            </AnimatePresence>
+          </OperatorLane>
+        ) : (
+          <div className="board them">
+            {boardSlots(undefined).map((_, i) => <div key={`them-${i}`} className="slot" aria-hidden />)}
+          </div>
+        )}
         {v?.mode === 'salvage' && phone && (
           <button type="button" id="feedbtn" className={claiming ? 'go' : ''}
                   onClick={onFeedOpen}>
@@ -82,7 +104,7 @@ export function MatchTable({
             ))}
           </div>
         )}
-        <div id="prompt" className={hint.phase} aria-live="polite">
+        <div id="prompt" className={cn(hint.phase, yourBlock && 'flash')} aria-live="polite">
           <span className="prompt-text">{hint.text}</span>
           {aiming && (
             <button className="skip cancel" type="button" onClick={onCancelTarget}>cancel</button>
@@ -92,23 +114,30 @@ export function MatchTable({
             <button className="skip" type="button" onClick={onDismissCoach}>skip hints</button>
           )}
         </div>
-        <div className="board you">
-          {boardSlots(v?.you.board).map((a, i) => a
-            ? <BoardAsset key={a.uid} flyId={fly.fly(a.uid)} shared={fly.deployed.has(a.uid)} first={first} asset={a} isMine
-                     isReady={a.canAttack && v!.yourTurn && !pending && !awaitingClaim}
-                     isSelected={sel === a.uid} isTargetable={marked.assets.has(a.uid)}
-                     onClick={() => onAsset(a, true)} />
-            : <motion.div key={`you-${i}`} layout className="slot" aria-hidden />)}
-        </div>
-        {v && (
-          <OperatorBar
-            player={v.you} isMine mode={v.mode} targetable={marked.heroes.has(seat)}
+        {v ? (
+          <OperatorLane
+            player={v.you} isMine mode={v.mode}
+            targetable={marked.heroes.has(seat)}
             canPower={canPower} canEnd={canEnd}
             powerWhy={powerWhy(v, !!pending)} endWhy={endWhy}
             onPlayer={() => onPlayerTarget(true)}
-            onPower={onPower}
-            onEnd={onEnd}
-          />
+            onPower={onPower} onEnd={onEnd}
+          >
+            <AnimatePresence mode="popLayout">
+              {boardSlots(v.you.board).map((a, i) => a
+                ? <BoardAsset key={a.uid} flyId={fly.fly(a.uid)} shared={fly.deployed.has(a.uid)}
+                         first={first} fresh={fly.deployed.has(a.uid)} asset={a} isMine
+                         striking={striking.has(a.uid)}
+                         isReady={a.canAttack && v.yourTurn && !pending && !awaitingClaim}
+                         isSelected={sel === a.uid} isTargetable={marked.assets.has(a.uid)}
+                         onClick={() => onAsset(a, true)} />
+                : <motion.div key={`you-${i}`} layout className="slot" aria-hidden />)}
+            </AnimatePresence>
+          </OperatorLane>
+        ) : (
+          <div className="board you">
+            {boardSlots(undefined).map((_, i) => <div key={`you-${i}`} className="slot" aria-hidden />)}
+          </div>
         )}
         <div id="hand" className={claiming ? 'locked' : ''} style={{ ['--n' as string]: fly.hand.length }}>
           {fly.hand.map((item, i) => (

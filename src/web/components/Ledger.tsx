@@ -4,6 +4,7 @@ import { CardFace, CardNotes, hasNotes } from './Card.tsx';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip.tsx';
 
 export type LogLine = { n: number; text: string; kind: string };
+type ActorId = 'you' | 'foe';
 
 /** Longest names first so "Seed Phrase Kid" wins over "Seed". */
 const CARD_MATCHERS = CARD_IDS
@@ -80,11 +81,32 @@ function LedgerCard({ id, label }: { id: CardId; label: string }) {
   );
 }
 
-function Actor({ who }: { who: 'you' | 'foe' }) {
+function Actor({ who }: { who: ActorId }) {
   return <span className={`ledger-actor ${who}`}>{who}</span>;
 }
 
-function renderLine(text: string, kind: string): ReactNode {
+/** Block header already names the seat — omit the echo on that seat's own lines. */
+function actorPrefix(who: ActorId, blockActor: ActorId | null): ReactNode {
+  if (blockActor && who === blockActor) return null;
+  return <><Actor who={who} /><span className="ledger-sep"> · </span></>;
+}
+
+function parseBlockActor(text: string, kind: string): ActorId | null {
+  if (kind !== 'blk') return null;
+  const m = text.match(/^block \d{3} · (you|foe) · \d+ gas$/);
+  return m ? m[1] as ActorId : null;
+}
+
+/** Whose block owns this line — walk back to the nearest block header. */
+export function blockActorAt(lines: LogLine[], index: number): ActorId | null {
+  for (let i = index; i >= 0; i--) {
+    const actor = parseBlockActor(lines[i]!.text, lines[i]!.kind);
+    if (actor) return actor;
+  }
+  return null;
+}
+
+function renderLine(text: string, kind: string, blockActor: ActorId | null = null): ReactNode {
   const vs = text.match(/^(.+?) vs (.+)$/);
   if (kind === 'blk' && vs) {
     return <><span className="ledger-match">{vs[1]}</span><span className="ledger-sep"> vs </span><span className="ledger-match">{vs[2]}</span></>;
@@ -98,22 +120,29 @@ function renderLine(text: string, kind: string): ReactNode {
     return <>
       <span className="ledger-block">block {block[1]}</span>
       <span className="ledger-sep"> · </span>
-      <Actor who={block[2] as 'you' | 'foe'} />
+      <Actor who={block[2] as ActorId} />
       <span className="ledger-sep"> · </span>
       <span className="ledger-gas">{block[3]} gas</span>
     </>;
   }
 
-  const action = text.match(/^(you|foe) · (deploy|run|claim|draw|hero power) (.+?)(?: · -(\d+) gas)?$/);
+  const action = text.match(/^(you|foe) · (deploy|run|claim|draw|discard|hero power) (.+?)(?: · -(\d+) gas)?$/);
   if (action) {
     const [, who, verb, rest, gasCost] = action;
     return <>
-      <Actor who={who as 'you' | 'foe'} />
-      <span className="ledger-sep"> · </span>
+      {actorPrefix(who as ActorId, blockActor)}
       <span className="ledger-verb">{verb}</span>
       {' '}
       {tokenize(rest!)}
       {gasCost && <><span className="ledger-sep"> · </span><span className="ledger-gas">−{gasCost} gas</span></>}
+    </>;
+  }
+
+  const discardFizzle = text.match(/^(you|foe) · discard fizzled · empty hand$/);
+  if (discardFizzle) {
+    return <>
+      {actorPrefix(discardFizzle[1] as ActorId, blockActor)}
+      <span className="ledger-muted">discard fizzled · empty hand</span>
     </>;
   }
 
@@ -145,8 +174,7 @@ function renderLine(text: string, kind: string): ReactNode {
   const bag = text.match(/^(you|foe) · scraped the bag · (\d+)$/);
   if (kind === 'hit' && bag) {
     return <>
-      <Actor who={bag[1] as 'you' | 'foe'} />
-      <span className="ledger-sep"> · </span>
+      {actorPrefix(bag[1] as ActorId, blockActor)}
       <span className="ledger-muted">scraped the bag</span>
       <span className="ledger-sep"> · </span>
       <span className="ledger-dmg">{bag[2]}</span>
@@ -179,8 +207,8 @@ function renderLine(text: string, kind: string): ReactNode {
   return tokenize(text);
 }
 
-function LedgerEntry({ text, kind }: { text: string; kind: string }) {
-  return <div className={kind}>{renderLine(text, kind)}</div>;
+function LedgerEntry({ text, kind, blockActor }: { text: string; kind: string; blockActor: ActorId | null }) {
+  return <div className={kind}>{renderLine(text, kind, blockActor)}</div>;
 }
 
 export function LedgerLog({ lines, logRef, id = 'log' }: {
@@ -188,14 +216,21 @@ export function LedgerLog({ lines, logRef, id = 'log' }: {
   logRef?: RefObject<HTMLDivElement | null>;
   id?: string;
 }) {
+  let blockActor: ActorId | null = null;
   return (
     <div id={id} ref={logRef}>
-      {lines.map(e => <LedgerEntry key={e.n} text={e.text} kind={e.kind} />)}
+      {lines.map(e => {
+        const next = parseBlockActor(e.text, e.kind);
+        if (next) blockActor = next;
+        return <LedgerEntry key={e.n} text={e.text} kind={e.kind} blockActor={blockActor} />;
+      })}
     </div>
   );
 }
 
 /** One-line preview for the phone ticker. */
-export function LedgerPreview({ text, kind }: { text: string; kind: string }) {
-  return <span className={`tick-line ${kind}`}>{renderLine(text, kind)}</span>;
+export function LedgerPreview({ text, kind, blockActor = null }: {
+  text: string; kind: string; blockActor?: ActorId | null;
+}) {
+  return <span className={`tick-line ${kind}`}>{renderLine(text, kind, blockActor)}</span>;
 }

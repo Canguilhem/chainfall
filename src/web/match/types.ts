@@ -10,7 +10,6 @@ export type Pending = { i: number; spec: ChooseTarget; maxAtk?: number } | null;
 export type Screen =
   | { id: 'start' }
   | { id: 'docs' }
-  | { id: 'vault' }
   | { id: 'deck' }
   | { id: 'queued' }
   | { id: 'match' }
