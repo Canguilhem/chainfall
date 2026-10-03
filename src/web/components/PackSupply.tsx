@@ -19,19 +19,20 @@ function Flip({ pull, delay, up, onFlip }: {
   pull: Pull; delay: number; up: boolean; onFlip: () => void;
 }) {
   const c = CARDS[pull.id];
+  const mark = !up ? '—' : pull.fresh ? 'NEW' : pull.dupe ? 'EXTRA' : '';
   return (
     <div className={`vault-pull r-${pull.rar}${up ? ' shown' : ''}`}>
       <button type="button" className={`vault-flip r-${pull.rar}${up ? ' up' : ''} dealt`}
               style={{ animationDelay: `${delay}ms` }}
-              aria-label={up ? `${c.n}, ${pull.dupe ? 'extra copy' : 'new'}` : 'Sealed card. Tap to verify.'}
+              aria-label={up ? `${c.n}, ${pull.fresh ? 'new' : pull.dupe ? 'extra copy' : 'already in your collection'}` : 'Sealed card. Tap to verify.'}
               onClick={onFlip}>
         <div className="vault-face vault-back">◆</div>
         <div className="vault-face vault-front">
           <CardFace id={pull.id} />
         </div>
       </button>
-      <div className={`vault-tag${up ? (pull.dupe ? '' : ' new') : ' wait'}`}>
-        {up ? (pull.dupe ? 'EXTRA' : 'NEW') : '—'}
+      <div className={`vault-tag${up && pull.fresh ? ' new' : ''}${mark ? '' : ' wait'}`}>
+        {mark || '—'}
       </div>
     </div>
   );
@@ -146,7 +147,7 @@ export function PackSupply({ wallet, onBuy, onOpen }: Props) {
           </div>
           <div className="revfoot">
             <div className="revsum">
-              {reveal.pulls.filter(p => !p.dupe).length} new · {reveal.pulls.filter(p => p.dupe).length} extra
+              {reveal.pulls.filter(p => p.fresh).length} new · {reveal.pulls.filter(p => p.dupe).length} extra
             </div>
             <button className="vault-btn ghost" type="button"
                     onClick={() => setFlipped(reveal.pulls.map(() => true))}>REVEAL ALL</button>

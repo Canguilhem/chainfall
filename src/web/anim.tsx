@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type Ref } from 'react';
 import { motion, useReducedMotion, type Transition } from 'motion/react';
 import type { MatchView } from '../engine/index.ts';
+import { strikeUids } from './strike.ts';
 
 export type FlashKind = '' | 'hit' | 'heal';
 
@@ -44,40 +45,31 @@ export function useStrikeFlash(
 ): Set<number> {
   const seen = useRef(0);
   const primed = useRef(false);
+  const prevAttacks = useRef(new Map<number, number>());
   const [uids, setUids] = useState(() => new Set<number>());
   useEffect(() => {
     if (!v) {
       seen.current = 0;
       primed.current = false;
+      prevAttacks.current = new Map();
       return;
     }
+    const now = new Map<number, number>();
+    for (const a of [...v.you.board, ...v.them.board]) now.set(a.uid, a.attacksLeft);
     // Skip the backlog on first paint / reconnect — only animate new strikes.
     if (!primed.current) {
       primed.current = true;
       if (lines.length) seen.current = lines[lines.length - 1]!.n + 1;
+      prevAttacks.current = now;
       return;
     }
     const fresh = lines.filter(e => e.n >= seen.current);
+    const before = prevAttacks.current;
+    prevAttacks.current = now;
     if (!fresh.length) return;
     seen.current = fresh[fresh.length - 1]!.n + 1;
 
-    const struck = new Set<number>();
-    for (const h of fresh) {
-      if (h.kind !== 'hit') continue;
-      const m = h.text.match(/^(.+?) (?:→|×) /);
-      if (!m) continue;
-      const name = m[1]!;
-      let actor: 'you' | 'foe' | null = null;
-      for (const e of lines) {
-        if (e.n > h.n) break;
-        const blk = e.kind === 'blk' && e.text.match(/^block \d{3} · (you|foe) ·/);
-        if (blk) actor = blk[1] as 'you' | 'foe';
-      }
-      const primary = actor === 'foe' ? v.them.board : v.you.board;
-      const secondary = actor === 'foe' ? v.you.board : v.them.board;
-      const hit = primary.find(a => a.name === name) ?? secondary.find(a => a.name === name);
-      if (hit) struck.add(hit.uid);
-    }
+    const struck = strikeUids(lines, fresh, v.you.board, v.them.board, before);
     if (!struck.size) return;
     setUids(struck);
     const t = window.setTimeout(() => setUids(new Set()), ms);

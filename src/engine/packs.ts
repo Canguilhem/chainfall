@@ -1,4 +1,4 @@
-import { CARD_IDS, isToken, type CardId } from './cards.ts';
+import { CARD_IDS, DECKS, isToken, type CardId } from './cards.ts';
 
 export type Rarity = 'common' | 'rare' | 'epic' | 'legend';
 
@@ -56,7 +56,15 @@ export interface PackState {
   salvage: number;
 }
 
-export interface Pull { id: PackCardId; rar: Rarity; dupe: boolean }
+export interface Pull { id: PackCardId; rar: Rarity; dupe: boolean; fresh: boolean }
+
+/** Most copies a starter kit gives you. Starters are always legal, so a pack
+ *  pull of a card you already play is not a first find. */
+function starterCopies(id: string): number {
+  let n = 0;
+  for (const deck of Object.values(DECKS)) n = Math.max(n, deck[id as CardId] ?? 0);
+  return n;
+}
 
 function eligible(rar: Rarity, owned: Record<string, number>): PackCardId[] {
   const pool = PACK_IDS.filter(id => rarityOf(id) === rar && (owned[id] ?? 0) < maxOf(id));
@@ -109,10 +117,12 @@ export function openPack(state: PackState, rng: () => number): { pulls: Pull[]; 
     if (rar === 'legend') gotLegend = true;
     const pool = eligible(rar, owned);
     const id = pool[Math.floor(rng() * pool.length)]!;
-    const have = owned[id] ?? 0;
+    const stash = owned[id] ?? 0;
+    const have = stash + starterCopies(id);
     const dupe = have >= maxOf(id);
-    owned[id] = have + 1;
-    pulls.push({ id, rar, dupe });
+    const fresh = have === 0;
+    owned[id] = stash + 1;
+    pulls.push({ id, rar, dupe, fresh });
   }
   state.owned = owned;
   state.sinceLegend = gotLegend ? 0 : state.sinceLegend + 1;

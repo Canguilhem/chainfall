@@ -167,6 +167,8 @@ export interface PublicPlayer {
 export interface ViewAsset {
   uid: number; id: string; name: string; atk: number; hp: number; maxHp: number;
   f: Faction; kw: Keyword[]; shield: boolean; seized: boolean; canAttack: boolean;
+  /** Swings still available this block. Public: it is what the READY badge is counting. */
+  attacksLeft: number;
 }
 export interface MatchView {
   seat: Seat | null;

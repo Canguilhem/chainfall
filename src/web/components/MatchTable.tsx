@@ -139,7 +139,7 @@ export function MatchTable({
             {boardSlots(undefined).map((_, i) => <div key={`you-${i}`} className="slot" aria-hidden />)}
           </div>
         )}
-        <div id="hand" className={claiming ? 'locked' : ''} style={{ ['--n' as string]: fly.hand.length }}>
+        <div id="hand" className={claiming ? 'locked' : ''}>
           {fly.hand.map((item, i) => (
             <HandCard key={item.key} flyId={item.key} shared={fly.claimed.has(item.key)}
                       fresh={fly.drawn.has(item.key)} first={first}

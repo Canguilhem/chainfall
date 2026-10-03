@@ -468,7 +468,8 @@ export function view(S: MatchState, seat: Seat | null, sinceLog = 0): MatchView 
     cardsPlayed: p.cardsPlayed, dmgDealt: p.dmgDealt, dmgTaken: p.dmgTaken, dmgSelf: p.dmgSelf,
     board: p.board.map(a => ({
       uid: a.uid, id: a.id, name: a.name, atk: effAtk(S, a, s), hp: a.hp, maxHp: a.maxHp,
-      f: a.f, kw: a.kw, shield: a.shield, seized: a.seized, canAttack: s === S.turn && canAttack(a)
+      f: a.f, kw: a.kw, shield: a.shield, seized: a.seized, canAttack: s === S.turn && canAttack(a),
+      attacksLeft: a.attacksLeft
     }))
   });
   return {
@@ -501,15 +502,17 @@ function botTarget(S: MatchState, spec: ChooseTarget, e: Effect, seat: Seat): Ta
   if (maxAtk !== undefined) t = t.filter(r => { const a = findAsset(S, r); return !!a && effAtk(S, a, r.p) <= maxAtk; });
   if (!t.length) return null;
   const destructive = (['damage', 'destroy', 'seize', 'control'] as const).includes(e.op as never);
+  const helpful = (['buff', 'buffTemp', 'doubleAtk', 'grantShield', 'heal', 'copyFriendly'] as const).includes(e.op as never);
   const enemy = t.filter(r => r.p !== seat), mine = t.filter(r => r.p === seat);
   const score = (r: TargetRef) => { const a = findAsset(S, r); return a ? worth(S, a, r.p) : 0; };
   const friendlyOnly = spec === 'choose-friendly-asset' || spec === 'choose-other-friendly-asset';
+  if (helpful && !mine.length) return null;     // Hopium with an empty board — don't buff them
   if (destructive && !enemy.length) {
     if (!friendlyOnly) return null;             // Gas Leak with an empty enemy board — don't shoot our own
     const assets = mine.filter(r => r.kind === 'asset');
     return assets.length ? assets.sort((x, y) => score(x) - score(y))[0]! : (mine[0] ?? null);
   }
-  const pool = destructive ? enemy : (mine.length ? mine : t);
+  const pool = destructive ? enemy : mine;
   const assets = pool.filter(r => r.kind === 'asset');
   return assets.length ? assets.sort((x, y) => score(y) - score(x))[0]! : (pool[0] ?? null);
 }

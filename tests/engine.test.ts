@@ -110,6 +110,26 @@ describe('discard', () => {
   });
 });
 
+describe('bot targeting', () => {
+  it('does not buff an enemy Asset when its own board is empty', () => {
+    const S = createMatch({ seed: 1, mode: 'salvage', factions: ['sovereign', 'consortium'] });
+    S.awaitingClaim = false;
+    S.turn = 1;
+    S.p[1].hand = ['hopium'];
+    S.p[1].gas = 3;
+    S.p[1].board = [];
+    S.p[0].board = [{
+      uid: 9, id: 'node', name: 'Node', atk: 3, hp: 3, maxHp: 3, cost: 0, f: 'sovereign',
+      kw: [], shield: false, sick: false, seized: false, attacksLeft: 1, tempAtk: 0, aura: 0,
+    }];
+    const a = botAction(S, 1);
+    expect(a?.t === 'play' && a.target?.p === 0).toBe(false);
+    if (a?.t === 'play') expect(applyAction(S, 1, a).ok).toBe(true);
+    expect(S.p[0].board[0]!.atk).toBe(3);
+    expect(S.p[0].board[0]!.hp).toBe(3);
+  });
+});
+
 describe('draw', () => {
   it('takes from the kit in constructed', () => {
     const S = createMatch({ seed: 7, mode: 'constructed', factions: ['sovereign', 'degen'] });

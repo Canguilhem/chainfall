@@ -44,6 +44,22 @@ describe('packs', () => {
     expect(s.sinceLegend).toBe(0);
   });
 
+  it('calls a pull new only when the collection had none', () => {
+    const s = fresh();
+    for (const id of PACK_IDS) {
+      if (id === 'yield_miner' || id === 'the_chairman') continue;
+      s.owned[id] = maxOf(id);
+    }
+    s.sinceLegend = PITY_LEGEND - 1;
+    const { pulls } = openPack(s, zero);
+    const miner = pulls.filter(p => p.id === 'yield_miner');
+    const chairman = pulls.filter(p => p.id === 'the_chairman');
+    expect(miner.length).toBeGreaterThan(0);
+    expect(miner[0]!.fresh).toBe(true);
+    expect(miner.slice(1).every(p => !p.fresh)).toBe(true);
+    expect(chairman.every(p => !p.fresh && p.dupe)).toBe(true);
+  });
+
   it('keeps extras when a playset-complete card drops again', () => {
     const s = fresh();
     for (const id of PACK_IDS) s.owned[id] = maxOf(id);

@@ -139,7 +139,7 @@
 .seal:hover:not(:disabled){filter:brightness(1.15)}
 .seal:disabled{background:transparent;color:var(--dim);border-color:var(--edge);cursor:default}
 .board{flex:1 1 auto;display:flex;justify-content:center;gap:10px;min-height:0;min-width:0;padding:4px;position:relative;overflow:visible}
-.board.them{align-items:flex-end}
+.board.them{align-items:flex-end;padding-top:18px}
 .board.you{align-items:flex-start;padding-bottom:18px}
 .lane .board{width:100%;height:100%}
 .centerline{height:1px;background:linear-gradient(90deg,transparent,var(--edge) 20%,var(--edge) 80%,transparent)}
@@ -163,7 +163,8 @@
  animation:ready-breathe 1.8s ease-in-out infinite}
 .asset.ready.is-selected,.asset.is-selected{animation:none;transform:translateY(-8px);
  box-shadow:0 3px 0 rgba(0,0,0,.45),0 0 0 3px var(--oxide)}
-/* Soft rim only — status flags under the Asset carry the meaning. */
+/* Soft rim only — status flags carry the meaning. Yours hang under the card.
+   Theirs hang above it, so the Feed does not cover them. */
 .asset.shield{box-shadow:0 3px 0 rgba(0,0,0,.45),0 0 0 1px rgba(127,176,201,.55),0 6px 14px rgba(0,0,0,.35)}
 .asset.ready.shield{box-shadow:0 3px 0 rgba(0,0,0,.45),0 0 0 2px var(--amber),0 6px 14px rgba(0,0,0,.35)}
 .asset-flags{position:absolute;z-index:3;left:50%;bottom:-2px;transform:translate(-50%,100%);
@@ -176,6 +177,8 @@
 .cold-flag{background:#1C3A4A;color:#B8D8E8}
 .cold-flag .kw-mark{color:#B8D8E8}
 .seized-flag{background:#4A3A38;color:#E8A09C}
+.board.them .asset-flags{bottom:auto;top:-2px;transform:translate(-50%,-100%)}
+.board.them .asset-flag{border-radius:3px 3px 0 0;box-shadow:0 -2px 0 rgba(0,0,0,.35)}
 @keyframes ready-flag-pulse{
   0%,100%{filter:brightness(1)}
   50%{filter:brightness(1.12)}
@@ -248,9 +251,9 @@
    can no longer out-stack the next card on its own. Hover has the rule above;
    a tap-to-peek has no hover, so lift the card itself. */
 #feed .fcard.peek{z-index:7}
-#hand{display:flex;justify-content:center;align-items:flex-end;flex:none;position:relative;z-index:3;
- height:calc(var(--hand-h) + 22px);padding:18px 8px 4px;gap:8px}
-#hand > * + *{margin-left:clamp(-32px, calc((var(--n, 4) - 4) * -7px), 0px)}
+#hand{display:flex;justify-content:safe center;align-items:flex-end;flex:none;position:relative;z-index:3;
+ height:calc(var(--hand-h) + 22px);padding:18px 8px 4px;gap:8px;
+ overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain}
 #hand > *:hover,#hand > *:has(.is-selected){z-index:8}
 #table .card{width:var(--hand-w);height:var(--hand-h)}
 @media (hover:hover) and (pointer:fine){
