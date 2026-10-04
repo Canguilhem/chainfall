@@ -102,6 +102,11 @@ export function tableHint(v: MatchView | null, pending: Pending, sel: number | n
     text: `${Tap} a READY Asset, then ${tap} what it hits.`,
     extra: 'Assets cannot attack the block they are deployed unless they have Zero-Conf.',
   };
+  if (!powerWhy(v, false)) return {
+    phase: 'power',
+    text: 'Crew power is still up. Use it, or seal the block.',
+    extra: 'SEAL stays quiet until nothing else is legal. Unspent gas does not carry over.',
+  };
   return {
     phase: 'seal',
     text: 'Nothing left to play or attack. Seal the block to end your turn.',

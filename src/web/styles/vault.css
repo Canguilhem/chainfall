@@ -72,7 +72,6 @@
 .vault-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.16em;padding:4px 10px;
  background:var(--slab);color:var(--bone2);border:1px solid var(--edge);border-radius:1px}
 .vault-tag.new{background:var(--oxide);color:var(--bone);border-color:var(--oxide)}
-.vault-tag.wait{visibility:hidden}
 .vault-pull.r-rare .vault-front .card{box-shadow:0 4px 0 rgba(0,0,0,.45),0 8px 18px rgba(0,0,0,.4),0 0 14px rgba(58,94,118,.5)}
 .vault-pull.r-epic .vault-front .card{box-shadow:0 4px 0 rgba(0,0,0,.45),0 8px 18px rgba(0,0,0,.4),0 0 18px rgba(62,122,107,.6)}
 .vault-pull.r-legend .vault-front .card{box-shadow:0 4px 0 rgba(0,0,0,.45),0 8px 18px rgba(0,0,0,.4),0 0 24px rgba(224,169,59,.75)}

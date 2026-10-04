@@ -3,7 +3,8 @@ import type { DeckSource, Opponent, Screen } from '../match/types.ts';
 import type { LobbyId } from '../match/routes.ts';
 import type { Wallet } from '../stash.ts';
 import { customKitError } from '../decks.ts';
-import { FactionMark, PowerPreview } from './Marks.tsx';
+import { FactionMark, PowerMark } from './Marks.tsx';
+import { Tip } from './Tip.tsx';
 import { KitBuilder } from './KitBuilder.tsx';
 import { Recap } from './Recap.tsx';
 import { Rules } from './Rules.tsx';
@@ -53,74 +54,86 @@ export function LobbyVeil({
         )}
         {screen.id === 'start' && (
           <>
-            <p className="lede">2058. Quantum broke the keys. Crews scrape the wreck for gas and a way out — 20 HP, last one standing walks free.</p>
-            <section className="setup">
-              <h2><span>1</span> Play mode</h2>
-              <div className="modes">
+            <p className="lede">2058. Quantum broke the keys. Crews scrape the wreck for gas — 20 HP each. Take the other crew to zero.</p>
+            <div className="setup-bar" aria-label="Match settings">
+              <div className="seg" role="group" aria-label="Play mode">
                 {(['constructed', 'salvage'] as Mode[]).map(m => (
-                  <button key={m} className={`mode${mode === m ? ' on' : ''}`}
-                          aria-pressed={mode === m} onClick={() => onMode(m)}>
-                    <h4>{m === 'constructed' ? 'CONSTRUCTED' : 'SALVAGE RUN'}
-                      {mode === m && <em>selected</em>}</h4>
-                    <p>{m === 'constructed'
-                      ? 'Draw one card per block from a 25-card list.'
-                      : 'No deck. Claim one card each block from a shared Feed.'}</p>
-                  </button>
+                  <Tip key={m} side="bottom" text={m === 'constructed'
+                    ? 'Draw one card each block from a 25-card list.'
+                    : 'No deck. Claim one card each block from a shared Feed.'}>
+                    <button type="button" className={mode === m ? 'on' : ''}
+                            aria-pressed={mode === m} onClick={() => onMode(m)}>
+                      {m === 'constructed' ? 'Constructed' : 'Salvage'}
+                    </button>
+                  </Tip>
                 ))}
               </div>
-            </section>
-            {mode === 'constructed' && (
-              <section className="setup">
-                <h2><span>2</span> Which list</h2>
-                <div className="modes">
-                  <button type="button" className={`mode${deckSource === 'starter' ? ' on' : ''}`}
-                          aria-pressed={deckSource === 'starter'}
-                          onClick={() => onDeckSource('starter')}>
-                    <h4>STARTER DECK{deckSource === 'starter' && <em>selected</em>}</h4>
-                    <p>The tuned 25-card list for each crew. Always legal, always fair.</p>
-                  </button>
-                  <button type="button" className={`mode${deckSource === 'custom' ? ' on' : ''}`}
-                          aria-pressed={deckSource === 'custom'}
-                          disabled={!canCustom}
-                          onClick={() => canCustom && onDeckSource('custom')}>
-                    <h4>YOUR DECK{deckSource === 'custom' && <em>selected</em>}</h4>
-                    <p>{canCustom
-                      ? <>Saved on the <button type="button" className="deck-link" onClick={e => { e.stopPropagation(); onGoLobby('deck'); }}>Deck</button> page. Solo only until Versus accepts custom lists.</>
-                      : 'Versus always runs the starter list for now.'}</p>
-                  </button>
+              {mode === 'constructed' && (
+                <div className="seg" role="group" aria-label="Which list">
+                  <Tip side="bottom" text="The tuned 25-card list for each crew. Always legal.">
+                    <button type="button" className={deckSource === 'starter' ? 'on' : ''}
+                            aria-pressed={deckSource === 'starter'}
+                            onClick={() => onDeckSource('starter')}>
+                      Starter
+                    </button>
+                  </Tip>
+                  <Tip side="bottom" text={canCustom
+                    ? 'The list saved on the Deck page. Solo only, until Versus takes custom lists.'
+                    : 'Versus always runs the starter list for now.'}>
+                    <button type="button" className={deckSource === 'custom' ? 'on' : ''}
+                            aria-pressed={deckSource === 'custom'}
+                            disabled={!canCustom}
+                            onClick={() => canCustom && onDeckSource('custom')}>
+                      Your deck
+                    </button>
+                  </Tip>
                 </div>
-                {deckSource === 'custom' && !anyCustomValid && (
-                  <p className="setup-warn">No valid saved deck yet — build one on the Deck page or pick Starter.</p>
-                )}
-              </section>
+              )}
+              <div className="seg" role="group" aria-label="Who you face">
+                <Tip side="bottom" text="Play the engine on this machine. No server needed.">
+                  <button type="button" className={opponent === 'bot' ? 'on' : ''}
+                          aria-pressed={opponent === 'bot'} onClick={() => onOpponent('bot')}>
+                    Solo
+                  </button>
+                </Tip>
+                <Tip side="bottom" text="Matchmaking is off until the match host is up. Solo still works.">
+                  <button type="button" disabled aria-pressed={false}>
+                    Versus
+                  </button>
+                </Tip>
+              </div>
+              {mode === 'constructed' && deckSource === 'custom' && (
+                <button type="button" className="deck-link setup-edit" onClick={() => onGoLobby('deck')}>
+                  Edit deck
+                </button>
+              )}
+            </div>
+            {mode === 'constructed' && deckSource === 'custom' && !anyCustomValid && (
+              <p className="setup-warn">No valid saved deck yet. Build one on the Deck page, or pick Starter.</p>
             )}
             <section className="setup">
-              <h2><span>{mode === 'constructed' ? '3' : '2'}</span> Who you face</h2>
-              <div className="modes">
-                <button type="button" className={`mode${opponent === 'bot' ? ' on' : ''}`}
-                        aria-pressed={opponent === 'bot'} onClick={() => onOpponent('bot')}>
-                  <h4>SOLO{opponent === 'bot' && <em>selected</em>}</h4>
-                  <p>Play the engine locally. No server needed.</p>
-                </button>
-                <button type="button" className="mode" aria-pressed={false} disabled
-                        aria-label="Versus, coming soon">
-                  <h4>VERSUS<em>coming soon</em></h4>
-                  <p>Server matchmaking is on hold until the match host is up. Solo still works.</p>
-                </button>
-              </div>
-            </section>
-            <section className="setup">
-              <h2><span>{mode === 'constructed' ? '4' : '3'}</span> Pick a crew — this starts the match</h2>
+              <h2>Choose a crew</h2>
+              <p className="crew-line"><em>Strong at one thing.</em> Pays for it.</p>
               <div className="picks">
                 {(Object.keys(FACTIONS) as PlayableFaction[]).map(k => {
                   const f = FACTIONS[k];
+                  const crew = f.name.replace('The ', '');
                   return (
                     <button key={k} className={`pick ${f.cls}`} onClick={() => onBegin(k)}
-                            aria-label={`Play as ${f.name.replace('The ', '')}. ${f.power.name}. ${f.power.text} ${f.blurb}`}>
-                      <h3><FactionMark faction={k} size={26} />{f.name.replace('The ', '').toUpperCase()}</h3>
-                      <PowerPreview faction={k} />
-                      <p>{f.blurb}</p>
-                      <div className="go">Play as {f.name.replace('The ', '')}</div>
+                            aria-label={`Play as ${crew}. ${f.power.name}, ${f.power.cost} gas, once a block. ${f.power.text} ${f.blurb}`}>
+                      <div className="pick-id">
+                        <h3><FactionMark faction={k} size={22} />{crew.toUpperCase()}</h3>
+                        <p className="pick-blurb">{f.blurb}</p>
+                      </div>
+                      <div className="pick-power">
+                        <div className="pick-kicker">
+                          <PowerMark size={15} />
+                          <span>Special ability</span>
+                          <b>{f.power.name}</b>
+                        </div>
+                        <p className="pick-fx">{f.power.text}</p>
+                      </div>
+                      <div className="go">Play</div>
                     </button>
                   );
                 })}

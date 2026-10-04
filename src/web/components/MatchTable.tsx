@@ -2,7 +2,9 @@ import { AnimatePresence, LayoutGroup, motion } from 'motion/react';
 import { type Action, type MatchView, type ViewAsset } from '../../engine/index.ts';
 import { useFlyLists, useRisingEdge, useStrikeFlash } from '../anim.tsx';
 import { cn } from '../lib/utils.ts';
+import { useState } from 'react';
 import { deadWhy, isPlayable, powerWhy, boardSlots } from '../match/legality.ts';
+import { useShortLandscape } from '../media.ts';
 import type { Hint, Pending } from '../match/types.ts';
 import { HandCard, FeedCard } from './Card.tsx';
 import { BoardAsset } from './Board.tsx';
@@ -52,10 +54,13 @@ export function MatchTable({
 }: Props) {
   const yourBlock = useRisingEdge(inMatch ? v?.yourTurn : false);
   const striking = useStrikeFlash(inMatch ? lines : [], v);
+  const short = useShortLandscape();
+  const [handOpen, setHandOpen] = useState(false);
 
   return (
     <main>
       <div id="table" data-phase={hint.phase}
+           data-hand={short ? (handOpen ? 'open' : 'shut') : undefined}
            className={cn(
              claiming && 'claiming',
              aiming && 'aiming',
@@ -84,14 +89,14 @@ export function MatchTable({
             {boardSlots(undefined).map((_, i) => <div key={`them-${i}`} className="slot" aria-hidden />)}
           </div>
         )}
-        {v?.mode === 'salvage' && phone && (
+        {v?.mode === 'salvage' && (phone || short) && (
           <button type="button" id="feedbtn" className={claiming ? 'go' : ''}
                   onClick={onFeedOpen}>
             <b>{claiming ? 'CLAIM FROM THE FEED' : 'SHARED FEED'}</b>
             <em>{v.feedRemaining} left</em>
           </button>
         )}
-        {v?.mode === 'salvage' && !phone && (
+        {v?.mode === 'salvage' && !phone && !short && (
           <div id="feed" className={`on${claiming ? ' claim' : ''}`}>
             <div className={`fl${claiming ? ' go' : ''}`}>
               <b>SHARED FEED</b>
@@ -138,6 +143,13 @@ export function MatchTable({
           <div className="board you">
             {boardSlots(undefined).map((_, i) => <div key={`you-${i}`} className="slot" aria-hidden />)}
           </div>
+        )}
+        {short && (
+          <button type="button" id="hand-tab" aria-expanded={handOpen}
+                  onClick={() => setHandOpen(open => !open)}>
+            <span>{handOpen ? 'Board' : 'Hand'}</span>
+            <b>{fly.hand.length}</b>
+          </button>
         )}
         <div id="hand" className={claiming ? 'locked' : ''}>
           {fly.hand.map((item, i) => (

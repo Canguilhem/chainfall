@@ -7,7 +7,6 @@ import { Glossary } from './Glossary.tsx';
 type FlyLists = ReturnType<typeof useFlyLists>;
 
 type Props = {
-  fighting: boolean;
   v: MatchView | null;
   fly: FlyLists;
   sheetFeed: boolean;
@@ -22,7 +21,7 @@ type Props = {
 };
 
 export function MatchOverlays({
-  fighting, v, fly, sheetFeed, claiming, peeked, lexicon,
+  v, fly, sheetFeed, claiming, peeked, lexicon,
   onClaim, onFeedClose, onPlayPeeked, onClosePeek, onCloseLexicon,
 }: Props) {
   return (
@@ -36,14 +35,6 @@ export function MatchOverlays({
                    why={deadWhy(v, peeked.id)}
                    onPlay={onPlayPeeked}
                    onClose={onClosePeek} />
-      )}
-
-      {fighting && (
-        <div id="rotate" role="alertdialog" aria-labelledby="rot-h">
-          <strong id="rot-h">TURN THE PHONE</strong>
-          <p>Portrait fits both boards, the Feed and your hand on one screen. Landscape does not.</p>
-          <small>The match is still running. Nothing was lost.</small>
-        </div>
       )}
 
       {lexicon && (

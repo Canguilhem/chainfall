@@ -55,6 +55,16 @@
  animation:claimdot 1.4s ease-in-out infinite}
 @keyframes claimdot{0%,100%{opacity:.35}50%{opacity:1}}
 
+/* Landscape only — the hand leaves the column. Hidden until that query. */
+#hand-tab{display:none;align-items:center;justify-content:center;gap:8px;flex:none;
+ min-height:36px;margin:0 8px 2px;padding:6px 14px;border:1px solid var(--edge);border-radius:var(--r);
+ background:var(--concrete);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;
+ text-transform:uppercase;color:var(--dim)}
+#hand-tab b{font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:18px;
+ letter-spacing:.04em;color:var(--bone);line-height:1}
+#table.your-block #hand-tab{border-color:var(--amber);color:var(--amber)}
+#table[data-hand="open"] #hand-tab{border-color:var(--bone2);color:var(--bone)}
+
 /* The ledger, as one line. */
 #ticker{display:none;align-items:center;gap:8px;flex:none;width:100%;text-align:left;
  min-height:30px;padding:5px 10px;border-bottom:1px solid var(--edge);background:var(--concrete);

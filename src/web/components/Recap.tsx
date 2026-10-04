@@ -1,5 +1,32 @@
-import { FACTIONS, type MatchView } from '../../engine/index.ts';
+import { CARDS, CARD_IDS, FACTIONS, type CardId, type MatchView } from '../../engine/index.ts';
+import { CardFace } from './Card.tsx';
 import { FactionMark } from './Marks.tsx';
+
+function idByName(name: string): CardId | null {
+  const key = name.trim().toLowerCase();
+  for (const id of CARD_IDS) {
+    if (CARDS[id].n.toLowerCase() === key) return id;
+  }
+  return null;
+}
+
+/** The card behind the last blow in this match, if the log names one. */
+function finishingCard(log: MatchView['log']): CardId | null {
+  let played: CardId | null = null;
+  for (let i = log.length - 1; i >= 0; i--) {
+    const text = log[i]!.text;
+    if (text === 'you walk free' || text === 'you fell') continue;
+    if (/^block \d{3}/.test(text)) break;
+    const hit = text.match(/^(.+?) (?:→|×) /);
+    if (hit) {
+      const id = idByName(hit[1]!);
+      if (id) return id;
+    }
+    const play = text.match(/^(?:you|foe) · (?:deploy|run) (.+?) · -/);
+    if (play && !played) played = idByName(play[1]!);
+  }
+  return played;
+}
 
 export function Recap({ v, won, why, payout }: { v: MatchView; won: boolean | null; why: string; payout?: number | null }) {
   const youF = FACTIONS[v.you.faction];
@@ -12,6 +39,7 @@ export function Recap({ v, won, why, payout }: { v: MatchView; won: boolean | nu
       : `You went down on block ${block}.`;
   const outcome = won === null ? 'draw' : won ? 'win' : 'loss';
   const dmgLead = v.you.dmgDealt - v.them.dmgDealt;
+  const blow = finishingCard(v.log);
 
   const bar = (hp: number, max: number) => (
     <div className="recap-bar"><i style={{ width: `${Math.min(100, Math.max(0, hp) / max * 100)}%` }} /></div>
@@ -39,7 +67,13 @@ export function Recap({ v, won, why, payout }: { v: MatchView; won: boolean | nu
           {won === true && <em className="recap-tag">SURVIVED</em>}
           {won === false && <em className="recap-tag down">DOWN</em>}
         </div>
-        <div className="recap-vs" aria-hidden>
+        <div className="recap-vs">
+          {blow && (
+            <div className="recap-blow">
+              <CardFace id={blow} tips={false} />
+              <span>last blow</span>
+            </div>
+          )}
           <b>{v.block}</b>
           <span>blocks</span>
         </div>

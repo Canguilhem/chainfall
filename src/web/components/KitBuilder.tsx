@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  CARDS, DECK_SIZE, FACTIONS, FNAME, RARITY, availableCopies, brewPool, kitTotal, maxOf, rarityOf, validateKit,
+  CARDS, DECK_SIZE, FACTIONS, RARITY, availableCopies, brewPool, kitTotal, maxOf, rarityOf, validateKit,
   type CardId, type KitCounts, type PlayableFaction, type Pull,
 } from '../../engine/index.ts';
 import { loadKit, saveKit, starterKit } from '../decks.ts';
@@ -127,29 +127,30 @@ export function KitBuilder({ wallet, onBuyPack, onOpenPack, onCraft, onSalvage }
           <div className="kit-curve" aria-label="Gas curve">
             {curve.map((n, cost) => (
               <div key={cost} className="kit-curve-col" title={`${cost === 8 ? '8+' : cost} gas · ${n}`}>
-                <i style={{ height: `${n / curveMax * 100}%` }} />
+                <b>{n > 0 ? n : ''}</b>
+                <span className="kit-curve-plot">
+                  <i style={{ height: n ? `${(n / curveMax) * 100}%` : '0%' }} />
+                </span>
                 <em>{cost === 8 ? '8+' : cost}</em>
               </div>
             ))}
           </div>
 
-          <p className="kit-deck-hint">Tap a row to remove one copy</p>
-          <div className="kit-deck-list">
+          <p className="kit-deck-hint">Tap a card to remove one copy</p>
+          <div className="kit-deck-faces">
             {!deckCards.length
               ? <p className="stash-empty">Empty. Pick cards from the pool.</p>
               : deckCards.map(id => {
-                const c = CARDS[id];
                 const n = kit[id] ?? 0;
                 const avail = availableCopies(faction, id, wallet.owned);
-                const rar = rarityOf(id);
                 return (
-                  <button key={id} type="button" className={`kit-deck-row r-${rar}`}
+                  <button key={id} type="button" className="kit-deck-face"
                           onClick={() => remove(id)}
-                          aria-label={`Remove one ${c.n}`}>
-                    <span className="kit-row-cost">{c.c}</span>
-                    <span className="kit-row-name">{c.n}</span>
-                    <span className="kit-row-meta">{FNAME[c.f]}</span>
-                    <span className="kit-row-n">{n}<small>/{avail}</small></span>
+                          aria-label={`Remove one ${CARDS[id].n}`}>
+                    <CardFace id={id} tips={false}
+                              footerMid={
+                                <span className="kit-copy-n">{n}<small>/{avail}</small></span>
+                              } />
                   </button>
                 );
               })}
@@ -229,29 +230,30 @@ export function KitBuilder({ wallet, onBuyPack, onOpenPack, onCraft, onSalvage }
                                 </span>
                               } />
                   </button>
-                  <div className="kit-tile-act">
-                    <button type="button"
-                            disabled={wallet.salvage < R.craft}
-                            title={wallet.salvage < R.craft
-                              ? `Need ${R.craft} salvage`
-                              : `Spend ${R.craft} salvage to craft one copy`}
-                            onClick={() => {
-                              if (onCraft(id)) ping(`${CARDS[id].n} crafted · −${R.craft}`);
-                              else ping(`Need ${R.craft} salvage`);
-                            }}>
-                      CRAFT −{R.craft}
-                    </button>
-                    <button type="button" className="vault-act-sell" disabled={owned <= 0}
-                            title={owned <= 0
-                              ? 'No vault copy to sell'
-                              : `Sell one for +${R.salvage} salvage`}
-                            onClick={() => {
-                              if (onSalvage(id)) ping(`${CARDS[id].n} sold · +${R.salvage}`);
-                              else ping(`Can't sell`);
-                            }}>
-                      SELL +{R.salvage}
-                    </button>
-                  </div>
+                  {(wallet.salvage >= R.craft || owned > 0) && (
+                    <div className="kit-tile-act">
+                      {wallet.salvage >= R.craft && (
+                        <button type="button"
+                                title={`Spend ${R.craft} salvage to craft one copy`}
+                                onClick={() => {
+                                  if (onCraft(id)) ping(`${CARDS[id].n} crafted · −${R.craft}`);
+                                  else ping(`Need ${R.craft} salvage`);
+                                }}>
+                          CRAFT −{R.craft}
+                        </button>
+                      )}
+                      {owned > 0 && (
+                        <button type="button" className="vault-act-sell"
+                                title={`Sell one for +${R.salvage} salvage`}
+                                onClick={() => {
+                                  if (onSalvage(id)) ping(`${CARDS[id].n} sold · +${R.salvage}`);
+                                  else ping(`Can't sell`);
+                                }}>
+                          SELL +{R.salvage}
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </article>
               );
             })}

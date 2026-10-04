@@ -81,6 +81,39 @@ export function ClaimSheet({ feed, remaining, claimable, onClaim, onClose }: {
   );
 }
 
+/** A board Asset, read without spending the tap that attacks. Hold on a phone. */
+export function AssetSheet({ id, name, atk, hp, maxHp, onClose }: {
+  id: string; name: string; atk: number; hp: number; maxHp: number; onClose: () => void;
+}) {
+  const card = CARDS[id as CardId];
+  const printed = card?.t === 'asset' ? card : null;
+  const shifted = !!printed && (atk !== printed.a || hp !== printed.h);
+  useLockedBody();
+  return (
+    <div className="sheet card-sheet" role="dialog" aria-modal="true" aria-labelledby="as-h">
+      <div className="sheet-head">
+        <h2 id="as-h">{name}</h2>
+        <span className="sheet-count">{atk} / {hp}</span>
+        <button type="button" className="sheet-x" onClick={onClose} aria-label="Close">close</button>
+      </div>
+      <div className="sheet-body">
+        <div className="sheet-solo">{card && <CardFace id={id} tips={false} />}</div>
+        {shifted && (
+          <div className="sheet-notes">
+            <p>Now {atk} attack, {hp} of {maxHp} health.</p>
+          </div>
+        )}
+        {card && hasNotes(id, true) && (
+          <div className="sheet-notes"><CardNotes id={id} terse /></div>
+        )}
+      </div>
+      <div className="sheet-foot">
+        <button type="button" className="sheet-go ghost" onClick={onClose}>BACK TO THE BOARD</button>
+      </div>
+    </div>
+  );
+}
+
 /** One hand card, inspected. The first tap on a card in hand opens this; only
  *  the button below plays it. */
 export function CardSheet({ id, playable, why, onPlay, onClose }: {

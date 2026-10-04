@@ -27,8 +27,6 @@
 .pwr-tag{display:inline-flex;align-items:center;gap:5px}
 .pwr-tag .pwr-mark{display:block}
 .power:hover:not(:disabled) .pwr-mark{color:var(--ash)}
-.pick .pwr{margin:12px 0 4px;flex-direction:column;align-items:flex-start;gap:8px}
-.pick .pwr-name{font-size:20px}
 .pick .pwr-mark{width:18px;height:18px}
 .pwr-gas{width:26px;height:26px;border-radius:50%;background:var(--amber);color:#241F1C;
  display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:14px;border:1px solid #8A6416}
@@ -112,6 +110,10 @@
 }
 #table[data-phase="play"] .card:not(.dead),
 #table[data-phase="act"] .card:not(.dead){outline:2px dashed var(--amber);outline-offset:2px}
+@media (hover: hover) and (pointer: fine) {
+  #table[data-phase="play"] #hand .card:not(.dead):not(.is-selected),
+  #table[data-phase="act"] #hand .card:not(.dead):not(.is-selected){transform:translateY(-10px)}
+}
 #table[data-phase="seal"] .seal:not(:disabled){animation:sealpulse 1.2s ease-in-out infinite;box-shadow:0 0 0 2px var(--bone)}
 /* Card type follows the card's own width now, so only the Asset name, which is
    not on a container, still needs a height breakpoint. */

@@ -8,7 +8,7 @@ import { TooltipProvider } from './components/ui/tooltip.tsx';
 import { customKitError, loadDeckSource, saveDeckSource } from './decks.ts';
 import { useStash } from './stash.ts';
 import { useFlyLists } from './anim.tsx';
-import { useCoarsePointer, usePhoneLayout } from './media.ts';
+import { useCoarsePointer, usePhoneLayout, useShortLandscape } from './media.ts';
 import { useCoach } from './hooks/useCoach.ts';
 import { useLobbyRoute } from './hooks/useLobbyRoute.ts';
 import { useMatchInput } from './hooks/useMatchInput.ts';
@@ -23,6 +23,7 @@ export function App() {
   const [lexicon, setLexicon] = useState(false);
 
   const phone = usePhoneLayout();
+  const short = useShortLandscape();
   const coarse = useCoarsePointer();
   const { add, wallet, buyPack, openPack, craft, salvage, awardScrip } = useStash();
 
@@ -109,7 +110,7 @@ export function App() {
     begin(faction);
   };
 
-  const sheetFeed = phone && !!v && v.mode === 'salvage' && screen.id === 'match'
+  const sheetFeed = (phone || short) && !!v && v.mode === 'salvage' && screen.id === 'match'
     && (feedOpen || (actions.claiming && !feedShut));
   const peeked = peek != null ? fly.hand[peek] : undefined;
 
@@ -183,7 +184,6 @@ export function App() {
       />
 
       <MatchOverlays
-        fighting={fighting}
         v={v}
         fly={fly}
         sheetFeed={sheetFeed}

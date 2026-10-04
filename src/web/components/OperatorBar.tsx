@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { FACTIONS, MAXGAS, type Mode, type PublicPlayer } from '../../engine/index.ts';
 import { cn } from '../lib/utils.ts';
-import { FactionMark, PowerPreview, LiveHp } from './Marks.tsx';
+import { FactionMark, PowerPreview, LiveHp, powerBlurb } from './Marks.tsx';
 import { Tip } from './Tip.tsx';
 
 type Props = {
@@ -96,11 +96,12 @@ export function OperatorLane({
     </div>
   );
 
+  const theirs = powerBlurb(crew.power.text, true);
   const oppPower = (
-    <Tip text={crew.power.text} contentClassName="tip-panel">
+    <Tip text={theirs} contentClassName="tip-panel">
       <div className="power lane-opp-pwr" tabIndex={0}
-           aria-label={`${crew.power.name}: ${crew.power.text}`}>
-        <PowerPreview faction={player.faction} />
+           aria-label={`${crew.power.name}: ${theirs}`}>
+        <PowerPreview faction={player.faction} theirs />
       </div>
     </Tip>
   );

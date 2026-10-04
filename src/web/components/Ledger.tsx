@@ -1,5 +1,6 @@
-import { type ReactNode, type RefObject } from 'react';
+import { useState, type MouseEvent, type ReactNode, type RefObject } from 'react';
 import { CARDS, CARD_IDS, FNAME, isToken, type CardId } from '../../engine/index.ts';
+import { useCoarsePointer } from '../media.ts';
 import { CardFace, CardNotes, hasNotes } from './Card.tsx';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip.tsx';
 
@@ -11,7 +12,7 @@ const CARD_MATCHERS = CARD_IDS
   .map(id => ({ id, name: CARDS[id].n }))
   .sort((a, b) => b.name.length - a.name.length);
 
-function tokenize(text: string): ReactNode[] {
+function tokenize(text: string, plain = false): ReactNode[] {
   const out: ReactNode[] = [];
   let i = 0;
   while (i < text.length) {
@@ -24,7 +25,9 @@ function tokenize(text: string): ReactNode[] {
       }
     }
     if (hit) {
-      out.push(<LedgerCard key={`${i}-${hit.id}`} id={hit.id} label={hit.label} />);
+      out.push(plain
+        ? <span key={`${i}-${hit.id}`} className={`ledger-card faction-${CARDS[hit.id].f}`}>{hit.label}</span>
+        : <LedgerCard key={`${i}-${hit.id}`} id={hit.id} label={hit.label} />);
       i += hit.len;
       continue;
     }
@@ -49,9 +52,14 @@ function tokenize(text: string): ReactNode[] {
 function LedgerCard({ id, label }: { id: CardId; label: string }) {
   const card = CARDS[id];
   const token = isToken(id);
+  const coarse = useCoarsePointer();
+  const [open, setOpen] = useState(false);
+  const onClick = coarse
+    ? (event: MouseEvent) => { event.stopPropagation(); setOpen(v => !v); }
+    : undefined;
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
+    <Tooltip open={coarse ? open : undefined} onOpenChange={coarse ? setOpen : undefined}>
+      <TooltipTrigger asChild onClick={onClick}>
         <button type="button" className={`ledger-card faction-${card.f}`}
                 aria-label={`${card.n}, ${card.c} gas${card.t === 'asset' ? `, ${card.a} attack, ${card.h} health` : ''}`}>
           {label}
@@ -106,7 +114,7 @@ export function blockActorAt(lines: LogLine[], index: number): ActorId | null {
   return null;
 }
 
-function renderLine(text: string, kind: string, blockActor: ActorId | null = null): ReactNode {
+function renderLine(text: string, kind: string, blockActor: ActorId | null = null, plain = false): ReactNode {
   const vs = text.match(/^(.+?) vs (.+)$/);
   if (kind === 'blk' && vs) {
     return <><span className="ledger-match">{vs[1]}</span><span className="ledger-sep"> vs </span><span className="ledger-match">{vs[2]}</span></>;
@@ -133,7 +141,7 @@ function renderLine(text: string, kind: string, blockActor: ActorId | null = nul
       {actorPrefix(who as ActorId, blockActor)}
       <span className="ledger-verb">{verb}</span>
       {' '}
-      {tokenize(rest!)}
+      {tokenize(rest!, plain)}
       {gasCost && <><span className="ledger-sep"> · </span><span className="ledger-gas">−{gasCost} gas</span></>}
     </>;
   }
@@ -149,7 +157,7 @@ function renderLine(text: string, kind: string, blockActor: ActorId | null = nul
   const heroHit = text.match(/^(.+?) → (you|them) · (\d+)$/);
   if (kind === 'hit' && heroHit) {
     return <>
-      {tokenize(heroHit[1]!)}
+      {tokenize(heroHit[1]!, plain)}
       <span className="ledger-arrow"> → </span>
       <span className={`ledger-target ${heroHit[2]}`}>{heroHit[2]}</span>
       <span className="ledger-sep"> · </span>
@@ -160,15 +168,15 @@ function renderLine(text: string, kind: string, blockActor: ActorId | null = nul
   const fight = text.match(/^(.+?) × (.+)$/);
   if (kind === 'hit' && fight) {
     return <>
-      {tokenize(fight[1]!)}
+      {tokenize(fight[1]!, plain)}
       <span className="ledger-arrow"> × </span>
-      {tokenize(fight[2]!)}
+      {tokenize(fight[2]!, plain)}
     </>;
   }
 
   const liquidated = text.match(/^(.+?) liquidated$/);
   if (kind === 'hit' && liquidated) {
-    return <>{tokenize(liquidated[1]!)}<span className="ledger-muted"> liquidated</span></>;
+    return <>{tokenize(liquidated[1]!, plain)}<span className="ledger-muted"> liquidated</span></>;
   }
 
   const bag = text.match(/^(you|foe) · scraped the bag · (\d+)$/);
@@ -192,19 +200,19 @@ function renderLine(text: string, kind: string, blockActor: ActorId | null = nul
 
   const handFull = text.match(/^hand full · (.+?) burned$/);
   if (handFull) {
-    return <><span className="ledger-muted">hand full · </span>{tokenize(handFull[1]!)}<span className="ledger-muted"> burned</span></>;
+    return <><span className="ledger-muted">hand full · </span>{tokenize(handFull[1]!, plain)}<span className="ledger-muted"> burned</span></>;
   }
 
   const status = text.match(/^(.+?) · (cold storage broken|control transferred)$/);
   if (status) {
-    return <>{tokenize(status[1]!)}<span className="ledger-muted"> · {status[2]}</span></>;
+    return <>{tokenize(status[1]!, plain)}<span className="ledger-muted"> · {status[2]}</span></>;
   }
 
   if (text === 'board full · summon fizzled') {
     return <span className="ledger-muted">{text}</span>;
   }
 
-  return tokenize(text);
+  return tokenize(text, plain);
 }
 
 function LedgerEntry({ text, kind, blockActor }: { text: string; kind: string; blockActor: ActorId | null }) {
@@ -259,5 +267,5 @@ export function LedgerLog({ lines, logRef, id = 'log' }: {
 export function LedgerPreview({ text, kind, blockActor = null }: {
   text: string; kind: string; blockActor?: ActorId | null;
 }) {
-  return <span className={`tick-line ${kind}`}>{renderLine(text, kind, blockActor)}</span>;
+  return <span className={`tick-line ${kind}`}>{renderLine(text, kind, blockActor, true)}</span>;
 }

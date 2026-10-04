@@ -210,12 +210,22 @@ export function PowerMark({ size = 16 }: { size?: number }) {
   );
 }
 
-export function PowerPreview({ faction }: { faction: PlayableFaction }) {
+/** Crew powers are written from the owner's seat. On the other side of the
+ *  table, "them" is the player reading it. */
+export function powerBlurb(text: string, theirs: boolean): string {
+  if (!theirs) return text;
+  return text
+    .replace(/\byourself\b/gi, 'themselves')
+    .replace(/\byour\b/gi, 'their')
+    .replace(/\bthem\b/gi, 'you');
+}
+
+export function PowerPreview({ faction, theirs = false }: { faction: PlayableFaction; theirs?: boolean }) {
   const power = FACTIONS[faction].power;
   return (
     <div className="pwr">
       <span className="pwr-name"><PowerMark size={15} />{power.name}</span>
-      <span className="pwr-fx">{power.text}</span>
+      <span className="pwr-fx">{powerBlurb(power.text, theirs)}</span>
       <span className="pwr-once">Crew power · once per block</span>
     </div>
   );

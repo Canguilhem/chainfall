@@ -3,7 +3,6 @@
   #hand .card:hover{transform:translateY(-14px)}
   #hand.locked .card:hover{transform:none}
   .card.dead:hover{transform:none}
-  .pick:hover{transform:translateY(-4px)}
   .pick:hover .go{color:var(--bone)}
   .asset.ready:hover,.asset.is-targetable:hover{transform:translateY(-4px)}
   #feed.claim .fcard:hover{transform:translateY(-6px);animation:none}
@@ -55,8 +54,9 @@
     font-size:13px;letter-spacing:.06em;white-space:nowrap}
   #veil.has-dock .dock .again:first-child{flex:1.35 1 0}
   .lede{font-size:12px;margin-bottom:20px}
-  .pick{padding:16px 14px 12px}
-  .pick h3{font-size:22px}
+  .pick-id{padding:16px 14px 2px}
+  .pick h3{font-size:24px}
+  .pick-power,.pick .go{margin-left:12px;margin-right:12px}
   .vault-shop{gap:20px;flex-direction:column;align-items:center;text-align:center}
   .vault-info{max-width:none}
   .vault-btn{min-height:44px}
@@ -193,17 +193,26 @@
   .sheet .card{min-height:172px}
 }
 
-/* Landscape on a phone: almost no height. The rails, Feed bar, prompt and hand
-   are 339px of fixed chrome and the table gets 333px, so both boards round to
-   nothing and the Assets spill over the rails. Trimming does not close a 100px
-   gap — two board rows need at least 112px — so a match asks for portrait
-   instead. The lobby and the recap scroll, and are left alone.
-
-   The trims below still apply: the overlay only covers a live match, and this
-   query also catches the short-and-wide window a desktop user can drag to. */
-@media (max-height: 460px) and (orientation: landscape) {
+/* Landscape, phone or a window dragged short. The hand leaves the column and
+   becomes a drawer, so the two boards keep a real height. Lobby and recap
+   scroll and are left alone. */
+@media (max-height: 500px) and (orientation: landscape) {
   #ticker{display:none}
   #prompt .prompt-extra{display:none}
-  #table > *{--hand-h:clamp(84px,30cqh,120px)}
-  #rotate{display:flex}
+  #rotate{display:none}
+  #feedbtn{display:flex}
+  #hand-tab{display:flex}
+  #table > *{
+    --hand-h:clamp(96px,46cqh,128px);
+    --asset-h:clamp(78px,calc((100cqh - 88px) / 2.15),120px);
+    --asset-w:calc(var(--asset-h) * 0.9)}
+  #table[data-hand="shut"] #hand{display:none}
+  #table[data-hand="open"] #hand{
+    display:flex;position:absolute;left:0;right:0;bottom:0;z-index:12;
+    height:calc(var(--hand-h) + 16px);margin:0;
+    background:var(--ash);border-top:1px solid var(--edge);
+    box-shadow:0 -12px 24px rgba(0,0,0,.45)}
+  .lane{padding-top:2px;padding-bottom:2px;gap:6px}
+  .plate{height:34px}
+  .acts .power,.acts .seal,.lane-opp-pwr{min-height:32px}
 }

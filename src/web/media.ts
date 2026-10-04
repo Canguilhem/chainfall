@@ -14,6 +14,8 @@
 import { useEffect, useState } from 'react';
 
 export const PHONE_QUERY = '(max-width: 720px)';
+/** A phone on its side, or a window dragged shorter than the two boards. */
+export const LANDSCAPE_QUERY = '(max-height: 500px) and (orientation: landscape)';
 
 function useMedia(query: string): boolean {
   const [on, setOn] = useState(() =>
@@ -31,3 +33,4 @@ function useMedia(query: string): boolean {
 
 export const useCoarsePointer = () => useMedia('(pointer: coarse), (hover: none)');
 export const usePhoneLayout = () => useMedia(PHONE_QUERY);
+export const useShortLandscape = () => useMedia(LANDSCAPE_QUERY);

@@ -4,6 +4,7 @@ import {
   CARDS, PACK_COST, PITY_EPIC, PITY_LEGEND, RARITY,
   type Pull, type Rarity,
 } from '../../engine/index.ts';
+import { usePhoneLayout } from '../media.ts';
 import type { Wallet } from '../stash.ts';
 import { CardFace } from './Card.tsx';
 
@@ -19,7 +20,7 @@ function Flip({ pull, delay, up, onFlip }: {
   pull: Pull; delay: number; up: boolean; onFlip: () => void;
 }) {
   const c = CARDS[pull.id];
-  const mark = !up ? '—' : pull.fresh ? 'NEW' : pull.dupe ? 'EXTRA' : '';
+  const mark = up ? (pull.fresh ? 'NEW' : pull.dupe ? 'EXTRA' : '') : '';
   return (
     <div className={`vault-pull r-${pull.rar}${up ? ' shown' : ''}`}>
       <button type="button" className={`vault-flip r-${pull.rar}${up ? ' up' : ''} dealt`}
@@ -31,9 +32,9 @@ function Flip({ pull, delay, up, onFlip }: {
           <CardFace id={pull.id} />
         </div>
       </button>
-      <div className={`vault-tag${up && pull.fresh ? ' new' : ''}${mark ? '' : ' wait'}`}>
-        {mark || '—'}
-      </div>
+      {mark && (
+        <div className={`vault-tag${pull.fresh ? ' new' : ''}`}>{mark}</div>
+      )}
     </div>
   );
 }
@@ -46,6 +47,8 @@ type Props = {
 
 /** Pack buy/open for the Deck page — supply sits next to list building. */
 export function PackSupply({ wallet, onBuy, onOpen }: Props) {
+  const phone = usePhoneLayout();
+  const [packsOpen, setPacksOpen] = useState(false);
   const [openDetail, setOpenDetail] = useState(false);
   const [reveal, setReveal] = useState<{ pulls: Pull[]; opened: number } | null>(null);
   const [flipped, setFlipped] = useState<boolean[]>([]);
@@ -71,7 +74,63 @@ export function PackSupply({ wallet, onBuy, onOpen }: Props) {
     if (!result) return;
     setFlipped(result.pulls.map(() => false));
     setReveal({ pulls: result.pulls, opened: wallet.opened + 1 });
+    setPacksOpen(false);
   };
+
+  const shop = (
+    <>
+      <div className="kit-supply-acts">
+        <button type="button" className="vault-btn" disabled={wallet.scrip < PACK_COST} onClick={buy}>
+          BUY PACK · {PACK_COST}
+        </button>
+        <button type="button" className="vault-btn ghost" disabled={!wallet.packs} onClick={open}
+                aria-label={wallet.packs ? 'Open a sealed pack' : 'No sealed packs'}>
+          OPEN {wallet.packs ? `(${wallet.packs})` : ''}
+        </button>
+        <button type="button" className="kit-supply-more"
+                aria-expanded={openDetail}
+                onClick={() => setOpenDetail(v => !v)}>
+          {openDetail ? 'Hide odds' : 'Odds'}
+        </button>
+      </div>
+      {openDetail && (
+        <div className="kit-supply-detail">
+          <div className="vault-stack kit-supply-stack">
+            {Array.from({ length: stackN }, (_, i) => {
+              const top = i === stackN - 1;
+              return (
+                <button key={i} type="button"
+                        className={`blockpack${top ? ' top' : ''}${wallet.packs ? '' : ' empty'}`}
+                        disabled={!wallet.packs || !top}
+                        onClick={top && wallet.packs ? open : undefined}
+                        aria-label={wallet.packs ? 'Open a sealed pack' : 'No sealed packs'}>
+                  <div className="seal">◆</div>
+                  <div className="bt">SEALED</div>
+                  <div className="bs">PACK · 5 CARDS</div>
+                  <div className="hash">{hashes[i]}</div>
+                </button>
+              );
+            })}
+          </div>
+          <div className="vault-odds">
+            <p>Five cards per pack, at least one Rare or better. Extras above the deck playset stay in your stash — sell them for salvage when you want.</p>
+            {(Object.keys(RARITY) as Rarity[]).map(k => {
+              const r = RARITY[k];
+              return (
+                <div key={k}>
+                  <b>{r.label}</b> {r.weight}% · salvage {r.salvage} · craft {r.craft} · deck max {r.max}
+                </div>
+              );
+            })}
+            <div className="vault-odds-note">
+              <b>PITY</b> epic by {PITY_EPIC} packs · legend by {PITY_LEGEND}<br />
+              <b>PULLS</b> prefer cards under playset, then extras
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 
   return (
     <>
@@ -79,59 +138,29 @@ export function PackSupply({ wallet, onBuy, onOpen }: Props) {
         <div className="kit-supply-chips">
           <span className="vault-chip">SCRIP <b>{wallet.scrip}</b></span>
           <span className="vault-chip sv">SALVAGE <b>{wallet.salvage}</b></span>
-          <span className="vault-chip">SEALED <b>{wallet.packs}</b></span>
+          {phone
+            ? (
+              <button type="button" className="vault-chip kit-packs" onClick={() => setPacksOpen(true)}>
+                PACKS <b>{wallet.packs}</b>
+              </button>
+            )
+            : <span className="vault-chip">SEALED <b>{wallet.packs}</b></span>}
         </div>
-        <div className="kit-supply-acts">
-          <button type="button" className="vault-btn" disabled={wallet.scrip < PACK_COST} onClick={buy}>
-            BUY PACK · {PACK_COST}
-          </button>
-          <button type="button" className="vault-btn ghost" disabled={!wallet.packs} onClick={open}
-                  aria-label={wallet.packs ? 'Open a sealed pack' : 'No sealed packs'}>
-            OPEN {wallet.packs ? `(${wallet.packs})` : ''}
-          </button>
-          <button type="button" className="kit-supply-more"
-                  aria-expanded={openDetail}
-                  onClick={() => setOpenDetail(v => !v)}>
-            {openDetail ? 'Hide odds' : 'Odds'}
-          </button>
-        </div>
-        {openDetail && (
-          <div className="kit-supply-detail">
-            <div className="vault-stack kit-supply-stack">
-              {Array.from({ length: stackN }, (_, i) => {
-                const top = i === stackN - 1;
-                return (
-                  <button key={i} type="button"
-                          className={`blockpack${top ? ' top' : ''}${wallet.packs ? '' : ' empty'}`}
-                          disabled={!wallet.packs || !top}
-                          onClick={top && wallet.packs ? open : undefined}
-                          aria-label={wallet.packs ? 'Open a sealed pack' : 'No sealed packs'}>
-                    <div className="seal">◆</div>
-                    <div className="bt">SEALED</div>
-                    <div className="bs">PACK · 5 CARDS</div>
-                    <div className="hash">{hashes[i]}</div>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="vault-odds">
-              <p>Five cards per pack, at least one Rare or better. Extras above the deck playset stay in your stash — sell them for salvage when you want.</p>
-              {(Object.keys(RARITY) as Rarity[]).map(k => {
-                const r = RARITY[k];
-                return (
-                  <div key={k}>
-                    <b>{r.label}</b> {r.weight}% · salvage {r.salvage} · craft {r.craft} · deck max {r.max}
-                  </div>
-                );
-              })}
-              <div className="vault-odds-note">
-                <b>PITY</b> epic by {PITY_EPIC} packs · legend by {PITY_LEGEND}<br />
-                <b>PULLS</b> prefer cards under playset, then extras
-              </div>
-            </div>
-          </div>
-        )}
+        {!phone && shop}
       </section>
+      {phone && packsOpen && createPortal(
+        <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="packs-h">
+          <div className="sheet-head">
+            <h2 id="packs-h">PACKS</h2>
+            <span className="sheet-count">{wallet.packs} sealed</span>
+            <button type="button" className="sheet-x" onClick={() => setPacksOpen(false)} aria-label="Close packs">close</button>
+          </div>
+          <div className="sheet-body">
+            <section className="kit-supply">{shop}</section>
+          </div>
+        </div>,
+        document.body,
+      )}
 
       {reveal && createPortal(
         <div className="vault-reveal" role="dialog" aria-labelledby="vault-rev-h">

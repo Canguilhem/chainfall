@@ -10,7 +10,7 @@ export function Rules() {
   return (
     <div className="rules">
       <h1>RULES</h1>
-      <p className="lede">Two crews, 20 HP. Spend gas, attack, seal. Last one standing walks free.</p>
+      <p className="lede">Two crews, 20 HP. Spend gas, attack, seal. Take the other crew to zero.</p>
 
       <section className="how rules-block">
         <h2>A block</h2>
@@ -24,6 +24,40 @@ export function Rules() {
           Play and attack in any order. They cannot answer on your block.
           Two same-crew cards in one block → <a href="#read-consensus">Consensus</a> fires on the second.
         </p>
+      </section>
+
+      <section className="how">
+        <h2>The table</h2>
+        <div className="table-read" aria-label="How the table is laid out">
+          <div className="table-stage" aria-hidden>
+            <div className="ts-plate them">Their crew</div>
+            <div className="ts-row">
+              <i /><i /><i /><i /><i />
+            </div>
+            <div className="ts-feed">Feed</div>
+            <div className="ts-row you">
+              <i /><i /><i /><i /><i />
+            </div>
+            <div className="ts-plate you">Your crew</div>
+            <div className="ts-hand"><i /><i /><i /><i /></div>
+          </div>
+          <article className="read-callout ts-them">
+            <b>Their crew</b>
+            <p>HP, gas, and the power they can spend. The sentence is turned around, so “you” means you.</p>
+          </article>
+          <article className="read-callout ts-board">
+            <b>Boards</b>
+            <p>Five Assets a side. Yours hang READY under the card. Theirs hang the flag above it.</p>
+          </article>
+          <article className="read-callout ts-feed">
+            <b>Feed</b>
+            <p>Salvage only. A shared row. Claim one card each block, then play from your hand.</p>
+          </article>
+          <article className="read-callout ts-hand">
+            <b>Hand</b>
+            <p>Lit cards can be played. Grey ones cost more than you have. Hold a board card on a phone to read it. A tap still attacks.</p>
+          </article>
+        </div>
       </section>
 
       <section className="how">

@@ -6,6 +6,8 @@
  background:var(--concrete);border:1px solid var(--edge);border-radius:var(--r)}
 .kit-supply-chips{display:flex;flex-wrap:wrap;gap:8px}
 .kit-supply-chips .vault-chip{margin:0}
+button.kit-packs{cursor:pointer;border-color:var(--amber);color:var(--amber)}
+button.kit-packs b{color:var(--bone)}
 .kit-supply-acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-left:auto}
 .kit-supply-acts .vault-btn{margin:0;padding:8px 14px;font-size:14px}
 .kit-supply-more{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
@@ -26,28 +28,22 @@
 .kit-deck-count .kit-status{margin:4px 0 0;font-size:10px}
 .kit-reset{padding:7px 12px !important;font-size:12px !important;margin:0 !important;flex:none}
 
-.kit-curve{display:flex;align-items:flex-end;gap:4px;height:52px;padding:0 2px;border-bottom:1px solid var(--edge)}
-.kit-curve-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%;min-width:0}
-.kit-curve-col i{display:block;width:100%;max-width:22px;min-height:2px;background:var(--amber);border-radius:2px 2px 0 0;transition:height .15s}
-.kit-curve-col em{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--dim);letter-spacing:.04em}
+.kit-curve{display:flex;align-items:flex-end;gap:4px;padding:0 2px;border-bottom:1px solid var(--edge)}
+.kit-curve-col{flex:1;display:flex;flex-direction:column;align-items:center;min-width:0}
+.kit-curve-col b{flex:none;height:13px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;
+ line-height:1;color:var(--amber)}
+.kit-curve-plot{flex:none;height:72px;width:100%;display:flex;align-items:flex-end;justify-content:center}
+.kit-curve-col i{display:block;width:100%;max-width:20px;min-height:0;background:var(--amber);border-radius:2px 2px 0 0;transition:height .15s}
+.kit-curve-col em{flex:none;margin-top:4px;font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--dim);letter-spacing:.04em}
 
 .kit-deck-hint,.kit-coll-hint{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin:0}
 .kit-coll-hint{margin-bottom:14px}
-.kit-deck-list{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:4px;
- scrollbar-width:thin;padding-right:2px}
-.kit-deck-row{display:grid;grid-template-columns:28px 1fr auto auto;gap:8px;align-items:center;width:100%;
- padding:8px 10px;border:1px solid var(--edge);border-left:3px solid #7A6C5D;border-radius:var(--r);
- background:var(--slab);color:var(--bone);text-align:left;cursor:pointer;transition:border-color .12s,background .12s}
-.kit-deck-row:hover{border-color:var(--amber);background:#3a342f}
-.kit-deck-row.r-legend{border-left-color:var(--amber)}
-.kit-deck-row.r-epic{border-left-color:#3E7A6B}
-.kit-deck-row.r-rare{border-left-color:var(--ink)}
-.kit-row-cost{font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:18px;color:var(--amber);text-align:center}
-.kit-row-name{font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:15px;letter-spacing:.04em;
- white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.kit-row-meta{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.08em;color:var(--dim);text-transform:uppercase}
-.kit-row-n{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--amber);white-space:nowrap}
-.kit-row-n small{font-weight:400;color:var(--dim)}
+.kit-deck-faces{flex:1;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:10px;align-content:start;scrollbar-width:thin;padding:2px 2px 8px}
+.kit-deck-face{border:none;background:transparent;padding:0;cursor:pointer;text-align:left;min-width:0}
+.kit-deck-face .card{width:100%;height:auto;aspect-ratio:5/7;margin:0}
+.kit-deck-face:hover .card{transform:translateY(-4px)}
+.stash-empty{grid-column:1 / -1}
 
 .kit-coll{min-width:0}
 .kit-coll-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-bottom:8px}
@@ -60,7 +56,7 @@
 .kit-search:focus{outline:none;border-color:var(--amber)}
 
 .kit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:14px 10px}
-.kit-tile-wrap{display:flex;flex-direction:column;gap:6px;min-width:0}
+.kit-tile-wrap{display:flex;flex-direction:column;gap:6px;min-width:0;position:relative}
 .kit-tile-wrap.locked{opacity:.72}
 .kit-tile-wrap.locked .card{filter:grayscale(.35)}
 .kit-tile-wrap.extra .kit-tile-act .vault-act-sell:not(:disabled){border-color:var(--amber)}
@@ -77,6 +73,10 @@
 .kit-tile-act button.vault-act-sell:not(:disabled){color:#7FB0A2;border-color:rgba(127,176,162,.35)}
 .kit-tile-act button.vault-act-sell:hover:not(:disabled){color:#9fd4c4;border-color:#7FB0A2}
 .kit-tile-act button:disabled{opacity:.35;cursor:default}
+@media (hover: hover) and (pointer: fine) {
+  .kit-tile-act{position:absolute;left:4px;right:4px;bottom:6px;z-index:2;opacity:0;pointer-events:none}
+  .kit-tile-wrap:hover .kit-tile-act,.kit-tile-wrap:focus-within .kit-tile-act{opacity:1;pointer-events:auto}
+}
 
 /* Copy count in the card footer, centered between atk and hp (or OP). */
 .kit-copy-n{display:inline-flex;align-items:baseline;gap:0;font-family:'IBM Plex Mono',monospace;
@@ -92,11 +92,17 @@
 .kit-status.ok{color:var(--amber)}
 
 @media (max-width:720px){
-  .kit-workspace{grid-template-columns:1fr;gap:16px}
+  .kit-workspace{grid-template-columns:minmax(0,1fr);gap:16px}
+  .kit-deck,.kit-deck-faces,.kit-coll{min-width:0}
   .kit-deck{position:static;max-height:none}
-  .kit-deck-list{max-height:240px}
+  .kit-deck-faces{display:flex;overflow-x:auto;gap:8px;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+  .kit-deck-face{flex:0 0 96px}
+  .kit-deck-face .card{width:96px}
+  .kit-deck-face .card .card-body,.kit-deck-face .card .card-faction-name{display:none}
+  .kit-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 10px}
   .kit-coll-tabs{width:100%}
   .kit-search{margin-left:0;max-width:none}
   .kit-supply-acts{margin-left:0;width:100%}
   .kit-supply-stack{margin-bottom:0}
+  .kit-lede{display:none}
 }
