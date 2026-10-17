@@ -16,18 +16,22 @@ type Props = {
   onPlayer: () => void;
   onPower?: () => void;
   onEnd?: () => void;
+  /** Phone / short window: one column, and SEAL lives in the prompt instead of this lane. */
+  stacked?: boolean;
   children: ReactNode;
 };
 
 /** One seat's board row: identity/HP left, Assets center, gas right. */
 export function OperatorLane({
   player, isMine, mode, targetable, canPower, canEnd, powerWhy, endWhy,
-  onPlayer, onPower, onEnd, children,
+  onPlayer, onPower, onEnd, stacked, children,
 }: Props) {
   const crew = FACTIONS[player.faction];
-  const handSummary = mode === 'salvage'
-    ? `${player.handCount} ${player.handCount === 1 ? 'card' : 'cards'} in hand`
-    : `${player.deckCount} left · ${player.handCount} ${player.handCount === 1 ? 'card' : 'cards'} in hand`;
+  const handSummary = stacked
+    ? `${player.handCount} in hand`
+    : mode === 'salvage'
+      ? `${player.handCount} ${player.handCount === 1 ? 'card' : 'cards'} in hand`
+      : `${player.deckCount} left · ${player.handCount} ${player.handCount === 1 ? 'card' : 'cards'} in hand`;
 
   const [plateHit, setPlateHit] = useState(false);
   const hitTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -79,20 +83,26 @@ export function OperatorLane({
     </div>
   );
 
+  const powerBtn = (
+    <Tip text={!canPower ? powerWhy : crew.power.text}>
+      <button className="power" disabled={!canPower} onClick={onPower}
+              aria-label={`${crew.power.name}, ${crew.power.cost} gas, ${crew.power.text}`}>
+        <PowerPreview faction={player.faction} />
+      </button>
+    </Tip>
+  );
+  const sealBtn = (
+    <Tip text={!canEnd ? endWhy : 'Seal the block, end your turn'}>
+      <button className="seal" disabled={!canEnd} onClick={onEnd}
+              aria-label="Seal the block">
+        SEAL
+      </button>
+    </Tip>
+  );
   const myActs = (
     <div className="acts">
-      <Tip text={!canPower ? powerWhy : crew.power.text}>
-        <button className="power" disabled={!canPower} onClick={onPower}
-                aria-label={`${crew.power.name}, ${crew.power.cost} gas, ${crew.power.text}`}>
-          <PowerPreview faction={player.faction} />
-        </button>
-      </Tip>
-      <Tip text={!canEnd ? endWhy : 'Seal the block, end your turn'}>
-        <button className="seal" disabled={!canEnd} onClick={onEnd}
-                aria-label="Seal the block">
-          SEAL
-        </button>
-      </Tip>
+      {powerBtn}
+      {!stacked && sealBtn}
     </div>
   );
 
@@ -106,6 +116,32 @@ export function OperatorLane({
     </Tip>
   );
 
+  const gas = (
+    <div className="lane-gas">
+      <div className="gasbar" aria-label={`${player.gas} of ${player.maxGas} gas`}>
+        {Array.from({ length: MAXGAS }, (_, index) => (
+          <span key={index} className={cn('pip', index < player.gas && 'on', spent.has(index) && 'spent')} />
+        ))}
+        <span className="gasnum">{player.gas}/{player.maxGas}{stacked ? '' : ' gas'}</span>
+      </div>
+      <span className="handnum">{handSummary}</span>
+    </div>
+  );
+  const board = <div className={cn('board', isMine ? 'you' : 'them')}>{children}</div>;
+  const status = <div className="lane-status">{plate}{gas}</div>;
+
+  if (stacked) {
+    return (
+      <div className={cn('lane', 'stacked', isMine ? 'you' : 'them')}>
+        {!isMine && oppPower}
+        {!isMine && status}
+        {board}
+        {isMine && status}
+        {isMine && myActs}
+      </div>
+    );
+  }
+
   return (
     <div className={cn('lane', isMine ? 'you' : 'them')}>
       <div className="lane-id">
@@ -114,20 +150,8 @@ export function OperatorLane({
         {plate}
         {isMine && myActs}
       </div>
-
-      <div className={cn('board', isMine ? 'you' : 'them')}>
-        {children}
-      </div>
-
-      <div className="lane-gas">
-        <div className="gasbar" aria-label={`${player.gas} of ${player.maxGas} gas`}>
-          {Array.from({ length: MAXGAS }, (_, index) => (
-            <span key={index} className={cn('pip', index < player.gas && 'on', spent.has(index) && 'spent')} />
-          ))}
-          <span className="gasnum">{player.gas}/{player.maxGas} gas</span>
-        </div>
-        <span className="handnum">{handSummary}</span>
-      </div>
+      {board}
+      {gas}
     </div>
   );
 }

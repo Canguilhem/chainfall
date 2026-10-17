@@ -7,13 +7,15 @@
  padding-left:max(10px,env(safe-area-inset-left));
  padding-right:max(10px,env(safe-area-inset-right));
  padding-bottom:max(10px,env(safe-area-inset-bottom))}
-.sheet-head{display:flex;align-items:baseline;gap:10px;flex:none;
+.sheet-head{display:flex;align-items:baseline;gap:10px;flex:none;flex-wrap:nowrap;
  padding:6px 6px 10px;border-bottom:1px solid var(--edge)}
 .sheet-head h2{font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:24px;
- letter-spacing:.12em;line-height:1;color:var(--amber)}
+ letter-spacing:.12em;line-height:1;color:var(--amber);min-width:0}
 .card-sheet .sheet-head h2{color:var(--bone)}
+.sheet-gas{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.06em;
+ color:var(--amber);white-space:nowrap}
 .sheet-count{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;
- text-transform:uppercase;color:var(--dim)}
+ text-transform:uppercase;color:var(--dim);white-space:nowrap}
 .sheet-x{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;
  text-transform:uppercase;color:var(--dim);border:1px solid var(--edge);border-radius:var(--r);
  padding:8px 12px;min-height:36px}

@@ -58,7 +58,6 @@ export function useMatchActions({ v, input, send, flash, coarse }: Options) {
     if (s) {
       const refs = targetsFor(s.spec, s.maxAtk);
       if (refs.length) return setPending({ i, spec: s.spec, maxAtk: s.maxAtk });
-      if (!s.opt && c.t === 'op') return flash('no legal target');
     }
     send({ t: 'play', i });
   }, [v, flash, resetTargeting, setPeek, targetsFor, setPending, send]);

@@ -27,8 +27,9 @@ function useLockedBody() {
 
 /** The Feed, as a full-width sheet. Read-only outside your claim step, so the
  *  market stays inspectable on a block where you cannot take from it. */
-export function ClaimSheet({ feed, remaining, claimable, onClaim, onClose }: {
+export function ClaimSheet({ feed, remaining, claimable, gas, maxGas, onClaim, onClose }: {
   feed: Keyed[]; remaining: number; claimable: boolean;
+  gas: number; maxGas: number;
   onClaim: (i: number) => void; onClose: () => void;
 }) {
   const [pick, setPick] = useState<number | null>(null);
@@ -41,6 +42,9 @@ export function ClaimSheet({ feed, remaining, claimable, onClaim, onClose }: {
     <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="claim-h">
       <div className="sheet-head">
         <h2 id="claim-h">{claimable ? 'CLAIM ONE' : 'SHARED FEED'}</h2>
+        {claimable && (
+          <span className="sheet-gas" aria-label={`${gas} of ${maxGas} gas this block`}>{gas}/{maxGas} gas</span>
+        )}
         <span className="sheet-count">{remaining} left</span>
         {!claimable && (
           <button type="button" className="sheet-x" onClick={onClose} aria-label="Close the feed">close</button>

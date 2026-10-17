@@ -55,7 +55,7 @@ export function Rules() {
           </article>
           <article className="read-callout ts-hand">
             <b>Hand</b>
-            <p>Lit cards can be played. Grey ones cost more than you have. Hold a board card on a phone to read it. A tap still attacks.</p>
+            <p>Lit cards can be played. Grey ones cost more than you have. Hover a board card to read it. On a phone, hold it — a tap still attacks.</p>
           </article>
         </div>
       </section>

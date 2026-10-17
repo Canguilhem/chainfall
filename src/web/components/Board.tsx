@@ -1,12 +1,12 @@
 import { forwardRef, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { FNAME, type Keyword, type ViewAsset } from '../../engine/index.ts';
+import { CARDS, FNAME, type CardId, type Keyword, type ViewAsset } from '../../engine/index.ts';
 import { Fly, useValueFlash } from '../anim.tsx';
 import { cn } from '../lib/utils.ts';
 import { useCoarsePointer } from '../media.ts';
+import { CardNotes } from './Card.tsx';
 import { FactionMark, KwLine, KwMark, StatPair } from './Marks.tsx';
 import { AssetSheet } from './Sheet.tsx';
-import { TipHit } from './Tip.tsx';
 
 /** Statuses that hang under the Asset — not printed as face keywords. */
 const FACE_SKIP = new Set<Keyword>(['coldstorage']);
@@ -89,11 +89,8 @@ export const BoardAsset = forwardRef<HTMLDivElement, {
   };
 
   const interactive = isReady || isSelected || isTargetable;
-  const tip = isTargetable ? 'click to target'
-    : isReady ? 'ready — click, then click what it hits'
-    : asset.seized ? 'seized — cannot attack'
-    : cold ? 'Cold Storage — must be broken before other targets'
-    : isMine && !isReady ? 'cannot attack this block' : undefined;
+  const printed = CARDS[asset.id as CardId];
+  const shifted = printed?.t === 'asset' && (asset.atk !== printed.a || asset.hp !== printed.h);
 
   const statusBits = [
     asset.name,
@@ -128,7 +125,13 @@ export const BoardAsset = forwardRef<HTMLDivElement, {
                onClick();
              }
            }}>
-        <TipHit text={tip} />
+        {!coarse && (
+          <div className="asset-pop">
+            <strong>{asset.name}</strong>
+            <CardNotes id={asset.id} />
+            {shifted && <p>Now {asset.atk} attack, {asset.hp} health.</p>}
+          </div>
+        )}
         <div className="asset-header">
           <FactionMark faction={asset.f} size={11} />
           <span className="asset-faction">{FNAME[asset.f].toUpperCase()}</span>

@@ -496,25 +496,65 @@ const worth = (S: MatchState, a: AssetInstance, s: Seat) =>
   effAtk(S, a, s) * 1.6 + a.hp + (a.shield ? 2 : 0) + (a.kw.includes('firewall') ? 1 : 0);
 const AGGRO: Record<PlayableFaction, number> = { degen: 1.7, sovereign: 1.2, consortium: 0.95 };
 
+const HELP_OPS = new Set<Effect['op']>(['buff', 'buffTemp', 'doubleAtk', 'grantShield', 'copyFriendly', 'heal']);
+const HURT_OPS = new Set<Effect['op']>(['damage', 'destroy', 'seize', 'control']);
+
+function effectTarget(e: Effect): string | undefined {
+  return 'tgt' in e ? e.tgt : undefined;
+}
+
+/** An Op whose aimed effect would buff them, shoot our own board, or resolve into nothing.
+ *  A rider such as "draw a card" does not make that play worth spending. */
+function opWhiffs(S: MatchState, seat: Seat, fx: Effect[] | undefined): boolean {
+  if (!fx?.length) return false;
+  const me = S.p[seat].board;
+  const them = S.p[other(seat)].board;
+  const under = (board: AssetInstance[], owner: Seat, maxAtk?: number) =>
+    board.some(a => maxAtk === undefined || effAtk(S, a, owner) <= maxAtk);
+  const lands = (e: Effect): boolean => {
+    const tgt = effectTarget(e);
+    const maxAtk = 'maxAtk' in e ? e.maxAtk : undefined;
+    if (e.op === 'draw' || e.op === 'gas' || e.op === 'armor' || e.op === 'summon' || e.op === 'discardSelf' || e.op === 'splitDamage')
+      return true;
+    if (e.op === 'discardEnemy') return S.p[other(seat)].hand.length > 0;
+    if ((e.op === 'heal' || e.op === 'damage') && (tgt === 'self-hero' || tgt === 'enemy-hero')) return true;
+    const friendly = tgt === 'choose-friendly-asset' || tgt === 'choose-other-friendly-asset'
+      || tgt === 'all-friendly-assets' || tgt === 'random-friendly-asset';
+    const enemy = tgt === 'choose-enemy-asset' || tgt === 'all-enemy-assets' || tgt === 'random-enemy-asset';
+    if (HELP_OPS.has(e.op)) return friendly || tgt === 'choose-asset' ? me.length > 0 : true;
+    if (HURT_OPS.has(e.op)) {
+      if (friendly) return me.length > 0;
+      if (tgt === 'all-assets') return them.length > 0 && me.length === 0;
+      if (enemy || tgt === 'choose-asset') return under(them, other(seat), maxAtk);
+    }
+    return true;
+  };
+  const aimed = fx.filter(e => {
+    const tgt = effectTarget(e);
+    return !!tgt && tgt !== 'self-hero' && tgt !== 'enemy-hero';
+  });
+  if (aimed.length && aimed.some(e => !lands(e))) return true;
+  return !fx.some(lands);
+}
+
 function botTarget(S: MatchState, spec: ChooseTarget, e: Effect, seat: Seat): TargetRef | null {
   let t = targets(S, spec, seat, null);
   const maxAtk = 'maxAtk' in e ? e.maxAtk : undefined;
   if (maxAtk !== undefined) t = t.filter(r => { const a = findAsset(S, r); return !!a && effAtk(S, a, r.p) <= maxAtk; });
   if (!t.length) return null;
-  const destructive = (['damage', 'destroy', 'seize', 'control'] as const).includes(e.op as never);
-  const helpful = (['buff', 'buffTemp', 'doubleAtk', 'grantShield', 'heal', 'copyFriendly'] as const).includes(e.op as never);
   const enemy = t.filter(r => r.p !== seat), mine = t.filter(r => r.p === seat);
   const score = (r: TargetRef) => { const a = findAsset(S, r); return a ? worth(S, a, r.p) : 0; };
+  const best = (pool: TargetRef[], low: boolean): TargetRef | null => {
+    const assets = pool.filter(r => r.kind === 'asset');
+    const list = assets.length ? assets : pool;
+    if (!list.length) return null;
+    return [...list].sort((x, y) => low ? score(x) - score(y) : score(y) - score(x))[0]!;
+  };
   const friendlyOnly = spec === 'choose-friendly-asset' || spec === 'choose-other-friendly-asset';
-  if (helpful && !mine.length) return null;     // Hopium with an empty board — don't buff them
-  if (destructive && !enemy.length) {
-    if (!friendlyOnly) return null;             // Gas Leak with an empty enemy board — don't shoot our own
-    const assets = mine.filter(r => r.kind === 'asset');
-    return assets.length ? assets.sort((x, y) => score(x) - score(y))[0]! : (mine[0] ?? null);
-  }
-  const pool = destructive ? enemy : mine;
-  const assets = pool.filter(r => r.kind === 'asset');
-  return assets.length ? assets.sort((x, y) => score(y) - score(x))[0]! : (pool[0] ?? null);
+  if (HELP_OPS.has(e.op)) return best(mine, false);
+  if (HURT_OPS.has(e.op) && !friendlyOnly) return best(enemy, false);
+  if (HURT_OPS.has(e.op)) return best(mine, true);
+  return best(mine, false) ?? best(enemy, false);
 }
 function selfBurn(id: string): number {
   const c = card(id);
@@ -548,11 +588,13 @@ export function botAction(S: MatchState, seat: Seat): Action | null {
     const c = card(o.id);
     if (c.t === 'asset' && P.board.length >= BOARD) continue;
     if (selfBurn(o.id) >= P.hp - 3) continue;
-    if (c.fx?.some(e => e.op === 'destroy' && e.tgt === 'choose-friendly-asset') && !P.board.length) continue;
+    if (c.t === 'op' && opWhiffs(S, seat, c.fx)) continue;
     const spec = needsTarget(S, c.fx, seat, null);
-    if (spec === 'IMPOSSIBLE') continue;
+    if (spec === 'IMPOSSIBLE') {
+      if (c.t === 'op') continue;
+    }
     let target: TargetRef | null = null;
-    if (spec) {
+    if (spec && spec !== 'IMPOSSIBLE') {
       const e = c.fx!.find(x => 'tgt' in x && x.tgt === spec)!;
       target = botTarget(S, spec, e, seat);
       if (!target) continue;

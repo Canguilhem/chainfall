@@ -44,8 +44,23 @@
      on the thumb. #veil is the scrollport everywhere else, so this only splits
      the column when a dock is actually in the tree. */
   #veil.has-dock{overflow:hidden;padding-bottom:0;display:flex;flex-direction:column}
-  #veil.has-dock .panel{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;
-    padding-bottom:12px}
+  #veil.has-dock .panel{flex:1;min-height:0;min-width:0;overflow-x:clip;overflow-y:auto;
+    -webkit-overflow-scrolling:touch;padding-bottom:4px}
+  /* The recap is one screen on a phone. The old margins were written for a
+     desktop column and left the panel a scrollbar taller than the viewport. */
+  #veil.has-dock .panel h1{font-size:32px;letter-spacing:.06em}
+  .recap{max-width:100%;margin:0 auto 4px}
+  .recap-lede{margin:4px auto 8px !important}
+  .recap-arena{gap:6px;margin-bottom:8px}
+  .recap-fighter{padding:8px 10px}
+  .recap-hero{margin:0 0 8px;padding:8px 10px}
+  .recap-hero b{font-size:32px}
+  .recap-arena,.recap-fighter,.recap-hero,.recap-foot{min-width:0;max-width:100%}
+  .recap-board{table-layout:fixed}
+  .recap-board th,.recap-board td{padding:4px 6px}
+  .recap-sec th{padding-top:6px}
+  .recap-foot{margin-top:8px;gap:8px}
+  .recap-meta{overflow-wrap:anywhere}
   #veil.has-dock .dock{flex:none;display:flex;flex-wrap:nowrap;gap:6px;margin:0;
     padding:10px 10px max(14px,env(safe-area-inset-bottom));
     background:var(--ash);border-top:1px solid var(--edge);
@@ -125,13 +140,17 @@
   .lane-gas .gasbar{flex:none;min-width:0}
   .plate .stat.hp{font-size:16px}
   .acts{padding:0;gap:8px}
-  .acts .power,.lane-opp-pwr{min-height:40px}
-  .acts .seal{flex:none;min-height:40px;min-width:72px;padding:7px 12px;font-size:14px;letter-spacing:.1em}
+  .acts .power,.lane-opp-pwr{min-height:32px}
+  .acts .seal{flex:none;min-height:32px;min-width:64px;padding:4px 10px;font-size:13px;letter-spacing:.08em}
+  #prompt{position:relative;z-index:6;background:var(--ash);flex-wrap:nowrap;height:36px;min-height:36px;overflow:visible}
+  #prompt .prompt-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #prompt .prompt-extra{display:none}
+  #prompt .seal{min-height:28px;min-width:64px;padding:3px 10px;font-size:13px}
   .asset .asset-keywords .kw-label{display:none}
 
   /* One line, and it has to hold the Cancel button during targeting. */
-  #prompt{padding:5px 10px;font-size:11.5px;gap:4px 10px}
-  #prompt .skip{min-height:34px;display:inline-flex;align-items:center;padding:4px 12px}
+  #prompt{padding:4px 10px;font-size:11.5px;gap:4px 8px}
+  #prompt .skip{min-height:28px;display:inline-flex;align-items:center;padding:3px 8px;flex:none}
 
   /* A strip, not a fan. Overlapped cards give ~34px of tappable width, and a
      mis-tap here spends gas. Two-stage tap (Sheet.tsx) covers inspection, so
@@ -192,6 +211,35 @@
   .sheet-grid{grid-template-columns:repeat(2,1fr);gap:10px}
   .sheet .card{min-height:172px}
 }
+
+/* Phone and a short window render `.lane.stacked`: one column, boards full width,
+   SEAL in the prompt. Inline flex:none on the fly wrappers would otherwise
+   refuse to shrink and the Assets paint on top of the plate. */
+.lane.stacked{display:flex;flex-direction:column;align-items:stretch;gap:6px;width:100%;min-width:0}
+.lane.stacked .board,.lane.stacked .acts,.lane.stacked .lane-opp-pwr{width:100%;max-width:none;position:relative}
+.lane.stacked .lane-status{display:flex;align-items:center;gap:8px;width:100%;min-width:0;min-height:34px}
+.lane.stacked .lane-status .plate{flex:1 1 auto;width:auto;max-width:none;height:34px;min-width:0;padding:0 8px;column-gap:6px;
+  background:transparent;border-color:transparent}
+.lane.stacked.you .lane-status .plate{box-shadow:inset 3px 0 0 var(--amber)}
+.lane.stacked.them .lane-status .plate{box-shadow:none}
+.lane.stacked .lane-status .lane-gas{flex:0 1 auto;width:auto;max-width:none;flex-direction:row;align-items:center;align-self:center;
+  gap:6px;padding:0;border:none;background:transparent;box-shadow:none}
+.lane.stacked .lane-gas .pip{width:7px;height:11px}
+.lane.stacked .gasnum,.lane.stacked .handnum{font-size:10px;white-space:nowrap}
+.lane.stacked .callsign-name{font-size:15px}
+.lane.stacked .board{display:flex;flex-direction:row;flex-wrap:nowrap;justify-content:center;align-items:flex-end;gap:4px;min-height:var(--asset-h,96px)}
+.lane.stacked .board > *{flex:1 1 0 !important;min-width:0 !important;width:auto !important;max-width:20% !important;height:auto}
+.lane.stacked .asset,.lane.stacked .slot{width:100%;max-width:none;height:var(--asset-h,96px)}
+.lane.stacked .acts{padding:0}
+.lane.stacked .acts .power,.lane.stacked .lane-opp-pwr{min-height:32px}
+#prompt.holding{position:relative;z-index:6;height:36px;min-height:36px;overflow:visible;
+  background:transparent;border-color:transparent;color:transparent}
+.seal-dialog{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:8;
+  width:min(268px,calc(100vw - 36px));margin:0;padding:12px 14px 10px;text-align:center;
+  background:var(--concrete);color:var(--bone);border:1px solid var(--oxide);border-radius:var(--r);
+  box-shadow:0 18px 40px rgba(0,0,0,.55)}
+.seal-dialog p{margin:0 0 8px;font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.35;letter-spacing:.02em;color:var(--bone)}
+#table[data-phase="seal"] .seal-dialog button.seal:not(:disabled){min-height:32px;min-width:84px;padding:4px 14px;font-size:14px;letter-spacing:.1em;animation:none;box-shadow:none}
 
 /* Landscape, phone or a window dragged short. The hand leaves the column and
    becomes a drawer, so the two boards keep a real height. Lobby and recap

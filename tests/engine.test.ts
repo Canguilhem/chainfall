@@ -110,6 +110,13 @@ describe('discard', () => {
   });
 });
 
+function pawn(uid: number, atk = 2, hp = 2) {
+  return {
+    uid, id: 'node', name: 'Node', atk, hp, maxHp: hp, cost: 1, f: 'neutral' as const,
+    kw: [], shield: false, sick: true, seized: false, attacksLeft: 0, tempAtk: 0, aura: 0,
+  };
+}
+
 describe('bot targeting', () => {
   it('does not buff an enemy Asset when its own board is empty', () => {
     const S = createMatch({ seed: 1, mode: 'salvage', factions: ['sovereign', 'consortium'] });
@@ -127,6 +134,78 @@ describe('bot targeting', () => {
     if (a?.t === 'play') expect(applyAction(S, 1, a).ok).toBe(true);
     expect(S.p[0].board[0]!.atk).toBe(3);
     expect(S.p[0].board[0]!.hp).toBe(3);
+  });
+
+  it('buffs its own Asset when both boards have one', () => {
+    const S = createMatch({ seed: 1, mode: 'constructed', factions: ['degen', 'degen'] });
+    S.turn = 1;
+    S.p[1].powerUsed = true;
+    S.p[1].hand = ['hopium'];
+    S.p[1].gas = 3;
+    S.p[1].board = [pawn(2, 1, 1)];
+    S.p[0].board = [pawn(9, 3, 3)];
+    const a = botAction(S, 1);
+    expect(a).toMatchObject({ t: 'play', target: { p: 1, uid: 2 } });
+    expect(applyAction(S, 1, a!).ok).toBe(true);
+    expect(S.p[1].board[0]!.atk).toBe(3);
+    expect(S.p[0].board[0]!.atk).toBe(3);
+  });
+
+  it('destroys an enemy Asset rather than its own', () => {
+    const S = createMatch({ seed: 1, mode: 'constructed', factions: ['consortium', 'consortium'] });
+    S.turn = 1;
+    S.p[1].powerUsed = true;
+    S.p[1].hand = ['hardware_failure'];
+    S.p[1].gas = 6;
+    S.p[1].board = [pawn(2, 5, 5)];
+    S.p[0].board = [pawn(9, 2, 2)];
+    const a = botAction(S, 1);
+    expect(a).toMatchObject({ t: 'play', target: { p: 0, uid: 9 } });
+  });
+
+  it('does not destroy its own Asset when the enemy board is empty', () => {
+    const S = createMatch({ seed: 1, mode: 'constructed', factions: ['consortium', 'consortium'] });
+    S.turn = 1;
+    S.p[1].powerUsed = true;
+    S.p[1].hand = ['hardware_failure'];
+    S.p[1].gas = 6;
+    S.p[1].board = [pawn(2)];
+    S.p[0].board = [];
+    expect(botAction(S, 1)).toEqual({ t: 'end' });
+  });
+
+  it('does not seize when the enemy has no Asset', () => {
+    const S = createMatch({ seed: 1, mode: 'constructed', factions: ['consortium', 'consortium'] });
+    S.turn = 1;
+    S.p[1].powerUsed = true;
+    S.p[1].hand = ['kyc_checkpoint'];
+    S.p[1].gas = 4;
+    S.p[0].board = [];
+    expect(botAction(S, 1)).toEqual({ t: 'end' });
+    expect(applyAction(S, 1, { t: 'play', i: 0 }).ok).toBe(true);
+  });
+
+  it('does not buff when it has no Asset', () => {
+    const S = createMatch({ seed: 1, mode: 'constructed', factions: ['degen', 'degen'] });
+    S.turn = 1;
+    S.p[1].powerUsed = true;
+    S.p[1].hand = ['pump'];
+    S.p[1].gas = 4;
+    S.p[1].board = [];
+    S.p[0].board = [pawn(9)];
+    expect(botAction(S, 1)).toEqual({ t: 'end' });
+  });
+
+  it('still sacrifices its own Asset when that is what the card does', () => {
+    const S = createMatch({ seed: 1, mode: 'constructed', factions: ['degen', 'degen'] });
+    S.turn = 1;
+    S.p[1].powerUsed = true;
+    S.p[1].hand = ['rekt'];
+    S.p[1].gas = 4;
+    S.p[1].board = [pawn(2, 1, 1)];
+    S.p[0].board = [pawn(9, 4, 4)];
+    const a = botAction(S, 1);
+    expect(a).toMatchObject({ t: 'play', target: { p: 1, uid: 2 } });
   });
 });
 

@@ -114,7 +114,7 @@
   #table[data-phase="play"] #hand .card:not(.dead):not(.is-selected),
   #table[data-phase="act"] #hand .card:not(.dead):not(.is-selected){transform:translateY(-10px)}
 }
-#table[data-phase="seal"] .seal:not(:disabled){animation:sealpulse 1.2s ease-in-out infinite;box-shadow:0 0 0 2px var(--bone)}
+#table[data-phase="seal"] button.seal:not(:disabled){animation:sealpulse 1.2s ease-in-out infinite;box-shadow:0 0 0 2px var(--bone)}
 /* Card type follows the card's own width now, so only the Asset name, which is
    not on a container, still needs a height breakpoint. */
 @media (max-height:900px){

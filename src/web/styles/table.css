@@ -138,8 +138,8 @@
  padding:9px 20px;border:1px solid var(--edge);background:transparent;color:var(--bone2);border-radius:var(--r);flex:none}
 .seal:hover:not(:disabled){border-color:var(--oxide);color:var(--bone)}
 .seal:disabled{color:var(--dim);border-color:var(--edge);cursor:default}
-#table[data-phase="seal"] .seal:not(:disabled){background:var(--oxide);color:var(--bone);border-color:var(--oxide)}
-#table[data-phase="seal"] .seal:hover:not(:disabled){filter:brightness(1.15)}
+#table[data-phase="seal"] button.seal:not(:disabled){background:var(--oxide);color:var(--bone);border-color:var(--oxide)}
+#table[data-phase="seal"] button.seal:hover:not(:disabled){filter:brightness(1.15)}
 .board{flex:1 1 auto;display:flex;justify-content:center;gap:10px;min-height:0;min-width:0;padding:4px;position:relative;overflow:visible}
 .board.them{align-items:flex-end;padding-top:18px}
 .board.you{align-items:flex-start;padding-bottom:18px}
@@ -184,6 +184,21 @@
 @keyframes ready-flag-pulse{
   0%,100%{filter:brightness(1)}
   50%{filter:brightness(1.12)}
+}
+.asset-pop{display:none;position:absolute;left:50%;width:min(220px,70vw);z-index:8;
+ background:var(--concrete);color:var(--bone);border:1px solid var(--edge);border-radius:var(--r);padding:12px 14px;
+ font-family:'Archivo',system-ui,sans-serif;font-size:12px;line-height:1.45;
+ box-shadow:0 10px 24px rgba(0,0,0,.5);pointer-events:none}
+.asset-pop strong{display:block;font-family:'Big Shoulders Display',sans-serif;font-size:15px;letter-spacing:.04em;margin-bottom:8px}
+.asset-pop p{margin-top:6px;color:var(--bone2)}
+.asset-pop .note-kw{margin-top:8px}
+.board.you .asset-pop{bottom:calc(100% + 10px);transform:translateX(-50%)}
+.board.them .asset-pop{top:calc(100% + 10px);transform:translateX(-50%)}
+.board > :first-child .asset-pop{left:0;transform:none}
+.board > :last-child .asset-pop{left:auto;right:0;transform:none}
+@media (hover: hover) and (pointer: fine) {
+  .board > :hover{z-index:7}
+  .asset:hover .asset-pop{display:block}
 }
 .asset.seized{filter:grayscale(.7) brightness(.8)}
 .asset.hit{animation:asset-hit .42s ease-out}

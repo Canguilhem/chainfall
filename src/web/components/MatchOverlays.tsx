@@ -28,6 +28,7 @@ export function MatchOverlays({
     <>
       {sheetFeed && v && (
         <ClaimSheet feed={fly.feed} remaining={v.feedRemaining} claimable={claiming}
+                    gas={v.you.gas} maxGas={v.you.maxGas}
                     onClaim={onClaim} onClose={onFeedClose} />
       )}
       {peeked && v && !sheetFeed && (

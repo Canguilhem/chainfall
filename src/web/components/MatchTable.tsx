@@ -56,6 +56,9 @@ export function MatchTable({
   const striking = useStrikeFlash(inMatch ? lines : [], v);
   const short = useShortLandscape();
   const [handOpen, setHandOpen] = useState(false);
+  const stacked = phone || short;
+  const sealDialog = stacked && hint.phase === 'seal' && canEnd && !aiming;
+  const sealHere = stacked && canEnd && !aiming && !sealDialog;
 
   return (
     <main>
@@ -71,7 +74,7 @@ export function MatchTable({
         {inMatch && <Ticker lines={lines} />}
         {v ? (
           <OperatorLane
-            player={v.them} isMine={false} mode={v.mode}
+            player={v.them} isMine={false} mode={v.mode} stacked={stacked}
             targetable={marked.heroes.has(1 - seat)}
             onPlayer={() => onPlayerTarget(false)}
           >
@@ -109,19 +112,30 @@ export function MatchTable({
             ))}
           </div>
         )}
-        <div id="prompt" className={cn(hint.phase, yourBlock && 'flash')} aria-live="polite">
-          <span className="prompt-text">{hint.text}</span>
+        <div id="prompt" className={cn(hint.phase, yourBlock && 'flash', sealDialog && 'holding')} aria-live="polite">
+          <span className="prompt-text">{sealDialog ? '' : hint.text}</span>
+          {sealHere && (
+            <button className="seal" type="button" onClick={onEnd} aria-label="Seal the block">
+              SEAL
+            </button>
+          )}
           {aiming && (
             <button className="skip cancel" type="button" onClick={onCancelTarget}>cancel</button>
           )}
-          {coach && hint.extra && <span className="prompt-extra">{hint.extra}</span>}
-          {coach && inMatch && v?.yourTurn && !aiming && (
+          {coach && hint.extra && !sealDialog && <span className="prompt-extra">{hint.extra}</span>}
+          {coach && inMatch && v?.yourTurn && !aiming && !sealDialog && (
             <button className="skip" type="button" onClick={onDismissCoach}>skip hints</button>
+          )}
+          {sealDialog && (
+            <div className="seal-dialog" role="dialog" aria-label="Seal the block">
+              <p>{hint.text}</p>
+              <button className="seal" type="button" onClick={onEnd}>SEAL</button>
+            </div>
           )}
         </div>
         {v ? (
           <OperatorLane
-            player={v.you} isMine mode={v.mode}
+            player={v.you} isMine mode={v.mode} stacked={stacked}
             targetable={marked.heroes.has(seat)}
             canPower={canPower} canEnd={canEnd}
             powerWhy={powerWhy(v, !!pending)} endWhy={endWhy}
