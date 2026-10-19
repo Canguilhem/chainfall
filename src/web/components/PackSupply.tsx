@@ -20,21 +20,19 @@ function Flip({ pull, delay, up, onFlip }: {
   pull: Pull; delay: number; up: boolean; onFlip: () => void;
 }) {
   const c = CARDS[pull.id];
-  const mark = up ? (pull.fresh ? 'NEW' : pull.dupe ? 'EXTRA' : '') : '';
+  const mark = pull.fresh ? 'NEW' : pull.dupe ? 'EXTRA' : 'COPY';
   return (
     <div className={`vault-pull r-${pull.rar}${up ? ' shown' : ''}`}>
       <button type="button" className={`vault-flip r-${pull.rar}${up ? ' up' : ''} dealt`}
               style={{ animationDelay: `${delay}ms` }}
-              aria-label={up ? `${c.n}, ${pull.fresh ? 'new' : pull.dupe ? 'extra copy' : 'already in your collection'}` : 'Sealed card. Tap to verify.'}
+              aria-label={up ? `${c.n}, ${mark === 'NEW' ? 'new' : mark === 'EXTRA' ? 'extra copy' : 'another copy'}` : 'Sealed card. Tap to verify.'}
               onClick={onFlip}>
         <div className="vault-face vault-back">◆</div>
         <div className="vault-face vault-front">
           <CardFace id={pull.id} />
         </div>
       </button>
-      {mark && (
-        <div className={`vault-tag${pull.fresh ? ' new' : ''}`}>{mark}</div>
-      )}
+      <div className={`vault-tag${up && pull.fresh ? ' new' : ''}${up ? '' : ' pending'}`}>{mark}</div>
     </div>
   );
 }
@@ -176,11 +174,21 @@ export function PackSupply({ wallet, onBuy, onOpen }: Props) {
           </div>
           <div className="revfoot">
             <div className="revsum">
-              {reveal.pulls.filter(p => p.fresh).length} new · {reveal.pulls.filter(p => p.dupe).length} extra
+              {reveal.pulls.filter(p => p.fresh).length} new
+              {' · '}
+              {reveal.pulls.filter(p => !p.fresh && !p.dupe).length} copy
+              {' · '}
+              {reveal.pulls.filter(p => p.dupe).length} extra
             </div>
             <button className="vault-btn ghost" type="button"
                     onClick={() => setFlipped(reveal.pulls.map(() => true))}>REVEAL ALL</button>
-            <button className="vault-btn" type="button" onClick={() => setReveal(null)}>CLOSE</button>
+            {wallet.packs > 0 && (
+              <button className="vault-btn" type="button" onClick={open}>
+                OPEN ANOTHER · {wallet.packs}
+              </button>
+            )}
+            <button className={`vault-btn${wallet.packs > 0 ? ' ghost' : ''}`} type="button"
+                    onClick={() => setReveal(null)}>CLOSE</button>
           </div>
         </div>,
         document.body,

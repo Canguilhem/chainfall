@@ -151,6 +151,14 @@
   /* One line, and it has to hold the Cancel button during targeting. */
   #prompt{padding:4px 10px;font-size:11.5px;gap:4px 8px}
   #prompt .skip{min-height:28px;display:inline-flex;align-items:center;padding:3px 8px;flex:none}
+  #prompt.lesson{height:auto;min-height:36px;flex-wrap:wrap}
+  #prompt.lesson.quiet{display:none}
+  .sensei.br{right:8px;bottom:8px}
+  .sensei.tr{top:8px;right:8px}
+  .sensei-bubble{width:min(232px,calc(100vw - 76px))}
+  .sensei-sprite{width:42px;height:48px}
+  .sensei-say{font-size:14px}
+  .sensei-cue{font-size:14px}
 
   /* A strip, not a fan. Overlapped cards give ~34px of tappable width, and a
      mis-tap here spends gas. Two-stage tap (Sheet.tsx) covers inspection, so
@@ -182,6 +190,8 @@
 }
 
 @media (max-width: 540px) {
+  .learn-row{align-items:stretch;width:100%}
+  .learn-row p{max-width:none}
   header:has(.topnav){
     display:grid;grid-template-columns:1fr auto;align-items:center;
     gap:6px 10px;

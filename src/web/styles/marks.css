@@ -89,6 +89,100 @@
 #prompt .skip,.lex-head .skip{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;
  color:var(--dim);border:1px solid var(--edge);padding:3px 8px;border-radius:var(--r)}
 #prompt .skip:hover,.lex-head .skip:hover{color:var(--bone);border-color:var(--dim)}
+#prompt.lesson{flex-wrap:wrap;color:var(--amber);row-gap:4px}
+/* On the lane's top edge, over the gap that is already there. Same chip as the
+   prompt Cancel, so it reads as a control and not another line of the Feed. */
+.lesson-cancel{position:fixed;z-index:75;
+ font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+ color:var(--bone);background:var(--oxide);border:1px solid var(--oxide);border-radius:var(--r);
+ padding:4px 12px;min-height:28px;line-height:1.2;cursor:pointer;
+ box-shadow:0 8px 18px rgba(0,0,0,.45)}
+.lesson-cancel:hover{filter:brightness(1.1)}
+.sensei{position:fixed;z-index:80;display:flex;align-items:flex-end;gap:2px;pointer-events:none}
+.sensei.br{right:16px;bottom:16px}
+.sensei.tr{right:16px;top:56px;align-items:flex-start}
+.sensei-bubble{pointer-events:auto;position:relative;width:min(280px,calc(100vw - 84px));
+ display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:10px 12px;
+ background:var(--concrete);border:1px solid var(--amber);border-radius:12px 12px 4px 12px;
+ text-align:left}
+.sensei.tr .sensei-bubble{border-radius:12px 4px 12px 12px}
+.sensei-bubble::after{content:'';position:absolute;width:12px;height:12px;background:var(--concrete);
+ right:-7px;bottom:18px;border-right:1px solid var(--amber);border-bottom:1px solid var(--amber);
+ transform:rotate(-45deg)}
+.sensei.tr .sensei-bubble::after{bottom:auto;top:18px;border:none;
+ border-top:1px solid var(--amber);border-right:1px solid var(--amber);transform:rotate(45deg)}
+.sensei-sprite{width:52px;height:60px;flex:none;color:var(--amber);
+ filter:drop-shadow(0 0 8px rgba(224,169,59,.45))}
+.sensei-head{flex:1 0 100%;display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.sensei-name{flex:none;margin:0;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;
+ letter-spacing:.18em;text-transform:uppercase;color:var(--amber)}
+.sensei-name::before{content:'▸ '}
+.sensei-notion{margin:0;font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:16px;
+ letter-spacing:.08em;text-transform:uppercase;color:var(--amber);text-align:right}
+.sensei-say{flex:1 0 100%;margin:0;font-family:'Archivo',system-ui,sans-serif;font-size:15px;
+ line-height:1.4;letter-spacing:0;color:var(--bone)}
+.sensei-foot{flex:1 0 100%;display:flex;flex-wrap:wrap;align-items:center;gap:10px;min-width:0}
+.sensei-cue{flex:none;font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:16px;
+ letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
+.sensei-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.sensei-skip{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+ color:var(--dim);background:transparent;border:1px solid var(--edge);padding:6px 8px;border-radius:var(--r);
+ min-height:32px;cursor:pointer}
+.sensei-skip:hover{color:var(--bone);border-color:var(--dim)}
+.sensei-play{color:var(--amber);border-color:var(--amber)}
+.sensei-next{flex:none;margin:0;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;
+ letter-spacing:.14em;text-transform:uppercase;color:var(--ash);background:var(--amber);
+ border:none;border-radius:var(--r);padding:7px 14px;min-height:32px;cursor:pointer}
+.sensei-next:hover{filter:brightness(1.08)}
+#prompt.lesson.quiet{display:none}
+.lesson-dots{display:inline-flex;gap:0;align-items:center;flex:none}
+.lesson-dots button{width:16px;height:16px;padding:0;border:0;background:transparent;display:grid;place-items:center;cursor:pointer}
+.lesson-dots button:disabled{cursor:default}
+.lesson-dots i{width:6px;height:6px;border-radius:50%;background:var(--edge);display:block;pointer-events:none}
+.lesson-dots button.on i,.lesson-dots button.was i,.lesson-dots button.ahead i{background:var(--amber)}
+.lesson-dots button.was i{opacity:.45}
+.lesson-dots button.ahead i{opacity:.7}
+.lesson-dots button:not(:disabled):hover i{opacity:1;transform:scale(1.2)}
+#prompt .lesson-play{color:var(--amber);border-color:var(--amber)}
+@keyframes lesson-blink{
+  0%,100%{outline-color:var(--amber)}
+  50%{outline-color:transparent}
+}
+/* Everything but the target drops back. The hole and a steady glow do the pointing;
+   a border that blinks off is easy to lose next to the feed's own amber dashes. */
+.lesson-spot{position:fixed;inset:0;z-index:70;width:100%;height:100%;pointer-events:none}
+.lesson-spot-ring{fill:none;stroke:var(--amber);stroke-width:2;
+ filter:drop-shadow(0 0 6px rgba(224,169,59,.95))}
+#root[data-lesson-card] [data-card]{opacity:.78}
+#root[data-lesson-card] [data-card].is-lesson{opacity:1;outline:none;z-index:7;animation:none;
+ box-shadow:0 0 0 2px var(--amber), 0 0 22px 4px rgba(224,169,59,.75)}
+#root[data-lesson-card] #feed.claim .fcard.is-lesson{animation:none;outline:none}
+#root[data-lesson-part="cost"] [data-card].is-lesson,
+#root[data-lesson-part="stats"] [data-card].is-lesson{outline:none;animation:none}
+#root[data-lesson-part="cost"] .is-lesson .card-faction,
+#root[data-lesson-part="cost"] .is-lesson .card-name,
+#root[data-lesson-part="cost"] .is-lesson .card-body,
+#root[data-lesson-part="cost"] .is-lesson .card-stats{opacity:.35}
+#root[data-lesson-part="cost"] .is-lesson .cost{opacity:1;outline:2px solid var(--amber);outline-offset:2px;
+ animation:lesson-blink 1.15s ease-in-out infinite}
+#root[data-lesson-part="stats"] .is-lesson .card-header,
+#root[data-lesson-part="stats"] .is-lesson .card-name,
+#root[data-lesson-part="stats"] .is-lesson .card-body{opacity:.35}
+#root[data-lesson-part="stats"] .is-lesson .card-stats{outline:2px solid var(--amber);outline-offset:3px;
+ animation:lesson-blink 1.15s ease-in-out infinite}
+#root[data-lesson-part="kw"] .is-lesson .card-keywords,
+#root[data-lesson-part="crew"] .is-lesson .card-faction,
+#root[data-lesson-part="consensus"] .is-lesson .card-consensus-row{
+ outline:2px solid var(--amber);outline-offset:2px;animation:lesson-blink 1.15s ease-in-out infinite}
+#table[data-lesson-region="crews"] .plate,
+#table[data-lesson-region="gas"] .lane.you .gasbar,
+#table[data-lesson-hero="1"] .lane.them .plate,
+#table[data-lesson-seal="1"] button.seal:not(:disabled){
+ box-shadow:0 0 0 2px var(--amber), 0 0 20px 3px rgba(224,169,59,.65)}
+#root[data-lesson-card] #feed.claim .fcard:not(.is-lesson){animation:none;outline:none}
+#root[data-lesson-card] #table[data-phase="play"] .card:not(.is-lesson),
+#root[data-lesson-card] #table[data-phase="act"] .card:not(.is-lesson){outline:none;transform:none}
+#table[data-lesson-region] #feed.claim .fcard{animation:none;outline:none}
 #hand.locked{opacity:.55}
 .fpop{display:none;position:absolute;top:0;left:calc(100% + 14px);transform:none;width:220px;
  background:var(--concrete);color:var(--bone);border:1px solid var(--edge);border-radius:var(--r);padding:12px 14px;

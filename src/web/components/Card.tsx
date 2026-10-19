@@ -27,6 +27,7 @@ function ConsensusTip({ faction }: { faction: Faction }) {
 function ConsensusLine({ faction, text, tips = true }: { faction: Faction; text: string; tips?: boolean }) {
   const row = (
     <span className="card-consensus-row">
+      <span className="card-consensus-kicker">Consensus</span>
       <span className="card-consensus-fx">
         <FactionMark faction={faction} size={11} />
         <span className="card-consensus-text">{text}</span>
@@ -142,7 +143,7 @@ export function CardFace({ id, missing, playable, selected, fresh, why, footerMi
     fresh && 'just-drawn',
   );
   return (
-    <div className={className}
+    <div className={className} data-card={id}
          role={interactive ? 'button' : undefined}
          aria-disabled={interactive && playable === false}
          aria-label={`${missing ? 'Still out. ' : ''}${card.n}, ${card.c} gas${card.t === 'asset' ? `, ${card.a} attack, ${card.h} health` : ''}${why ? `. ${why}` : ''}`}
@@ -183,7 +184,7 @@ export function FeedCard({ id, claimable, onClick, flyId, first }: {
   };
   return (
     <Fly id={flyId} first={first}>
-      <div className={cn('fcard', `faction-${card.f}`, claimable && 'take', peek && 'peek')}
+      <div className={cn('fcard', `faction-${card.f}`, claimable && 'take', peek && 'peek')} data-card={id}
            role="button"
            aria-label={`${claimable ? 'Claim ' : ''}${card.n}, ${card.c} gas${card.t === 'asset' ? `, ${card.a} attack, ${card.h} health` : ''}`}
            tabIndex={0} onClick={tap} onBlur={() => setPeek(false)}

@@ -6,12 +6,13 @@ import { LedgerLog, LedgerPreview, blockActorAt, type LogLine } from './Ledger.t
 
 export type Line = LogLine;
 
-export function Ticker({ lines }: { lines: Line[] }) {
+export function Ticker({ lines, openLedger = false }: { lines: Line[]; openLedger?: boolean }) {
   const [open, setOpen] = useState(false);
   const logRef = useRef<HTMLDivElement>(null);
   const last = lines[lines.length - 1];
   const lastActor = last ? blockActorAt(lines, lines.length - 1) : null;
 
+  useEffect(() => { if (openLedger) setOpen(true); }, [openLedger]);
   useEffect(() => {
     if (open && logRef.current) logRef.current.scrollTop = 0;
   }, [open, lines]);

@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import {
-  createMatch, applyAction, view, botAction, replay, DECKS, validateKit,
-  type Action, type MatchState, type PlayableFaction, type Seat
+  createMatch, applyAction, view, botAction, lessonAction, lessonPending, settleLesson,
+  replay, DECKS, validateKit, LESSON_COURSES, LESSON_STEPS,
+  type Action, type LessonCourse, type MatchState, type PlayableFaction, type Seat
 } from '../src/engine/index.ts';
+import { lessonCue } from '../src/web/lesson.ts';
 
 const F: PlayableFaction[] = ['consortium', 'sovereign', 'degen'];
 
@@ -311,6 +313,164 @@ describe('kits', () => {
     for (const f of F) {
       expect(validateKit(DECKS[f], f)).toBeNull();
     }
+  });
+
+  it('teaches one block, then a point of health', () => {
+    const S = createMatch({ lesson: true, seed: 3 });
+    const tape: { seat: Seat; action: Action }[] = [];
+    const step = () => LESSON_STEPS[S.lessonCourse!][S.lessonStep!];
+    const act = (seat: Seat, action: Action) => {
+      const r = applyAction(S, seat, action);
+      expect(r.ok, `${step()} ${JSON.stringify(action)} ${r.error ?? ''}`).toBe(true);
+      tape.push({ seat, action });
+      if (lessonPending(S)) settleLesson(S);
+    };
+    const foe = () => {
+      let guard = 0;
+      while (S.turn === 1 && guard++ < 8) {
+        const a = lessonAction(S, 1);
+        expect(a, step()).not.toBeNull();
+        act(1, a!);
+      }
+    };
+
+    expect(S.mode).toBe('salvage');
+    expect(S.p[0].faction).toBe('sovereign');
+    expect(step()).toBe('claim');
+    expect(S.p[0].gas).toBe(1);
+    expect(S.p[0].maxGas).toBe(1);
+    expect(S.feed[0]).toBe('seed_phrase_kid');
+    expect(applyAction(S, 0, { t: 'claim', i: 1 }).ok).toBe(false);
+    expect(applyAction(S, 0, { t: 'end' }).ok).toBe(false);
+    act(0, { t: 'claim', i: 0 });
+
+    expect(step()).toBe('play');
+    const kidAt = S.p[0].hand.indexOf('seed_phrase_kid');
+    expect(applyAction(S, 0, { t: 'attack', attacker: 1, target: { p: 1, kind: 'hero' } }).ok).toBe(false);
+    act(0, { t: 'play', i: kidAt });
+
+    expect(step()).toBe('seal');
+    const kid = S.p[0].board.find(a => a.id === 'seed_phrase_kid')!;
+    expect(kid.attacksLeft).toBe(0);
+    expect(applyAction(S, 0, { t: 'attack', attacker: kid.uid, target: { p: 1, kind: 'hero' } }).ok).toBe(false);
+    act(0, { t: 'end' });
+
+    expect(step()).toBe('hit');
+    foe();
+    expect(S.turn).toBe(0);
+    expect(S.p[0].gas).toBe(2);
+    expect(S.p[0].maxGas).toBe(2);
+    expect(S.p[1].board).toHaveLength(0);
+    expect(S.p[1].hp).toBe(20);
+    const ready = S.p[0].board.find(a => a.id === 'seed_phrase_kid')!;
+    expect(ready.attacksLeft).toBeGreaterThan(0);
+    expect(applyAction(S, 0, { t: 'play', i: 0 }).ok).toBe(false);
+    act(0, { t: 'claim', i: 0 });
+    expect(applyAction(S, 0, { t: 'end' }).ok).toBe(false);
+    act(0, { t: 'attack', attacker: ready.uid, target: { p: 1, kind: 'hero' } });
+
+    expect(S.p[1].hp).toBe(18);
+    expect(S.p[0].hp).toBe(20);
+    expect(view(S, 0).lesson).toBe('done');
+    expect(lessonCue(view(S, 0))?.cue).toBe('Done');
+    expect(lessonCue(view(S, 0))?.hint).toContain('18');
+
+    const again = replay({
+      seed: 3, mode: 'salvage', factions: ['sovereign', 'degen'], lesson: true, actions: tape,
+    });
+    expect(view(again, 0).lesson).toBe('done');
+    expect(again.p[1].hp).toBe(18);
+    expect(again.p[1].board).toHaveLength(0);
+    expect(again.p[0].board.some(a => a.id === 'seed_phrase_kid')).toBe(true);
+  });
+
+  it('teaches one term per sitting, and only the line that shows it', () => {
+    const line = (S: MatchState): Action => {
+      const course = S.lessonCourse!;
+      const step = LESSON_STEPS[course][S.lessonStep!];
+      const face = (id: string): Action => ({
+        t: 'attack', attacker: S.p[0].board.find(a => a.id === id)!.uid, target: { p: 1, kind: 'hero' },
+      });
+      const strike = (yours: string, theirs: string): Action => ({
+        t: 'attack',
+        attacker: S.p[0].board.find(a => a.id === yours)!.uid,
+        target: { p: 1, uid: S.p[1].board.find(a => a.id === theirs)!.uid, kind: 'asset' },
+      });
+      if (step === 'claim') return { t: 'claim', i: 0 };
+      if (step === 'play' || step === 'first' || step === 'second') return { t: 'play', i: 0 };
+      if (step === 'power') return { t: 'power' };
+      if (course === 'liquidation') return strike('sovereign_miner', 'full_node');
+      if (course === 'cold') return strike('sovereign_miner', 'cold_wallet');
+      if (course === 'firewall') return strike('sovereign_miner', 'diamond_hands');
+      if (course === 'yield') return face('yield_miner');
+      if (course === 'sharded') return face('sharded_rig');
+      return face('frontrunner');
+    };
+    const sit = (course: LessonCourse) => {
+      const S = createMatch({ lesson: course, seed: 1 });
+      let guard = 0;
+      while (view(S, 0).lesson !== 'done' && guard++ < 6) {
+        const r = applyAction(S, 0, line(S));
+        expect(r.ok, `${course} ${r.error ?? ''}`).toBe(true);
+        if (lessonPending(S)) settleLesson(S);
+      }
+      expect(view(S, 0).lesson, course).toBe('done');
+      return S;
+    };
+
+    const cast = sit('op');
+    expect(cast.p[0].board.some(a => a.id === 'seed_phrase_kid')).toBe(true);
+    expect(cast.p[0].hand).not.toContain('airdrop_coin');
+    expect(cast.p[0].gas).toBe(2);
+
+    const deployed = sit('deploy');
+    expect(deployed.p[0].board.some(a => a.id === 'sovereign_miner')).toBe(true);
+    expect(deployed.p[0].gas).toBe(2);
+
+    const popped = sit('liquidation');
+    expect(popped.p[1].board.some(a => a.id === 'full_node')).toBe(false);
+    expect(popped.p[1].board.some(a => a.id === 'node')).toBe(true);
+
+    const iced = sit('freeze');
+    expect(iced.p[1].board[0]!.seized).toBe(true);
+    expect(iced.p[1].board[0]!.id).toBe('seed_phrase_kid');
+
+    const zc = createMatch({ lesson: 'zeroconf', seed: 1 });
+    expect(zc.p[0].gas).toBe(2);
+    expect(applyAction(zc, 0, { t: 'claim', i: 1 }).ok).toBe(false);
+    const swung = sit('zeroconf');
+    expect(swung.p[1].hp).toBe(18);
+    expect(swung.block).toBe(1);
+
+    const cold = createMatch({ lesson: 'cold', seed: 1 });
+    expect(cold.p[1].board[0]!.shield).toBe(true);
+    const spent = sit('cold').p[1].board[0]!;
+    expect(spent.shield).toBe(false);
+    expect(spent.hp).toBe(spent.maxHp);
+
+    const wall = createMatch({ lesson: 'firewall', seed: 1 });
+    expect(applyAction(wall, 0, { t: 'attack', attacker: wall.p[0].board[0]!.uid, target: { p: 1, kind: 'hero' } }).ok).toBe(false);
+    const afterWall = sit('firewall');
+    expect(afterWall.p[1].hp).toBe(20);
+    expect(afterWall.p[1].board[0]!.hp).toBeLessThan(afterWall.p[1].board[0]!.maxHp);
+
+    expect(sit('yield').p[0].hp).toBe(22);
+
+    const rig = createMatch({ lesson: 'sharded', seed: 1 });
+    expect(rig.p[0].board[0]!.attacksLeft).toBe(2);
+    const twice = sit('sharded');
+    expect(twice.p[1].hp).toBe(14);
+    expect(twice.p[0].board[0]!.attacksLeft).toBe(0);
+
+    const clocked = sit('overclock');
+    expect(clocked.p[1].hp).toBe(15);
+    expect(clocked.p[0].hp).toBe(18);
+
+    expect(sit('consensus').p[0].board.some(a => a.id === 'node')).toBe(true);
+    const forked = sit('power');
+    expect(forked.p[0].board.some(a => a.id === 'node')).toBe(true);
+    expect(forked.p[0].powerUsed).toBe(true);
+    expect(LESSON_COURSES.at(-1)).toBe('power');
   });
 
   it('createMatch uses a custom kit when provided', () => {

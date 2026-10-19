@@ -34,7 +34,7 @@
 .rail.them .callsign{color:var(--bone2)}
 .lane.you .plate{border-color:#4A433C;box-shadow:inset 3px 0 0 var(--amber),inset 0 1px 0 rgba(255,255,255,.05)}
 .lane.them .callsign{color:var(--bone2)}
-.lane{flex:1 1 0;display:grid;grid-template-columns:minmax(220px,260px) minmax(0,1fr) minmax(132px,180px);
+.lane{position:relative;flex:1 1 0;display:grid;grid-template-columns:minmax(220px,260px) minmax(0,1fr) minmax(132px,180px);
  gap:10px 12px;align-items:center;min-height:0;min-width:0;padding:4px 0;overflow:visible}
 .lane.them{align-items:end}
 .lane.you{align-items:start;padding-bottom:14px}
@@ -144,6 +144,14 @@
 .board.them{align-items:flex-end;padding-top:18px}
 .board.you{align-items:flex-start;padding-bottom:18px}
 .lane .board{width:100%;height:100%}
+/* Five slots have to live in this column. --asset-w is sized from the whole
+   table, so without this cap the first card spills onto the plate and Seal.
+   The cap is on the direct child: a percentage here is the board, not the card. */
+.lane:not(.stacked) .board > *{
+  width:min(var(--asset-w,128px),calc((100% - 48px) / 5));
+  height:auto;aspect-ratio:.91;flex:none}
+.lane:not(.stacked) .board .asset{width:100%;height:100%}
+.lane-id,.lane-gas{position:relative;z-index:2}
 .centerline{height:1px;background:linear-gradient(90deg,transparent,var(--edge) 20%,var(--edge) 80%,transparent)}
 .asset{position:relative;width:var(--asset-w,128px);height:var(--asset-h,142px);flex:none;background:linear-gradient(160deg,var(--bone),var(--bone2));
  color:#241F1C;border-radius:var(--r);cursor:default;
@@ -185,20 +193,17 @@
   0%,100%{filter:brightness(1)}
   50%{filter:brightness(1.12)}
 }
-.asset-pop{display:none;position:absolute;left:50%;width:min(220px,70vw);z-index:8;
+/* Portaled to the body so it clears the lesson veil (z-index 70) and stays under Sensei (80). */
+.asset-pop{position:fixed;z-index:75;width:min(220px,70vw);transform:translate(-50%,0);
  background:var(--concrete);color:var(--bone);border:1px solid var(--edge);border-radius:var(--r);padding:12px 14px;
  font-family:'Archivo',system-ui,sans-serif;font-size:12px;line-height:1.45;
  box-shadow:0 10px 24px rgba(0,0,0,.5);pointer-events:none}
+.asset-pop.above{transform:translate(-50%,-100%)}
 .asset-pop strong{display:block;font-family:'Big Shoulders Display',sans-serif;font-size:15px;letter-spacing:.04em;margin-bottom:8px}
 .asset-pop p{margin-top:6px;color:var(--bone2)}
 .asset-pop .note-kw{margin-top:8px}
-.board.you .asset-pop{bottom:calc(100% + 10px);transform:translateX(-50%)}
-.board.them .asset-pop{top:calc(100% + 10px);transform:translateX(-50%)}
-.board > :first-child .asset-pop{left:0;transform:none}
-.board > :last-child .asset-pop{left:auto;right:0;transform:none}
 @media (hover: hover) and (pointer: fine) {
   .board > :hover{z-index:7}
-  .asset:hover .asset-pop{display:block}
 }
 .asset.seized{filter:grayscale(.7) brightness(.8)}
 .asset.hit{animation:asset-hit .42s ease-out}
@@ -276,3 +281,22 @@
 @media (hover:hover) and (pointer:fine){
   #hand .card:hover:not(.is-selected){transform:translateY(-6px)}
 }
+
+/* The ledger slides in from the right. Crew plates stay on the lanes: their HP
+   is a target, so it cannot live behind a tab. */
+main.drawers{position:relative}
+main.drawers #table{padding-right:36px}
+main.drawers #ticker{display:none}
+main.drawers #ledger{display:flex;position:absolute;top:0;right:0;bottom:0;z-index:28;
+ width:min(300px,42vw);transform:translateX(105%);transition:transform .18s ease;
+ pointer-events:none;padding-right:32px}
+main.drawers[data-drawer="ledger"] #ledger{transform:none;pointer-events:auto;
+ box-shadow:-18px 0 28px rgba(0,0,0,.45)}
+.drawer-tab{position:absolute;z-index:30;top:50%;right:0;transform:translateY(-50%);
+ display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 5px;
+ background:var(--concrete);border:1px solid var(--edge);border-right:none;
+ border-radius:var(--r) 0 0 var(--r);color:var(--dim);
+ font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase}
+.drawer-tab.on,.drawer-tab:hover{color:var(--amber);border-color:var(--amber)}
+#prompt .power{flex:none;min-height:28px;padding:4px 10px}
+#prompt .seal{min-height:28px}

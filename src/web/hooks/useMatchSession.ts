@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  type Action, type MatchView, type Mode, type PlayableFaction, type ServerMessage
+  LESSON_STEPS,
+  type Action, type LessonCourse, type MatchView, type Mode, type PlayableFaction, type ServerMessage
 } from '../../engine/index.ts';
 import { kitForMatch, kitIdsForStash } from '../decks.ts';
 import type { Wallet } from '../stash.ts';
@@ -31,8 +32,11 @@ export function useMatchSession({
   const [notice, setNotice] = useState('');
   const [lines, setLines] = useState<LogLine[]>([]);
   const [payout, setPayout] = useState<number | null>(null);
+  const [lesson, setLesson] = useState(false);
 
   const transport = useRef<Transport | null>(null);
+  const courseMark = useRef<LessonCourse | null>(null);
+  const reachedRef = useRef(0);
   const logRef = useRef<HTMLDivElement>(null);
   const seenLog = useRef(0);
   const deal = useRef(true);
@@ -57,14 +61,34 @@ export function useMatchSession({
 
   const send = useCallback((a: Action) => transport.current?.send(a), []);
 
+  const seek = useCallback((step: number) => {
+    seenLog.current = 0;
+    setLines([]);
+    resetInput();
+    transport.current?.seek?.(step);
+  }, [resetInput]);
+
   const goLobby = useCallback((id: LobbyId) => {
     if (screen.id === 'match') return;
     transport.current?.close();
+    setLesson(false);
     setV(null);
     setScreen({ id });
   }, [screen.id]);
 
-  const begin = useCallback((faction: PlayableFaction) => {
+  const leaveMatch = useCallback(() => {
+    transport.current?.close();
+    setLesson(false);
+    setV(null);
+    setLines([]);
+    setScreen({ id: 'start' });
+  }, []);
+
+  const begin = useCallback((faction: PlayableFaction, opts?: { lesson?: boolean | LessonCourse; mode?: Mode; deck?: DeckSource }) => {
+    const teaching = !!opts?.lesson;
+    const playMode: Mode = teaching ? 'salvage' : (opts?.mode ?? mode);
+    const src = opts?.deck ?? deckSourceRef.current;
+    setLesson(teaching);
     transport.current?.close();
     clearTimeout(connectTimer.current);
     seenLog.current = 0;
@@ -83,7 +107,7 @@ export function useMatchSession({
         }
         const matchCardIds = [...(nv.you.hand ?? [])];
         if (nv.mode === 'constructed') {
-          matchCardIds.push(...kitIdsForStash(nv.you.faction, walletRef.current, deckSourceRef.current));
+          matchCardIds.push(...kitIdsForStash(nv.you.faction, walletRef.current, src));
         }
         onAddCardsRef.current(matchCardIds);
       },
@@ -91,7 +115,7 @@ export function useMatchSession({
         gotServer = true;
         clearTimeout(connectTimer.current);
         if (message.t === 'queued') setScreen({ id: 'queued' });
-        else if (message.t === 'start') { setScreen({ id: 'match' }); setConn(opponent === 'bot' ? 'solo' : 'connected'); }
+        else if (message.t === 'start') { setScreen({ id: 'match' }); setConn(opponent === 'bot' || teaching ? 'solo' : 'connected'); }
         else if (message.t === 'reject') flash(message.why);
         else if (message.t === 'timeout') flash('turn timed out');
         else if (message.t === 'opponentGone') setConn('dropped · clock held');
@@ -104,12 +128,11 @@ export function useMatchSession({
         if (opponent === 'human' && s === 'closed' && !gotServer) setConn('offline');
       },
     };
-    const src = deckSourceRef.current;
-    const kit = mode === 'constructed' ? kitForMatch(faction, walletRef.current, src) : undefined;
-    transport.current = opponent === 'bot'
-      ? localTransport(faction, mode, handlers, kit)
-      : remoteTransport(faction, mode, handlers);
-    if (opponent === 'human') {
+    const kit = !teaching && playMode === 'constructed' ? kitForMatch(faction, walletRef.current, src) : undefined;
+    transport.current = opponent === 'bot' || teaching
+      ? localTransport(teaching ? 'sovereign' : faction, playMode, handlers, kit, opts?.lesson ?? false)
+      : remoteTransport(faction, playMode, handlers);
+    if (opponent === 'human' && !teaching) {
       setConn('connecting…');
       connectTimer.current = setTimeout(() => {
         if (!gotServer) {
@@ -134,6 +157,16 @@ export function useMatchSession({
     setPayout(awardScrip(screen.won));
   }, [screen, awardScrip]);
 
+  const courseNow = v?.course ?? null;
+  if (courseNow !== courseMark.current) {
+    courseMark.current = courseNow;
+    reachedRef.current = 0;
+  }
+  if (v?.lesson && v.course) {
+    const i = (LESSON_STEPS[v.course] as readonly string[]).indexOf(v.lesson);
+    if (i > reachedRef.current) reachedRef.current = i;
+  }
+
   return {
     screen, setScreen,
     v,
@@ -145,7 +178,11 @@ export function useMatchSession({
     fighting,
     begin,
     send,
+    seek,
+    lessonReached: reachedRef.current,
     flash,
     goLobby,
+    lesson,
+    leaveMatch,
   };
 }

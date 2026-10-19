@@ -29,6 +29,8 @@ export const BoardAsset = forwardRef<HTMLDivElement, {
   const hpFlash = useValueFlash(asset.hp);
   const coarse = useCoarsePointer();
   const [reading, setReading] = useState(false);
+  const [popAt, setPopAt] = useState<{ left: number; top: number; above: boolean } | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const holdTimer = useRef<number | undefined>(undefined);
   const held = useRef(false);
   const origin = useRef<{ x: number; y: number } | null>(null);
@@ -41,9 +43,9 @@ export const BoardAsset = forwardRef<HTMLDivElement, {
   }, [fresh, first, asset.uid]);
   useEffect(() => () => window.clearTimeout(holdTimer.current), []);
 
-  const cold = asset.shield || asset.kw.includes('coldstorage');
-  const showReady = isMine && isReady && !isSelected;
-  const faceKw = (asset.kw ?? []).filter(k => !(cold && FACE_SKIP.has(k)));
+  const cold = asset.shield;
+  const showReady = isMine && isReady;
+  const faceKw = (asset.kw ?? []).filter(k => !FACE_SKIP.has(k));
   const className = cn(
     'asset',
     `faction-${asset.f}`,
@@ -87,6 +89,16 @@ export const BoardAsset = forwardRef<HTMLDivElement, {
     const dy = event.clientY - origin.current.y;
     if (dx * dx + dy * dy > 100) clearHold();
   };
+  const showPop = () => {
+    if (coarse || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    const el = cardRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const half = Math.min(220, window.innerWidth * 0.7) / 2;
+    const left = Math.max(12 + half, Math.min(window.innerWidth - 12 - half, r.left + r.width / 2));
+    const above = isMine && r.top > 96;
+    setPopAt({ left, top: above ? r.top - 10 : r.bottom + 10, above });
+  };
 
   const interactive = isReady || isSelected || isTargetable;
   const printed = CARDS[asset.id as CardId];
@@ -103,8 +115,10 @@ export const BoardAsset = forwardRef<HTMLDivElement, {
 
   return (
     <Fly id={flyId} shared={shared} first={first} flyRef={ref}>
-      <div className={className} tabIndex={interactive ? 0 : -1}
+      <div ref={cardRef} className={className} data-card={asset.id} tabIndex={interactive ? 0 : -1}
            aria-label={coarse ? `${statusBits}. Hold to read` : statusBits}
+           onPointerEnter={showPop}
+           onPointerLeave={() => setPopAt(null)}
            onPointerDown={onPointerDown}
            onPointerMove={onPointerMove}
            onPointerUp={clearHold}
@@ -125,20 +139,13 @@ export const BoardAsset = forwardRef<HTMLDivElement, {
                onClick();
              }
            }}>
-        {!coarse && (
-          <div className="asset-pop">
-            <strong>{asset.name}</strong>
-            <CardNotes id={asset.id} />
-            {shifted && <p>Now {asset.atk} attack, {asset.hp} health.</p>}
-          </div>
-        )}
         <div className="asset-header">
           <FactionMark faction={asset.f} size={11} />
           <span className="asset-faction">{FNAME[asset.f].toUpperCase()}</span>
         </div>
         <div className="asset-name">{asset.name}</div>
-        <KwLine keywords={faceKw} className="asset-keywords" />
-        <StatPair atk={asset.atk} hp={asset.hp} damaged={asset.hp < asset.maxHp} live className="stats" />
+        <KwLine keywords={faceKw} className="asset-keywords" tips={false} />
+        <StatPair atk={asset.atk} hp={asset.hp} damaged={asset.hp < asset.maxHp} live tips={false} className="stats" />
         {(cold || asset.seized || showReady) && (
           <div className="asset-flags" aria-hidden>
             {cold && (
@@ -148,7 +155,7 @@ export const BoardAsset = forwardRef<HTMLDivElement, {
               </span>
             )}
             {asset.seized && (
-              <span className="asset-flag seized-flag">SEIZED</span>
+              <span className="asset-flag seized-flag">FROZEN</span>
             )}
             {showReady && (
               <span className="asset-flag ready-flag">
@@ -159,6 +166,14 @@ export const BoardAsset = forwardRef<HTMLDivElement, {
           </div>
         )}
       </div>
+      {popAt && createPortal(
+        <div className={`asset-pop${popAt.above ? ' above' : ''}`} style={{ left: popAt.left, top: popAt.top }} role="tooltip">
+          <strong>{asset.name}</strong>
+          <CardNotes id={asset.id} />
+          {shifted && <p>Now {asset.atk} attack, {asset.hp} health.</p>}
+        </div>,
+        document.body,
+      )}
       {reading && createPortal(
         <AssetSheet id={asset.id} name={asset.name} atk={asset.atk} hp={asset.hp} maxHp={asset.maxHp}
                     onClose={() => setReading(false)} />,

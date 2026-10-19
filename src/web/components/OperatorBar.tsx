@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { createPortal } from 'react-dom';
 import { FACTIONS, MAXGAS, type Mode, type PublicPlayer } from '../../engine/index.ts';
 import { cn } from '../lib/utils.ts';
 import { FactionMark, PowerPreview, LiveHp, powerBlurb } from './Marks.tsx';
@@ -16,15 +17,53 @@ type Props = {
   onPlayer: () => void;
   onPower?: () => void;
   onEnd?: () => void;
+  /** Lesson only. Sits on the top edge of this lane so selecting a card does not open a new row. */
+  onCancel?: () => void;
   /** Phone / short window: one column, and SEAL lives in the prompt instead of this lane. */
   stacked?: boolean;
+  /** `board` is the row of Assets. `status` is the plate, gas, and powers, for a drawer. */
+  slot?: 'all' | 'board' | 'status';
+  /** When the prompt already has FORK and SEAL, the drawer does not repeat them. */
+  acts?: boolean;
   children: ReactNode;
 };
+
+/** The lesson Cancel, portaled so the spotlight cannot wash it out and the lane grid does not keep a cell for it. */
+function LessonCancel({ onCancel, anchor }: { onCancel: () => void; anchor: RefObject<HTMLDivElement | null> }) {
+  const [at, setAt] = useState<{ left: number; top: number; shift: string } | null>(null);
+  useLayoutEffect(() => {
+    let frame = 0;
+    const place = () => {
+      const el = anchor.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const label = document.querySelector('#feed .fl, #feedbtn');
+      const below = label ? label.getBoundingClientRect().bottom + 8 : r.top;
+      const stacked = el.classList.contains('stacked');
+      const next = {
+        left: Math.round(stacked ? r.right - 8 : r.left + r.width / 2),
+        top: Math.round(Math.max(r.top, below)),
+        shift: stacked ? '-100%' : '-50%',
+      };
+      setAt(prev => prev && prev.left === next.left && prev.top === next.top && prev.shift === next.shift ? prev : next);
+      frame = requestAnimationFrame(place);
+    };
+    frame = requestAnimationFrame(place);
+    return () => cancelAnimationFrame(frame);
+  }, [anchor]);
+  if (!at) return null;
+  return createPortal(
+    <button type="button" className="lesson-cancel" style={{ left: at.left, top: at.top, transform: `translate(${at.shift}, 0)` }} onClick={onCancel}>
+      cancel
+    </button>,
+    document.body,
+  );
+}
 
 /** One seat's board row: identity/HP left, Assets center, gas right. */
 export function OperatorLane({
   player, isMine, mode, targetable, canPower, canEnd, powerWhy, endWhy,
-  onPlayer, onPower, onEnd, stacked, children,
+  onPlayer, onPower, onEnd, onCancel, stacked, slot = 'all', acts = true, children,
 }: Props) {
   const crew = FACTIONS[player.faction];
   const handSummary = stacked
@@ -56,6 +95,9 @@ export function OperatorLane({
     }
     prevGas.current = player.gas;
   }, [player.gas]);
+
+  const laneRef = useRef<HTMLDivElement>(null);
+  const floatingCancel = onCancel ? <LessonCancel onCancel={onCancel} anchor={laneRef} /> : null;
 
   const plate = (
     <div className={cn('plate', targetable && 'is-targetable', plateHit && 'plate-hit')}
@@ -130,9 +172,25 @@ export function OperatorLane({
   const board = <div className={cn('board', isMine ? 'you' : 'them')}>{children}</div>;
   const status = <div className="lane-status">{plate}{gas}</div>;
 
+  if (slot === 'board') {
+    return <div className={cn('lane', 'board-only', isMine ? 'you' : 'them')}>{board}</div>;
+  }
+
+  if (slot === 'status') {
+    return (
+      <div className={cn('seat-card', 'lane', isMine ? 'you' : 'them')}>
+        {!isMine && oppPower}
+        {plate}
+        {gas}
+        {isMine && acts && myActs}
+      </div>
+    );
+  }
+
   if (stacked) {
     return (
-      <div className={cn('lane', 'stacked', isMine ? 'you' : 'them')}>
+      <div ref={laneRef} className={cn('lane', 'stacked', isMine ? 'you' : 'them')}>
+        {floatingCancel}
         {!isMine && oppPower}
         {!isMine && status}
         {board}
@@ -143,7 +201,8 @@ export function OperatorLane({
   }
 
   return (
-    <div className={cn('lane', isMine ? 'you' : 'them')}>
+    <div ref={laneRef} className={cn('lane', isMine ? 'you' : 'them')}>
+      {floatingCancel}
       <div className="lane-id">
         {/* Mirror across the midline: their power sits above the plate, yours below. */}
         {!isMine && oppPower}

@@ -5,11 +5,14 @@ import { LobbyVeil } from './components/LobbyVeil.tsx';
 import { MatchOverlays } from './components/MatchOverlays.tsx';
 import { MatchTable } from './components/MatchTable.tsx';
 import { TooltipProvider } from './components/ui/tooltip.tsx';
-import { customKitError, loadDeckSource, saveDeckSource } from './decks.ts';
+import { customKitError, loadDeckSource } from './decks.ts';
 import { useStash } from './stash.ts';
 import { useFlyLists } from './anim.tsx';
 import { useCoarsePointer, usePhoneLayout, useShortLandscape } from './media.ts';
+import { Lesson, Sensei } from './components/Lesson.tsx';
 import { useCoach } from './hooks/useCoach.ts';
+import { ORIENT, continueCourse, lessonCue } from './lesson.ts';
+import type { LessonCourse } from '../engine/index.ts';
 import { useLobbyRoute } from './hooks/useLobbyRoute.ts';
 import { useMatchInput } from './hooks/useMatchInput.ts';
 import { useMatchSession } from './hooks/useMatchSession.ts';
@@ -17,10 +20,11 @@ import { useMatchActions } from './hooks/useMatchActions.ts';
 import type { DeckSource, Opponent } from './match/types.ts';
 
 export function App() {
-  const [mode, setMode] = useState<Mode>('salvage');
+  const mode: Mode = 'salvage';
   const [opponent, setOpponent] = useState<Opponent>('bot');
-  const [deckSource, setDeckSource] = useState<DeckSource>(loadDeckSource);
+  const [deckSource] = useState<DeckSource>(loadDeckSource);
   const [lexicon, setLexicon] = useState(false);
+  const [look, setLook] = useState(0);
 
   const phone = usePhoneLayout();
   const short = useShortLandscape();
@@ -47,7 +51,7 @@ export function App() {
 
   const {
     screen, setScreen, v, conn, notice, lines, logRef, payout, first, fighting,
-    begin, send, flash, goLobby: sessionGoLobby,
+    begin, send, seek, lessonReached, flash, goLobby: sessionGoLobby, lesson, leaveMatch,
   } = session;
 
   const goLobby = useLobbyRoute(screen, setScreen, sessionGoLobby);
@@ -66,6 +70,10 @@ export function App() {
   } = input;
 
   const { coach, dismissCoach } = useCoach(v);
+  const beat = lesson && v && screen.id === 'match' ? lessonCue(v) : null;
+  const spotlight = beat && v?.course === 'table' && look < ORIENT.length ? ORIENT[look]! : null;
+  const onward = v?.course ? continueCourse(v.course) : null;
+  const ledgerLook = !spotlight && v?.course === 'table' && v.lesson === 'done';
   const fly = useFlyLists(v, !!v);
 
   const actions = useMatchActions({
@@ -96,22 +104,26 @@ export function App() {
     if (opponent === 'human') setOpponent('bot');
   }, [opponent]);
 
-  const pickDeckSource = (source: DeckSource) => {
-    setDeckSource(source);
-    saveDeckSource(source);
+  const startLesson = (course: LessonCourse = 'table') => {
+    setLook(0);
+    begin('sovereign', { lesson: course });
   };
 
-  const startMatch = (faction: PlayableFaction) => {
+  const playSalvage = (faction: PlayableFaction) => {
     if (opponent === 'human') return flash('versus coming soon — play solo for now');
-    if (mode === 'constructed' && deckSource === 'custom') {
-      const err = customKitError(faction, wallet);
-      if (err) return flash(err);
-    }
-    begin(faction);
+    begin(faction, { mode: 'salvage' });
+  };
+
+  const playDeck = (faction: PlayableFaction) => {
+    if (opponent === 'human') return flash('versus coming soon — play solo for now');
+    const err = customKitError(faction, wallet);
+    if (err) return flash(err);
+    begin(faction, { mode: 'constructed', deck: 'custom' });
   };
 
   const sheetFeed = (phone || short) && !!v && v.mode === 'salvage' && screen.id === 'match'
-    && (feedOpen || (actions.claiming && !feedShut));
+    && (feedOpen || (actions.claiming && !feedShut
+      && !spotlight));
   const peeked = peek != null ? fly.hand[peek] : undefined;
 
   return (
@@ -139,7 +151,7 @@ export function App() {
           first={first}
           fly={fly}
           phone={phone}
-          coach={coach}
+          coach={coach && !beat}
           onDismissCoach={dismissCoach}
           pending={pending}
           sel={sel}
@@ -161,6 +173,8 @@ export function App() {
           onCard={actions.onCard}
           onFeedOpen={() => setFeedOpen(true)}
           send={send}
+          lesson={beat}
+          spotlight={spotlight?.region ?? null}
         />
       </div>
 
@@ -168,20 +182,38 @@ export function App() {
         screen={screen}
         v={v}
         payout={payout}
-        mode={mode}
         opponent={opponent}
-        deckSource={deckSource}
         wallet={wallet}
-        onMode={setMode}
         onOpponent={setOpponent}
-        onDeckSource={pickDeckSource}
-        onBegin={startMatch}
+        onBegin={playSalvage}
+        onPlayDeck={playDeck}
         onGoLobby={goLobby}
         onBuyPack={buyPack}
         onOpenPack={openPack}
         onCraft={craft}
         onSalvage={salvage}
+        onLearn={startLesson}
       />
+      {beat && <Lesson beat={beat} focus={spotlight?.region ?? (ledgerLook ? 'ledger' : null)} />}
+      {beat && (
+        <Sensei
+          say={spotlight ? spotlight.say : beat.hint}
+          cue={spotlight ? 'Look' : beat.cue}
+          notion={spotlight ? undefined : beat.notion}
+          step={beat.index}
+          steps={beat.steps}
+          closing={beat.closing}
+          prefer={phone ? 'tr' : 'br'}
+          reached={lessonReached}
+          onNext={spotlight ? () => setLook(n => n + 1) : undefined}
+          onStep={spotlight ? undefined : seek}
+          onContinue={beat.closing && onward ? () => startLesson(onward) : undefined}
+          onSkip={onward ? () => startLesson(onward) : leaveMatch}
+          skipLabel={onward ? 'Next' : 'Lobby'}
+          onLeave={leaveMatch}
+          onPlay={() => begin('sovereign')}
+        />
+      )}
 
       <MatchOverlays
         v={v}

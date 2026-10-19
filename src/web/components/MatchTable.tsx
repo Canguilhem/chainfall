@@ -1,16 +1,18 @@
 import { AnimatePresence, LayoutGroup, motion } from 'motion/react';
-import { type Action, type MatchView, type ViewAsset } from '../../engine/index.ts';
+import { FACTIONS, type Action, type MatchView, type ViewAsset } from '../../engine/index.ts';
 import { useFlyLists, useRisingEdge, useStrikeFlash } from '../anim.tsx';
 import { cn } from '../lib/utils.ts';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { deadWhy, isPlayable, powerWhy, boardSlots } from '../match/legality.ts';
 import { useShortLandscape } from '../media.ts';
 import type { Hint, Pending } from '../match/types.ts';
 import { HandCard, FeedCard } from './Card.tsx';
 import { BoardAsset } from './Board.tsx';
 import { OperatorLane } from './OperatorBar.tsx';
+import { PowerPreview } from './Marks.tsx';
 import { LedgerLog, type LogLine } from './Ledger.tsx';
 import { Ticker } from './Ticker.tsx';
+import { type LessonBeat, type OrientRegion } from '../lesson.ts';
 
 type FlyLists = ReturnType<typeof useFlyLists>;
 
@@ -44,6 +46,9 @@ type Props = {
   onCard: (id: string, i: number) => void;
   onFeedOpen: () => void;
   send: (action: Action) => void;
+  lesson: LessonBeat | null;
+  /** Which part of the table Sensei is showing, before the first claim. */
+  spotlight: OrientRegion | null;
 };
 
 export function MatchTable({
@@ -51,18 +56,60 @@ export function MatchTable({
   pending, sel, peek, seat, marked, hint, aiming, claiming, awaitingClaim,
   canPower, canEnd, endWhy,
   onCancelTarget, onAsset, onPlayerTarget, onPower, onEnd, onCard, onFeedOpen, send,
+  lesson, spotlight,
 }: Props) {
   const yourBlock = useRisingEdge(inMatch ? v?.yourTurn : false);
   const striking = useStrikeFlash(inMatch ? lines : [], v);
   const short = useShortLandscape();
   const [handOpen, setHandOpen] = useState(false);
   const stacked = phone || short;
-  const sealDialog = stacked && hint.phase === 'seal' && canEnd && !aiming;
-  const sealHere = stacked && canEnd && !aiming && !sealDialog;
+  const teaching = !!lesson;
+  const drawers = !phone && !short;
+  const [ledgerOpen, setLedgerOpen] = useState(false);
+  const sealDialog = !teaching && stacked && hint.phase === 'seal' && canEnd && !aiming;
+  const sealHere = !teaching && stacked && canEnd && !aiming && !sealDialog;
+  const lessonSeal = teaching && lesson?.cue === 'Seal';
+  const lessonPower = teaching && lesson?.cue === 'Power';
+  const lanePower = canPower && (!lesson || lessonPower);
+  const laneEnd = canEnd && (!teaching || lessonSeal);
+  const promptActs = lessonSeal;
+  const lessonFloat = teaching && aiming && !promptActs && !sealHere && !sealDialog;
+  const teachLedger = v?.course === 'table' && lesson?.id === 'done';
+
+  useEffect(() => {
+    if (!drawers) setLedgerOpen(false);
+  }, [drawers]);
+  useEffect(() => {
+    if (teachLedger && drawers) setLedgerOpen(true);
+  }, [teachLedger, drawers]);
+  useEffect(() => {
+    if (!ledgerOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (teachLedger) return;
+      if (event.key === 'Escape') setLedgerOpen(false);
+    };
+    const onPointer = (event: PointerEvent) => {
+      if (teachLedger) return;
+      const node = event.target;
+      if (!(node instanceof Element)) return;
+      if (node.closest('#ledger, .drawer-tab')) return;
+      setLedgerOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('pointerdown', onPointer);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('pointerdown', onPointer);
+    };
+  }, [ledgerOpen, teachLedger]);
 
   return (
-    <main>
+    <main className={drawers ? 'drawers' : undefined} data-drawer={ledgerOpen ? 'ledger' : undefined}>
       <div id="table" data-phase={hint.phase}
+           data-lesson-hero={lesson?.spotHero ? '1' : undefined}
+           data-lesson-power={lesson?.spotPower ? '1' : undefined}
+           data-lesson-seal={lessonSeal ? '1' : undefined}
+           data-lesson-region={spotlight ?? undefined}
            data-hand={short ? (handOpen ? 'open' : 'shut') : undefined}
            className={cn(
              claiming && 'claiming',
@@ -70,8 +117,15 @@ export function MatchTable({
              pending && 'targeting',
              yourBlock && 'your-block',
            )}>
+        {drawers && (
+          <button type="button" className={cn('drawer-tab', 'right', ledgerOpen && 'on')}
+                  aria-expanded={ledgerOpen} aria-controls="ledger"
+                  onClick={() => setLedgerOpen(open => !open)}>
+            Ledger
+          </button>
+        )}
         <LayoutGroup>
-        {inMatch && <Ticker lines={lines} />}
+        {inMatch && <Ticker lines={lines} openLedger={teachLedger} />}
         {v ? (
           <OperatorLane
             player={v.them} isMine={false} mode={v.mode} stacked={stacked}
@@ -112,14 +166,30 @@ export function MatchTable({
             ))}
           </div>
         )}
-        <div id="prompt" className={cn(hint.phase, yourBlock && 'flash', sealDialog && 'holding')} aria-live="polite">
-          <span className="prompt-text">{sealDialog ? '' : hint.text}</span>
+        <div id="prompt" className={cn(hint.phase, yourBlock && 'flash', sealDialog && 'holding', teaching && 'lesson', teaching && !promptActs && !sealHere && !sealDialog && 'quiet')} aria-live="polite">
+          {!lesson && (
+            <span className="prompt-text">{sealDialog ? '' : hint.text}</span>
+          )}
+          {promptActs && v && (
+            <>
+              <button className="power" type="button" disabled={!lanePower} onClick={onPower}
+                      aria-label={`${FACTIONS[v.you.faction].power.name}, ${FACTIONS[v.you.faction].power.cost} gas`}>
+                <PowerPreview faction={v.you.faction} />
+              </button>
+              {!sealHere && (
+                <button className="seal" type="button" disabled={!laneEnd} onClick={onEnd}
+                        aria-label="Seal the block">
+                  SEAL
+                </button>
+              )}
+            </>
+          )}
           {sealHere && (
             <button className="seal" type="button" onClick={onEnd} aria-label="Seal the block">
               SEAL
             </button>
           )}
-          {aiming && (
+          {aiming && !lessonFloat && (
             <button className="skip cancel" type="button" onClick={onCancelTarget}>cancel</button>
           )}
           {coach && hint.extra && !sealDialog && <span className="prompt-extra">{hint.extra}</span>}
@@ -136,11 +206,13 @@ export function MatchTable({
         {v ? (
           <OperatorLane
             player={v.you} isMine mode={v.mode} stacked={stacked}
+            acts={!promptActs}
             targetable={marked.heroes.has(seat)}
-            canPower={canPower} canEnd={canEnd}
+            canPower={lanePower} canEnd={laneEnd}
             powerWhy={powerWhy(v, !!pending)} endWhy={endWhy}
             onPlayer={() => onPlayerTarget(true)}
             onPower={onPower} onEnd={onEnd}
+            onCancel={lessonFloat ? onCancelTarget : undefined}
           >
             <AnimatePresence mode="popLayout">
               {boardSlots(v.you.board).map((a, i) => a

@@ -19,6 +19,7 @@ type Props = {
   onOpenPack: () => { pulls: Pull[]; refund: number } | null;
   onCraft: (id: string) => boolean;
   onSalvage: (id: string) => boolean;
+  onPlay: (faction: PlayableFaction) => void;
 };
 
 function curveBuckets(kit: KitCounts): number[] {
@@ -30,7 +31,7 @@ function curveBuckets(kit: KitCounts): number[] {
   return buckets;
 }
 
-export function KitBuilder({ wallet, onBuyPack, onOpenPack, onCraft, onSalvage }: Props) {
+export function KitBuilder({ wallet, onBuyPack, onOpenPack, onCraft, onSalvage, onPlay }: Props) {
   const [faction, setFaction] = useState<PlayableFaction>('consortium');
   const [kit, setKit] = useState<KitCounts>(() => loadKit('consortium'));
   const [filter, setFilter] = useState<PoolFilter>('all');
@@ -123,6 +124,9 @@ export function KitBuilder({ wallet, onBuyPack, onOpenPack, onCraft, onSalvage }
             </div>
             <button type="button" className="vault-btn ghost kit-reset" onClick={reset}>Reset</button>
           </div>
+          <button type="button" className="again kit-play" disabled={!valid} onClick={() => onPlay(faction)}>
+            Play this deck
+          </button>
 
           <div className="kit-curve" aria-label="Gas curve">
             {curve.map((n, cost) => (

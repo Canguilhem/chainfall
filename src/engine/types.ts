@@ -24,6 +24,30 @@ export type Faction = 'neutral' | 'consortium' | 'sovereign' | 'degen';
 export type PlayableFaction = Exclude<Faction, 'neutral'>;
 export type Keyword = 'firewall' | 'zeroconf' | 'coldstorage' | 'yield' | 'sharded' | 'overclock';
 export type Mode = 'constructed' | 'salvage';
+
+/** Scripted beats, in the order a single fight actually reaches them. */
+export const LESSON_COURSES = [
+  'table', 'op', 'deploy', 'liquidation', 'freeze', 'zeroconf', 'cold', 'firewall', 'yield', 'sharded', 'overclock', 'consensus', 'power',
+] as const;
+export type LessonCourse = typeof LESSON_COURSES[number];
+
+/** One short sitting each. `table` is the first block. The rest are one term. */
+export const LESSON_STEPS = {
+  table: ['claim', 'play', 'seal', 'hit', 'done'],
+  op: ['play', 'done'],
+  deploy: ['play', 'done'],
+  liquidation: ['hit', 'done'],
+  freeze: ['play', 'done'],
+  zeroconf: ['claim', 'play', 'swing', 'done'],
+  cold: ['hit', 'done'],
+  firewall: ['hit', 'done'],
+  yield: ['hit', 'done'],
+  sharded: ['hit', 'again', 'done'],
+  overclock: ['play', 'done'],
+  consensus: ['first', 'second', 'done'],
+  power: ['power', 'done'],
+} as const satisfies Record<LessonCourse, readonly string[]>;
+export type LessonStepId = typeof LESSON_STEPS[LessonCourse][number];
 export type Seat = 0 | 1;
 
 /** Targets the player picks. These are the only ones that prompt. */
@@ -137,6 +161,10 @@ export interface MatchState {
   log: LogEntry[];
   actions: number;
   cleaning: boolean;
+  /** Which sitting. Null on a real match. */
+  lessonCourse: LessonCourse | null;
+  /** Index into that sitting's steps. Null on a real match. */
+  lessonStep: number | null;
 }
 
 /* ---------------------------------------------------------------- actions */
@@ -184,6 +212,10 @@ export interface MatchView {
   feedRemaining: number;
   awaitingClaim: boolean;
   log: LogEntry[];
+  /** Which scripted beat this is. Null on a real match. */
+  lesson: LessonStepId | null;
+  /** Which sitting. Null on a real match. */
+  course: LessonCourse | null;
 }
 
 export interface MatchRecord {
@@ -193,6 +225,10 @@ export interface MatchRecord {
   factions: [PlayableFaction, PlayableFaction];
   actions: { seat: Seat; action: Action }[];
   winner?: Seat | null;
+  /** Set when the match was the scripted lesson. Replay deals the same opening. */
+  lesson?: boolean;
+  /** Which sitting, when it was not the table lesson. */
+  course?: LessonCourse;
 }
 
 /* --------------------------------------------------------- wire protocol */

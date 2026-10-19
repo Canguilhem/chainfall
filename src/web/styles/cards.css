@@ -213,6 +213,16 @@
   border-top: 1px solid rgba(36, 31, 28, .24);
   cursor: help;
 }
+.card-consensus-kicker {
+  display: block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1em;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  color: #241F1C;
+}
 .card-consensus-fx {
   display: flex;
   align-items: flex-start;

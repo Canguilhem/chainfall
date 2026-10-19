@@ -6,12 +6,16 @@
    imports, path aliases) or anything Node-specific (fs, crypto). Keeping it
    plain TypeScript is what lets one copy of the rules serve both sides.
    ========================================================================== */
-import type {
-  Card, Action, ActionResult, AssetInstance, Effect, Faction, LogEntry, MatchRecord,
-  MatchState, MatchView, Mode, PlayableFaction, PlayerState, PublicPlayer, Seat,
-  TargetRef, TargetSpec, ChooseTarget
+import {
+  LESSON_COURSES, LESSON_STEPS, type LessonCourse, type LessonStepId,
+  type Card, type Action, type ActionResult, type AssetInstance, type Effect, type Faction, type LogEntry, type MatchRecord,
+  type MatchState, type MatchView, type Mode, type PlayableFaction, type PlayerState, type PublicPlayer, type Seat,
+  type TargetRef, type TargetSpec, type ChooseTarget
 } from './types.ts';
 import { CARDS, CONSENSUS, FACTIONS, DECKS, type CardId } from './cards.ts';
+
+export { LESSON_STEPS, LESSON_COURSES };
+export type { LessonStepId, LessonCourse };
 import { kitToList, type KitCounts } from './deck.ts';
 
 export const MAXGAS = 8, BOARD = 5, HANDMAX = 8, STARTHP = 20, FEEDSIZE = 5;
@@ -86,18 +90,28 @@ function refillFeed(S: MatchState): void {
 export function createMatch(opts: {
   seed?: number; mode?: Mode; factions?: [PlayableFaction, PlayableFaction];
   kits?: [KitCounts | undefined, KitCounts | undefined];
+  /** `true` is the table lesson. A course id is one term. Local only. */
+  lesson?: boolean | LessonCourse;
 } = {}): MatchState {
   const seed = (opts.seed ?? Math.floor(Math.random() * 0xFFFFFFFF)) >>> 0;
-  const factions = opts.factions ?? (['sovereign', 'consortium'] as [PlayableFaction, PlayableFaction]);
+  const course: LessonCourse | null = opts.lesson === true ? 'table'
+    : (typeof opts.lesson === 'string' ? opts.lesson : null);
+  const lesson = course != null;
+  const factions = lesson
+    ? (['sovereign', 'degen'] as [PlayableFaction, PlayableFaction])
+    : (opts.factions ?? (['sovereign', 'consortium'] as [PlayableFaction, PlayableFaction]));
   const S: MatchState = {
     seed, rng: makeRng(seed), uid: 1,
-    mode: opts.mode === 'salvage' ? 'salvage' : 'constructed',
+    mode: lesson || opts.mode === 'salvage' ? 'salvage' : 'constructed',
     p: [mkPlayer(factions[0]), mkPlayer(factions[1])],
     turn: 0, block: 0, over: false, winner: null,
     feed: [], feedDeck: [], played: {}, awaitingClaim: false,
-    log: [], actions: 0, cleaning: false
+    log: [], actions: 0, cleaning: false, lessonCourse: null, lessonStep: null
   };
-  if (S.mode === 'salvage') {
+  // A lesson is one salvage fight. Each beat is the only sensible line from here.
+  if (course) {
+    openLesson(S, course);
+  } else if (S.mode === 'salvage') {
     const pool: string[] = [];
     for (const id of Object.keys(CARDS)) if (!('token' in CARDS[id as CardId])) { pool.push(id, id); }
     S.feedDeck = shuffle(S, pool);
@@ -115,9 +129,11 @@ export function createMatch(opts: {
     for (let i = 0; i < 3; i++) draw(S, 0);
     for (let i = 0; i < 5; i++) draw(S, 1);
   }
-  S.p[1].hand.push('airdrop_coin');
-  log(S, FACTIONS[factions[0]].name + ' vs ' + FACTIONS[factions[1]].name, 'blk');
-  beginTurn(S, 0);
+  if (!lesson) {
+    S.p[1].hand.push('airdrop_coin');
+    log(S, FACTIONS[factions[0]].name + ' vs ' + FACTIONS[factions[1]].name, 'blk');
+    beginTurn(S, 0);
+  }
   return S;
 }
 
@@ -265,7 +281,7 @@ function resolve(S: MatchState, fx: Effect[], seat: Seat, chosen: TargetRef | nu
       case 'buffTemp': for (const r of refs) { const a = findAsset(S, r); if (a) a.tempAtk += e.a; } break;
       case 'doubleAtk': for (const r of refs) { const a = findAsset(S, r); if (a) a.atk *= 2; } break;
       case 'grantShield': for (const r of refs) { const a = findAsset(S, r); if (a) a.shield = true; } break;
-      case 'seize': for (const r of refs) { const a = findAsset(S, r); if (a) { a.seized = true; a.attacksLeft = 0; } } break;
+      case 'seize': for (const r of refs) { const a = findAsset(S, r); if (a) { a.seized = true; a.attacksLeft = 0; log(S, a.name + ' · frozen'); } } break;
       case 'destroy': for (const r of refs) { const a = findAsset(S, r); if (a) a.hp = 0; } break;
       case 'copyFriendly': for (const r of refs) { const a = findAsset(S, r); if (a) summon(S, seat, a.id, 1); } break;
       case 'control':
@@ -404,12 +420,281 @@ function attackWith(S: MatchState, seat: Seat, attUid: number, ref: TargetRef): 
 }
 
 /* ------------------------------------------------- the single entry point */
+/* --------------------------------------------------------------- lesson */
+function lessonId(S: MatchState): LessonStepId | null {
+  if (S.lessonStep == null || !S.lessonCourse) return null;
+  return LESSON_STEPS[S.lessonCourse][S.lessonStep] ?? null;
+}
+
+/** Boards go down before the turn starts, so beginTurn is what makes them ready. */
+function stageLesson(S: MatchState, o: {
+  gas: number; you?: string[]; them?: string[]; hand?: string[]; feed?: string[];
+}): void {
+  S.p[0].hand = [];
+  S.p[1].hand = [];
+  for (const id of o.you ?? []) S.p[0].board.push(instance(S, id));
+  for (const id of o.them ?? []) S.p[1].board.push(instance(S, id));
+  S.p[0].maxGas = Math.max(0, o.gas - 1);
+  S.feed = o.feed ? [...o.feed] : [];
+  S.feedDeck = [];
+  log(S, FACTIONS.sovereign.name + ' vs ' + FACTIONS.degen.name, 'blk');
+  beginTurn(S, 0);
+  if (o.hand) S.p[0].hand = [...o.hand];
+  if (o.hand || !o.feed?.length) S.awaitingClaim = false;
+}
+
+/**
+ * One sitting. `table` is the first block. Each other course is one term,
+ * already set up so the only legal play is the one that shows it.
+ */
+function openLesson(S: MatchState, course: LessonCourse): void {
+  S.lessonCourse = course;
+  S.lessonStep = 0;
+  switch (course) {
+    case 'table':
+      S.p[0].hand = [];
+      S.p[1].hand = [];
+      S.feed = ['seed_phrase_kid', 'cold_wallet', 'frontrunner', 'sentry_rig', 'whale'];
+      S.feedDeck = ['the_chairman', 'liquidation_order', 'satoshis_ghost'];
+      log(S, FACTIONS.sovereign.name + ' vs ' + FACTIONS.degen.name, 'blk');
+      beginTurn(S, 0);
+      break;
+    case 'op':
+      stageLesson(S, { gas: 1, you: ['seed_phrase_kid'], hand: ['airdrop_coin'] });
+      break;
+    case 'deploy':
+      stageLesson(S, { gas: 3, hand: ['sovereign_miner'] });
+      break;
+    case 'liquidation':
+      stageLesson(S, { gas: 1, you: ['sovereign_miner'], them: ['full_node'] });
+      break;
+    case 'freeze':
+      stageLesson(S, { gas: 5, them: ['seed_phrase_kid'], hand: ['asset_freeze'] });
+      break;
+    case 'zeroconf':
+      stageLesson(S, { gas: 2, feed: ['frontrunner', 'cold_wallet', 'sentry_rig', 'whale', 'the_chairman'] });
+      break;
+    case 'cold':
+      stageLesson(S, { gas: 1, you: ['sovereign_miner'], them: ['cold_wallet'] });
+      break;
+    case 'firewall':
+      stageLesson(S, { gas: 1, you: ['sovereign_miner'], them: ['diamond_hands'] });
+      break;
+    case 'yield':
+      stageLesson(S, { gas: 1, you: ['yield_miner'] });
+      break;
+    case 'sharded':
+      stageLesson(S, { gas: 1, you: ['sharded_rig'] });
+      break;
+    case 'overclock':
+      stageLesson(S, { gas: 3, you: ['signal_caller'], hand: ['send_it'] });
+      break;
+    case 'consensus':
+      stageLesson(S, { gas: 4, hand: ['full_node', 'torch_relay'] });
+      break;
+    case 'power':
+      stageLesson(S, { gas: 2 });
+      break;
+    default:
+      break;
+  }
+}
+
+function claimMax(S: MatchState): { t: 'claim'; i: number } {
+  let best = 0, cost = -1;
+  S.feed.forEach((id, i) => {
+    const c = card(id).c;
+    if (c >= cost) { cost = c; best = i; }
+  });
+  return { t: 'claim', i: best };
+}
+
+function onBoard(S: MatchState, seat: Seat, id: string): boolean {
+  return S.p[seat].board.some(a => a.id === id);
+}
+
+function isClaim(S: MatchState, action: Action, id: string): boolean {
+  return action.t === 'claim' && S.feed[action.i | 0] === id;
+}
+function isPlay(S: MatchState, seat: Seat, action: Action, id: string): boolean {
+  return action.t === 'play' && S.p[seat].hand[action.i | 0] === id;
+}
+function isFace(S: MatchState, action: Action, id?: string): boolean {
+  if (action.t !== 'attack' || action.target.kind !== 'hero') return false;
+  if (!id) return true;
+  return S.p[0].board.find(a => a.uid === action.attacker)?.id === id;
+}
+function isStrike(S: MatchState, action: Action, id: string): boolean {
+  if (action.t !== 'attack' || action.target.kind !== 'asset') return false;
+  return S.p[1].board.find(a => a.uid === action.target.uid)?.id === id;
+}
+function byId(S: MatchState, seat: Seat, id: string): AssetInstance | undefined {
+  return S.p[seat].board.find(a => a.id === id);
+}
+
+/** The beat's one job is finished. The board is left as the fight left it. */
+export function lessonPending(S: MatchState): boolean {
+  const id = lessonId(S);
+  const course = S.lessonCourse;
+  if (!id || !course || id === 'done') return false;
+  const you = S.p[0], them = S.p[1];
+  if (course === 'table') {
+    switch (id) {
+      case 'claim': return !S.awaitingClaim && you.hand.includes('seed_phrase_kid');
+      case 'play': return onBoard(S, 0, 'seed_phrase_kid');
+      case 'seal': return S.turn === 1;
+      case 'hit': return them.hp < them.maxHp;
+      default: return false;
+    }
+  }
+  switch (course) {
+    case 'op':
+      return !you.hand.includes('airdrop_coin');
+    case 'deploy':
+      return onBoard(S, 0, 'sovereign_miner') && you.gas === 2;
+    case 'liquidation':
+      return onBoard(S, 1, 'node');
+    case 'freeze':
+      return them.board.some(a => a.seized);
+    case 'zeroconf':
+      if (id === 'claim') return !S.awaitingClaim && you.hand.includes('frontrunner');
+      if (id === 'play') return onBoard(S, 0, 'frontrunner');
+      return them.hp < them.maxHp;
+    case 'cold':
+      return byId(S, 1, 'cold_wallet')?.shield === false;
+    case 'firewall':
+      return (byId(S, 1, 'diamond_hands')?.hp ?? 0) < (byId(S, 1, 'diamond_hands')?.maxHp ?? 1);
+    case 'yield':
+      return you.hp > you.maxHp;
+    case 'sharded':
+      return (byId(S, 0, 'sharded_rig')?.attacksLeft ?? 2) === (id === 'hit' ? 1 : 0);
+    case 'overclock':
+      return them.hp === 15;
+    case 'consensus':
+      if (id === 'first') return onBoard(S, 0, 'full_node');
+      return onBoard(S, 0, 'node');
+    case 'power':
+      return you.powerUsed && onBoard(S, 0, 'node');
+    default:
+      return false;
+  }
+}
+
+/** The one action this beat is waiting on. Used to revisit a beat already reached. */
+export function lessonScript(S: MatchState): Action | null {
+  const id = lessonId(S);
+  const course = S.lessonCourse;
+  if (!id || !course || id === 'done' || S.turn !== 0) return null;
+  const at = (ids: readonly string[], want: string) => {
+    const i = ids.indexOf(want);
+    return i < 0 ? 0 : i;
+  };
+  const claimOf = (cardId: string): Action => ({ t: 'claim', i: at(S.feed, cardId) });
+  const playOf = (cardId: string): Action => ({ t: 'play', i: at(S.p[0].hand, cardId) });
+  const face = (cardId: string): Action => ({
+    t: 'attack',
+    attacker: S.p[0].board.find(a => a.id === cardId)!.uid,
+    target: { p: 1, kind: 'hero' },
+  });
+  const strike = (yours: string, theirs: string): Action => ({
+    t: 'attack',
+    attacker: S.p[0].board.find(a => a.id === yours)!.uid,
+    target: { p: 1, uid: S.p[1].board.find(a => a.id === theirs)!.uid, kind: 'asset' },
+  });
+  if (course === 'table') {
+    if (id === 'claim') return claimOf('seed_phrase_kid');
+    if (id === 'play') return playOf('seed_phrase_kid');
+    if (id === 'seal') return { t: 'end' };
+    if (id === 'hit') return S.awaitingClaim ? { t: 'claim', i: 0 } : face('seed_phrase_kid');
+    return null;
+  }
+  switch (course) {
+    case 'op': return playOf('airdrop_coin');
+    case 'deploy': return playOf('sovereign_miner');
+    case 'liquidation': return strike('sovereign_miner', 'full_node');
+    case 'freeze': return playOf('asset_freeze');
+    case 'zeroconf':
+      if (id === 'claim') return claimOf('frontrunner');
+      if (id === 'play') return playOf('frontrunner');
+      return face('frontrunner');
+    case 'cold': return strike('sovereign_miner', 'cold_wallet');
+    case 'firewall': return strike('sovereign_miner', 'diamond_hands');
+    case 'yield': return face('yield_miner');
+    case 'sharded': return face('sharded_rig');
+    case 'overclock': return playOf('send_it');
+    case 'consensus': return playOf(id === 'first' ? 'full_node' : 'torch_relay');
+    case 'power': return { t: 'power' };
+    default: return null;
+  }
+}
+
+export function settleLesson(S: MatchState): boolean {
+  if (S.lessonStep == null || !S.lessonCourse || !lessonPending(S)) return false;
+  const next = LESSON_STEPS[S.lessonCourse][S.lessonStep + 1];
+  if (!next) return false;
+  S.lessonStep = S.lessonStep + 1;
+  return true;
+}
+
+function lessonAllows(S: MatchState, seat: Seat, action: Action): string | null {
+  const id = lessonId(S);
+  const course = S.lessonCourse;
+  if (!id || !course || id === 'done') return 'lesson over';
+  if (seat === 1) return null;
+  if (S.turn !== 0) return 'watch';
+  if (course === 'table') {
+    switch (id) {
+      case 'claim': return isClaim(S, action, 'seed_phrase_kid') ? null : 'claim the kid';
+      case 'play': return isPlay(S, 0, action, 'seed_phrase_kid') ? null : 'play the kid';
+      case 'seal': return action.t === 'end' ? null : 'seal';
+      case 'hit':
+        if (S.awaitingClaim) return action.t === 'claim' ? null : 'claim';
+        return isFace(S, action, 'seed_phrase_kid') ? null : 'hit their crew';
+      default: return 'watch';
+    }
+  }
+  switch (course) {
+    case 'op':
+      return isPlay(S, 0, action, 'airdrop_coin') ? null : 'play the operation';
+    case 'deploy':
+      return isPlay(S, 0, action, 'sovereign_miner') ? null : 'play the miner';
+    case 'liquidation':
+      return isStrike(S, action, 'full_node') ? null : 'hit the node';
+    case 'freeze':
+      return isPlay(S, 0, action, 'asset_freeze') ? null : 'play the freeze';
+    case 'zeroconf':
+      if (id === 'claim') return isClaim(S, action, 'frontrunner') ? null : 'claim frontrunner';
+      if (id === 'play') return isPlay(S, 0, action, 'frontrunner') ? null : 'play it';
+      return isFace(S, action, 'frontrunner') ? null : 'swing';
+    case 'cold':
+      return isStrike(S, action, 'cold_wallet') ? null : 'hit the wallet';
+    case 'firewall':
+      return isStrike(S, action, 'diamond_hands') ? null : 'hit the firewall';
+    case 'yield':
+      return isFace(S, action, 'yield_miner') ? null : 'hit their crew';
+    case 'sharded':
+      return isFace(S, action, 'sharded_rig') ? null : 'swing';
+    case 'overclock':
+      return isPlay(S, 0, action, 'send_it') ? null : 'play send it';
+    case 'consensus':
+      return isPlay(S, 0, action, id === 'first' ? 'full_node' : 'torch_relay') ? null : 'play the sovereign card';
+    case 'power':
+      return action.t === 'power' ? null : 'use the power';
+    default:
+      return 'watch';
+  }
+}
+
 export function applyAction(S: MatchState, seat: Seat, action: Action | null | undefined): ActionResult {
   const from = S.log.length;
   const fail = (why: string): ActionResult => ({ ok: false, error: why, events: [] });
   if (S.over) return fail('match over');
   if (S.turn !== seat) return fail('not your turn');
   if (!action || typeof action.t !== 'string') return fail('malformed');
+  if (S.lessonStep != null) {
+    const why = lessonAllows(S, seat, action);
+    if (why) return fail(why);
+  }
 
   switch (action.t) {
     case 'claim':
@@ -480,15 +765,31 @@ export function view(S: MatchState, seat: Seat | null, sinceLog = 0): MatchView 
     them: spectator ? pub(S.p[1], 1) : pub(S.p[other(seat)], other(seat)),
     feed: [...S.feed], feedRemaining: S.feedDeck.length,
     awaitingClaim: S.awaitingClaim && (spectator || S.turn === seat),
-    log: S.log.slice(sinceLog)
+    log: S.log.slice(sinceLog),
+    lesson: lessonId(S),
+    course: S.lessonCourse,
   };
 }
 
 /* ------------------------------------------------------------------- replay */
 export function replay(record: MatchRecord): MatchState {
-  const S = createMatch({ seed: record.seed, mode: record.mode, factions: record.factions });
-  for (const a of record.actions) applyAction(S, a.seat, a.action);
+  const S = createMatch({
+    seed: record.seed, mode: record.mode, factions: record.factions,
+    lesson: record.course ?? (record.lesson ? true : undefined),
+  });
+  for (const a of record.actions) {
+    const r = applyAction(S, a.seat, a.action);
+    if (r.ok) settleLesson(S);
+  }
   return S;
+}
+
+/* ------------------------------------------------------------ lesson tutor */
+/** Their block. They take a card and pass, so the crew stays empty to be hit. */
+export function lessonAction(S: MatchState, seat: Seat): Action | null {
+  if (S.over || S.turn !== seat || seat !== 1 || S.lessonStep == null) return null;
+  if (S.awaitingClaim) return claimMax(S);
+  return { t: 'end' };
 }
 
 /* ---------------------------------------------------------------------- bot */
