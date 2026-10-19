@@ -8,7 +8,7 @@ client to add a card.
 
 ```ts
 cold_snap: { n: 'Cold Snap', c: 3, t: 'op', f: 'consortium',
-  tx: 'Seize an enemy Asset. Draw a card.',
+  tx: 'Freeze an enemy Asset. Draw a card.',
   fx: [{ op: 'seize', tgt: 'choose-enemy-asset' }, { op: 'draw', amt: 1 }] },
 ```
 
@@ -26,7 +26,7 @@ cold_snap: { n: 'Cold Snap', c: 3, t: 'op', f: 'consortium',
 | `aura` | Static +N Attack to your *other* Assets |
 
 Available ops: `damage`, `heal`, `armor`, `buff`, `buffTemp`, `doubleAtk`,
-`grantShield`, `seize`, `destroy`, `control`, `copyFriendly`, `summon`, `draw`,
+`grantShield`, `seize` (print this as Freeze), `destroy`, `control`, `copyFriendly`, `summon`, `draw`,
 `gas`, `discardEnemy`, `discardSelf`, `splitDamage`.
 
 Targets you pick: `choose-asset`, `choose-enemy-asset`, `choose-friendly-asset`,
@@ -52,7 +52,7 @@ paid for by going under the line.** Cypherpunk is a 3-Gas 2/3 — five stats whe
 seven is standard — and the two missing stats buy Cold Storage.
 
 Rough prices, in stats: Firewall 1–2 · Cold Storage 2 · Zero-Conf 2 · Yield 2 ·
-Sharded 3 · draw a card 2 · 1 damage on deploy 1 · summon a 1/1 2 · seize an
+Sharded 3 · draw a card 2 · 1 damage on deploy 1 · summon a 1/1 2 · freeze an
 enemy Asset 2.
 
 For Ops, the benchmark is **3 Gas should kill roughly a 4-Gas Asset**. Print

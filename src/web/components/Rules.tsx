@@ -10,7 +10,7 @@ export function Rules() {
   return (
     <div className="rules">
       <h1>RULES</h1>
-      <p className="lede">Two crews, 20 HP. Spend gas, attack, seal. Take the other crew to zero.</p>
+      <p className="lede">20 health each. First crew at 0 loses.</p>
 
       <section className="how rules-block">
         <h2>A block</h2>
@@ -22,7 +22,7 @@ export function Rules() {
         </ol>
         <p className="how-note">
           Play and attack in any order. They cannot answer on your block.
-          Two same-crew cards in one block → <a href="#read-consensus">Consensus</a> fires on the second.
+          Two same-crew cards in one block. <a href="#read-consensus">Consensus</a> fires only if the second one has the line.
         </p>
       </section>
 
@@ -43,19 +43,19 @@ export function Rules() {
           </div>
           <article className="read-callout ts-them">
             <b>Their crew</b>
-            <p>HP, gas, and the power they can spend. The sentence is turned around, so “you” means you.</p>
+            <p>Health, gas, and their power. On their plate the power is written so “you” means you.</p>
           </article>
           <article className="read-callout ts-board">
             <b>Boards</b>
-            <p>Five Assets a side. Yours hang READY under the card. Theirs hang the flag above it.</p>
+            <p>Five Assets a side. READY means it can attack. An empty board means the attack hits that crew. Hover an Asset to read it. On a phone, hold it.</p>
           </article>
           <article className="read-callout ts-feed">
             <b>Feed</b>
-            <p>Salvage only. A shared row. Claim one card each block, then play from your hand.</p>
+            <p>Salvage Run. One shared row. Each crew takes one card from it each block.</p>
           </article>
           <article className="read-callout ts-hand">
             <b>Hand</b>
-            <p>Lit cards can be played. Grey ones cost more than you have. Hover a board card to read it. On a phone, hold it — a tap still attacks.</p>
+            <p>A card you can afford is lit. A grey card costs more gas than you have.</p>
           </article>
         </div>
       </section>
@@ -69,15 +69,31 @@ export function Rules() {
           </li>
           <li>
             <b>Assets</b>
-            <span>Stay on the board. Attack next block — or this one with <a href="#kw-zeroconf">Zero-Conf</a>.</span>
+            <span>Stay on the board. They attack next block, or this block with <a href="#kw-zeroconf">Zero-Conf</a>.</span>
           </li>
-          <li>
+          <li id="read-op">
             <b>Ops</b>
-            <span>Fire once, then leave. Marked <a href="#read-op">OP</a> on the face.</span>
+            <span>Fire once, then leave. Marked OP on the face.</span>
           </li>
           <li>
             <b>Crew power</b>
-            <span>2 gas, once per block. The button under your name. See <a href="#crew-powers">crew powers</a>.</span>
+            <span>Each crew has its own. 2 gas, once a block. The button under your name. See <a href="#crew-powers">crew powers</a>.</span>
+          </li>
+          <li id="read-deploy">
+            <b>On Deploy</b>
+            <span>The line that happens when an Asset is played onto the board.</span>
+          </li>
+          <li id="read-liquidation">
+            <b>On Liquidation</b>
+            <span>The line that happens when an Asset hits 0 and leaves the board.</span>
+          </li>
+          <li id="read-freeze">
+            <b>Freeze</b>
+            <span>The Asset cannot attack until the end of its owner’s next turn.</span>
+          </li>
+          <li id="read-consensus">
+            <b>Consensus</b>
+            <span>A labeled line on some cards. It fires only when that card is the second one of its crew this block.</span>
           </li>
         </ul>
       </section>
@@ -94,7 +110,7 @@ export function Rules() {
           </article>
           <article className="read-callout crew">
             <b>Crew</b>
-            <p>The band and mark. Consortium, Sovereign, Degen, or Neutral.</p>
+            <p>The band and mark. Consortium, Sovereigns, Degens, or Neutral.</p>
           </article>
           <article className="read-callout name">
             <b>Name</b>
@@ -106,23 +122,13 @@ export function Rules() {
           </article>
           <article className="read-callout rules">
             <b>Rules</b>
-            <p>The effect. <a href="#term-deploy">On Deploy</a>, <a href="#term-liquidation">On Liquidation</a>, or the whole card when it is an <a href="#read-op">Op</a>.</p>
+            <p>The effect. <a href="#read-deploy">On Deploy</a> happens when the Asset is played. <a href="#read-liquidation">On Liquidation</a> happens when it hits 0 and leaves. An <a href="#read-op">Op</a> is the whole card. <a href="#read-consensus">Consensus</a> is the labeled line under that.</p>
           </article>
           <article className="read-callout stats">
             <b>Attack / health</b>
-            <p>Triangle and heart. At 0 health the Asset is <a href="#term-liquidation">liquidated</a>.</p>
+            <p>Triangle is attack. Heart is health. At 0 health the Asset is <a href="#read-liquidation">liquidated</a>.</p>
           </article>
         </div>
-        <ul className="rules-also">
-          <li id="read-consensus">
-            <b>Consensus</b>
-            <span>A crew-colored line under the rules, on some cards. Fires when you play a second card of that crew this block.</span>
-          </li>
-          <li id="read-op">
-            <b>OP</b>
-            <span>Operations have no attack or health. They resolve, then leave.</span>
-          </li>
-        </ul>
       </section>
 
       <section className="how" id="keyword-marks">
@@ -146,17 +152,18 @@ export function Rules() {
         <div className="modes play-modes">
           <article className="mode">
             <h4>Salvage Run</h4>
-            <p>No deck. Claim one face-up Feed card each block, then play. Collection not required.</p>
+            <p>The match on the homepage. No deck. Each block, both crews take one card from the same row.</p>
           </article>
           <article className="mode">
             <h4>Constructed</h4>
-            <p>Your 25-card deck. Draw one each block. Crew + neutrals only.</p>
+            <p>Play this deck, on the Deck page. A starter list is legal from the start. Cards you open add more choices. Draw one each block.</p>
           </article>
         </div>
       </section>
 
       <section className="how" id="crew-powers">
         <h2>Crew powers</h2>
+        <p className="how-note">Each crew has a different power. Once a block, for 2 gas.</p>
         <ul className="rules-powers">
           {CREWS.map(k => {
             const f = FACTIONS[k];

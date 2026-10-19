@@ -136,7 +136,7 @@ checks it in place. Then `npm run balance` to see what moved.
 
 ```ts
 cold_snap: { n: 'Cold Snap', c: 3, t: 'op', f: 'consortium',
-  tx: 'Seize an enemy Asset. Draw a card.',
+  tx: 'Freeze an enemy Asset. Draw a card.',
   fx: [{ op: 'seize', tgt: 'choose-enemy-asset' }, { op: 'draw', amt: 1 }] },
 ```
 

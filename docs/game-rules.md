@@ -59,7 +59,7 @@ Once per turn, for 2 Gas:
 | **Overclock** | Your Ops deal +1 damage while this is on the board | Spell Damage |
 | **On Deploy** | Triggers when played from hand | Battlecry |
 | **On Liquidation** | Triggers when it dies | Deathrattle |
-| **Seized** | Cannot attack; clears at the end of your next turn | Freeze |
+| **Freeze** | Cannot attack until the end of its owner's next turn | Freeze |
 | **Consensus** | Extra effect if you already played another card of this faction this block | Hero Realms' Ally |
 
 Nine cards carry Consensus; see `chainfall-modes-and-pvp.md` for the list and for **Salvage Run**, the shared-Feed mode that needs no collection to play.
@@ -111,7 +111,7 @@ These are what the current set implies. Use them as a starting point, not law.
 | Draw a card | 2 |
 | Deal 1 damage on deploy | 1 |
 | Summon a 1/1 | 2 |
-| Seize an enemy Asset | 2 |
+| Freeze an enemy Asset | 2 |
 | Restore 3 HP to your Operator | 1 |
 
 ### Skew matters as much as total
@@ -167,20 +167,20 @@ Stats are Attack/HP. "Budget" shows actual stat total against the vanilla line f
 
 | Gas | Card | Type | Stats | Budget | Text |
 |---:|---|---|---|---:|---|
-| 1 | KYC Checkpoint | Op | — | — | Seize an enemy Asset. Draw a card. |
+| 1 | KYC Checkpoint | Op | — | — | Freeze an enemy Asset. Draw a card. |
 | 2 | Private Security | Asset | 1/3 | 4 / 5 | **Firewall.** |
 | 2 | Surveillance Drone | Asset | 2/2 | 4 / 5 | On Deploy: Deal 1 damage to an enemy Asset. |
-| 3 | Compliance Officer | Asset | 2/3 | 5 / 7 | On Deploy: Seize an enemy Asset. |
+| 3 | Compliance Officer | Asset | 2/3 | 5 / 7 | On Deploy: Freeze an enemy Asset. |
 | 3 | Data Broker | Asset | 2/3 | 5 / 7 | On Deploy: Draw a card. |
 | 4 | Bailout | Op | — | — | Gain 5 Armor. |
 | 4 | Custodian Vault | Asset | 3/5 | 8 / 9 | **Firewall.** |
 | 4 | Debt Collector | Asset | 3/4 | 7 / 9 | On Deploy: Your opponent discards a random card. |
-| 5 | Asset Freeze | Op | — | — | Seize all enemy Assets. |
+| 5 | Asset Freeze | Op | — | — | Freeze all enemy Assets. |
 | 5 | Board Member | Asset | 4/5 | 9 / 11 | On Deploy: Give another friendly Asset +2/+2. |
 | 5 | Liquidation Order | Op | — | — | Destroy an Asset. Gain 2 Armor. |
 | 5 | Riot Enforcer | Asset | 5/4 | 9 / 11 | **Firewall.** |
 | 6 | Regulatory Capture | Op | — | — | Take control of an enemy Asset with 4 or less Attack. |
-| 8 | The Chairman | Asset | 7/7 | 14 / 17 | On Deploy: Seize all enemy Assets. Gain 3 Armor. |
+| 8 | The Chairman | Asset | 7/7 | 14 / 17 | On Deploy: Freeze all enemy Assets. Gain 3 Armor. |
 
 ### Sovereign (14)
 

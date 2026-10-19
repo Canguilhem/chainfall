@@ -6,14 +6,14 @@ const TABLE_TERMS: { t: string; d: string }[] = [
   { t: 'Gas', d: 'The spend to play cards and fire your crew power. Refills each block.' },
   { t: 'Asset', d: 'A unit on the board. Attack hits. HP is life. 0 HP is a liquidation.' },
   { t: 'Operation', d: 'A one-shot. Resolves, then leaves your hand. Marked OP.' },
-  { t: 'Deploy', d: 'Play an Asset onto the board. It cannot attack this block unless it has Zero-Conf.' },
-  { t: 'Liquidation', d: 'An Asset hits 0 HP and is destroyed. Some cards fire when they go.' },
-  { t: 'Seize', d: 'Frozen. The Asset cannot attack. Clears at the end of your next turn.' },
+  { t: 'Deploy', d: 'Play an Asset onto the board. The On Deploy line happens then. It cannot attack this block unless it has Zero-Conf.' },
+  { t: 'Liquidation', d: 'An Asset hits 0 HP and leaves. The On Liquidation line happens as it goes.' },
+  { t: 'Freeze', d: 'The Asset cannot attack until the end of its owner’s next turn.' },
   { t: 'Claim', d: 'Take one face-up card from the Feed into your hand. Salvage Run only.' },
   { t: 'Seal', d: 'End your turn. The fight passes to them.' },
   { t: 'Ledger', d: 'The match log. Claims, plays, hits and scrapes, in order.' },
   { t: 'Armor', d: 'Soaks damage before HP. Consortium prints it.' },
-  { t: 'Consensus', d: 'Play a second card of the same crew this block and that card’s CONSENSUS line fires. Two of the same crew agreeing in the same block.' },
+  { t: 'Consensus', d: 'Fires only when the card with the line is the second card of its crew you play this block. Playing that card first does nothing.' },
 ];
 
 const KW_ORDER = Object.keys(KWHELP) as Keyword[];
@@ -49,7 +49,7 @@ export function Glossary({ compact, keywords = true }: { compact?: boolean; keyw
       )}
       <section className="gloss-sec">
         <h2>Terms</h2>
-        {!compact && <p className="gloss-cap">Verbs on the table and on the ledger.</p>}
+        {!compact && <p className="gloss-cap">Short definitions. The same list opens from Terms during a match.</p>}
         <Cards items={TABLE_TERMS} />
       </section>
       {keywords && (

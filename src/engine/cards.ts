@@ -38,20 +38,20 @@ export const CARDS = {
   junkyard_titan: { n: "Junkyard Titan", c: 7, t: "asset", a: 8, h: 8, f: "neutral" },
 
   // ---- consortium (14) ----
-  kyc_checkpoint: { n: "KYC Checkpoint", c: 1, t: "op", f: "consortium", tx: "Seize an enemy Asset. Draw a card.", fx: [{ op: "seize", tgt: "choose-enemy-asset" }, { op: "draw", amt: 1 }] },
+  kyc_checkpoint: { n: "KYC Checkpoint", c: 1, t: "op", f: "consortium", tx: "Freeze an enemy Asset. Draw a card.", fx: [{ op: "seize", tgt: "choose-enemy-asset" }, { op: "draw", amt: 1 }] },
   private_security: { n: "Private Security", c: 2, t: "asset", a: 1, h: 3, f: "consortium", kw: ["firewall"] },
   surveillance_drone: { n: "Surveillance Drone", c: 2, t: "asset", a: 2, h: 2, f: "consortium", tx: "On Deploy: Deal 1 damage to an enemy Asset.", fx: [{ op: "damage", amt: 1, tgt: "choose-enemy-asset" }] },
-  compliance_officer: { n: "Compliance Officer", c: 3, t: "asset", a: 2, h: 3, f: "consortium", tx: "On Deploy: Seize an enemy Asset.", fx: [{ op: "seize", tgt: "choose-enemy-asset" }] },
+  compliance_officer: { n: "Compliance Officer", c: 3, t: "asset", a: 2, h: 3, f: "consortium", tx: "On Deploy: Freeze an enemy Asset.", fx: [{ op: "seize", tgt: "choose-enemy-asset" }] },
   data_broker: { n: "Data Broker", c: 3, t: "asset", a: 2, h: 3, f: "consortium", tx: "On Deploy: Draw a card.", fx: [{ op: "draw", amt: 1 }] },
   debt_collector: { n: "Debt Collector", c: 4, t: "asset", a: 3, h: 4, f: "consortium", tx: "On Deploy: Your opponent discards a random card.", fx: [{ op: "discardEnemy", amt: 1 }] },
   custodian_vault: { n: "Custodian Vault", c: 4, t: "asset", a: 3, h: 5, f: "consortium", kw: ["firewall"] },
   bailout: { n: "Bailout", c: 4, t: "op", f: "consortium", tx: "Gain 5 Armor.", fx: [{ op: "armor", amt: 5, tgt: "self-hero" }] },
-  asset_freeze: { n: "Asset Freeze", c: 5, t: "op", f: "consortium", tx: "Seize all enemy Assets.", fx: [{ op: "seize", tgt: "all-enemy-assets" }] },
+  asset_freeze: { n: "Asset Freeze", c: 5, t: "op", f: "consortium", tx: "Freeze all enemy Assets.", fx: [{ op: "seize", tgt: "all-enemy-assets" }] },
   board_member: { n: "Board Member", c: 5, t: "asset", a: 4, h: 5, f: "consortium", tx: "On Deploy: Give another friendly Asset +2/+2.", fx: [{ op: "buff", a: 2, h: 2, tgt: "choose-other-friendly-asset", opt: true }] },
   liquidation_order: { n: "Liquidation Order", c: 5, t: "op", f: "consortium", tx: "Destroy an Asset. Gain 2 Armor.", fx: [{ op: "destroy", tgt: "choose-asset" }, { op: "armor", amt: 2, tgt: "self-hero" }] },
   riot_enforcer: { n: "Riot Enforcer", c: 5, t: "asset", a: 5, h: 4, f: "consortium", kw: ["firewall"] },
   regulatory_capture: { n: "Regulatory Capture", c: 6, t: "op", f: "consortium", tx: "Take control of an enemy Asset with 4 or less Attack.", fx: [{ op: "control", tgt: "choose-enemy-asset", maxAtk: 4 }] },
-  the_chairman: { n: "The Chairman", c: 8, t: "asset", a: 7, h: 7, f: "consortium", tx: "On Deploy: Seize all enemy Assets. Gain 3 Armor.", fx: [{ op: "seize", tgt: "all-enemy-assets" }, { op: "armor", amt: 3, tgt: "self-hero" }] },
+  the_chairman: { n: "The Chairman", c: 8, t: "asset", a: 7, h: 7, f: "consortium", tx: "On Deploy: Freeze all enemy Assets. Gain 3 Armor.", fx: [{ op: "seize", tgt: "all-enemy-assets" }, { op: "armor", amt: 3, tgt: "self-hero" }] },
 
   // ---- sovereign (15) ----
   full_node: { n: "Full Node", c: 1, t: "asset", a: 1, h: 2, f: "sovereign", tx: "On Liquidation: Summon a 1/1 Node.", dfx: [{ op: "summon", card: "node", count: 1 }] },
@@ -145,12 +145,12 @@ export const FNAME: Record<Faction, string> = {
 
 /** Shown on hover / in card notes beside the crew-mark consensus row. */
 export function consensusHelp(f: Faction): string {
-  return `Play another ${FNAME[f]} card first this block. This line fires on your second play.`;
+  return `Fires only when this card is the second ${FNAME[f]} card you play this block. Playing it first does nothing.`;
 }
 
 /** @deprecated Use consensusHelp(faction) */
 export const CONSENSUS_HELP =
-  'Play another card of the same crew first this block. The bonus line fires on your second play.';
+  'Fires only when this card is the second one of its crew you play this block. Playing it first does nothing.';
 
 export const FACTIONS = {
   consortium: {

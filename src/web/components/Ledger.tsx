@@ -203,7 +203,7 @@ function renderLine(text: string, kind: string, blockActor: ActorId | null = nul
     return <><span className="ledger-muted">hand full · </span>{tokenize(handFull[1]!, plain)}<span className="ledger-muted"> burned</span></>;
   }
 
-  const status = text.match(/^(.+?) · (cold storage broken|control transferred)$/);
+  const status = text.match(/^(.+?) · (cold storage broken|control transferred|frozen)$/);
   if (status) {
     return <>{tokenize(status[1]!, plain)}<span className="ledger-muted"> · {status[2]}</span></>;
   }
