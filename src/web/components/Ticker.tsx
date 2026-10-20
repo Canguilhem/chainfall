@@ -12,7 +12,7 @@ export function Ticker({ lines, openLedger = false }: { lines: Line[]; openLedge
   const last = lines[lines.length - 1];
   const lastActor = last ? blockActorAt(lines, lines.length - 1) : null;
 
-  useEffect(() => { if (openLedger) setOpen(true); }, [openLedger]);
+  useEffect(() => { setOpen(openLedger); }, [openLedger]);
   useEffect(() => {
     if (open && logRef.current) logRef.current.scrollTop = 0;
   }, [open, lines]);

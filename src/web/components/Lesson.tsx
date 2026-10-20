@@ -2,29 +2,38 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { LessonBeat, LessonFocus, LessonGlance, OrientRegion } from '../lesson.ts';
 
 type Part = OrientRegion | LessonGlance | null;
-type Hole = { x: number; y: number; w: number; h: number };
+type Hole = { x: number; y: number; w: number; h: number; ring: boolean };
 
 function shown(el: Element): boolean {
   const r = el.getBoundingClientRect();
   return r.width >= 8 && r.height >= 8;
 }
 
+/** Phone lanes draw the name, health and gas as one bar. A ring around only the plate slices it. */
+function lessonStacked(): boolean {
+  return !!document.querySelector('#table .lane.stacked');
+}
+
 /** What this beat is pointing at. A sheet stays fully lit; the card glow marks the one inside it. */
 function spotlightNodes(focus: LessonFocus | null): Element[] {
   const table = document.getElementById('table');
+  const stacked = lessonStacked();
   const nodes: Element[] = [];
-  if (focus === 'crews') nodes.push(...document.querySelectorAll('#table .plate'));
-  else if (focus === 'gas') nodes.push(...document.querySelectorAll('.lane.you .gasbar'));
+  if (focus === 'crews') nodes.push(...document.querySelectorAll(stacked ? '#table .lane.stacked .lane-status' : '#table .plate'));
+  else if (focus === 'gas') nodes.push(...document.querySelectorAll(stacked ? '#table .lane.stacked.you .lane-gas' : '.lane.you .gasbar'));
   else if (focus === 'feed') nodes.push(...document.querySelectorAll('#feed, #feedbtn'));
   else if (focus === 'ledger') nodes.push(...document.querySelectorAll('#ledger, #ticker, #tick-log'));
   else {
     nodes.push(...document.querySelectorAll('.is-lesson'));
-    if (table?.dataset.lessonHero) nodes.push(...document.querySelectorAll('.lane.them .plate'));
+    if (table?.dataset.lessonHero) nodes.push(...document.querySelectorAll(stacked ? '#table .lane.stacked.them .lane-status' : '.lane.them .plate'));
     if (table?.dataset.lessonPower) nodes.push(...document.querySelectorAll('.lane.you button.power, #prompt button.power'));
     if (table?.dataset.lessonSeal) nodes.push(...document.querySelectorAll('button.seal'));
   }
   const sheet = document.querySelector('.sheet');
-  if (sheet) nodes.push(sheet);
+  if (sheet) {
+    const inside = nodes.filter(node => sheet.contains(node));
+    return [...(inside.length ? inside : []), sheet].filter(shown);
+  }
   return nodes.filter(shown);
 }
 
@@ -37,7 +46,10 @@ function measureHoles(focus: LessonFocus | null): Hole[] {
   return nodes.map(node => {
     const base = node.getBoundingClientRect();
     const flags = node.querySelector('.asset-flags')?.getBoundingClientRect();
-    const r = !flags || flags.width < 4 ? base : new DOMRect(
+    const status = node.classList.contains('lane-gas') ? node.closest('.lane-status')?.getBoundingClientRect() : undefined;
+    const r = status && status.height > base.height + 4
+      ? new DOMRect(base.left, status.top, base.width, status.height)
+      : !flags || flags.width < 4 ? base : new DOMRect(
       Math.min(base.left, flags.left),
       Math.min(base.top, flags.top),
       Math.max(base.right, flags.right) - Math.min(base.left, flags.left),
@@ -47,17 +59,24 @@ function measureHoles(focus: LessonFocus | null): Hole[] {
     let y = Math.max(4, r.top - pad);
     let right = Math.min(vw - 4, r.right + pad);
     let bottom = Math.min(vh - 4, r.bottom + pad);
-    for (const plate of blocked) {
-      const b = plate.getBoundingClientRect();
-      if (right < b.left || x > b.right || bottom < b.top || y > b.bottom) continue;
-      if (bottom > b.top && y < b.top - 28) bottom = b.top - 6;
+    const inSheet = node.classList.contains('sheet') || !!node.closest('.sheet');
+    const ledgerNode = node.id === 'ticker' || node.id === 'tick-log' || node.id === 'ledger';
+    if (!inSheet && !ledgerNode) {
+      for (const plate of blocked) {
+        const b = plate.getBoundingClientRect();
+        if (right < b.left || x > b.right || bottom < b.top || y > b.bottom) continue;
+        if (bottom > b.top && y < b.top - 28) bottom = b.top - 6;
+      }
     }
-    return { x: Math.round(x), y: Math.round(y), w: Math.round(right - x), h: Math.round(bottom - y) };
+    return {
+      x: Math.round(x), y: Math.round(y), w: Math.round(right - x), h: Math.round(bottom - y),
+      ring: !node.classList.contains('sheet'),
+    };
   });
 }
 
 function sameHoles(a: Hole[], b: Hole[]): boolean {
-  return a.length === b.length && a.every((h, i) => h.x === b[i]!.x && h.y === b[i]!.y && h.w === b[i]!.w && h.h === b[i]!.h);
+  return a.length === b.length && a.every((h, i) => h.x === b[i]!.x && h.y === b[i]!.y && h.w === b[i]!.w && h.h === b[i]!.h && h.ring === b[i]!.ring);
 }
 
 /** Marks the card this beat is about, and dims everything that is not the target. */
@@ -76,7 +95,7 @@ export function Lesson({ beat, focus }: { beat: LessonBeat; focus: LessonFocus |
     else delete root.dataset.lessonPart;
     let frame = 0;
     const mark = () => {
-      root.querySelectorAll<HTMLElement>('[data-card]').forEach(el => {
+      document.querySelectorAll<HTMLElement>('[data-card]').forEach(el => {
         el.classList.toggle('is-lesson', !!el.dataset.card && want.has(el.dataset.card));
       });
     };
@@ -100,10 +119,10 @@ export function Lesson({ beat, focus }: { beat: LessonBeat; focus: LessonFocus |
       window.removeEventListener('resize', schedule);
       delete root.dataset.lessonCard;
       delete root.dataset.lessonPart;
-      root.querySelectorAll('.is-lesson').forEach(el => el.classList.remove('is-lesson'));
+      document.querySelectorAll('.is-lesson').forEach(el => el.classList.remove('is-lesson'));
       setHoles([]);
     };
-  }, [spots, part, focus]);
+  }, [spots, part, focus, beat.hint]);
 
   if (!holes.length) return null;
   return (
@@ -117,7 +136,7 @@ export function Lesson({ beat, focus }: { beat: LessonBeat; focus: LessonFocus |
         </mask>
       </defs>
       <rect width="100%" height="100%" fill="rgba(8,6,4,.4)" mask="url(#lesson-spot-mask)" />
-      {holes.map(h => (
+      {holes.filter(h => h.ring).map(h => (
         <rect key={`r${h.x},${h.y}`} className="lesson-spot-ring" x={h.x + 1} y={h.y + 1}
               width={Math.max(0, h.w - 2)} height={Math.max(0, h.h - 2)} rx={6} />
       ))}
@@ -148,15 +167,19 @@ function SenseiSprite() {
 
 function coversSpotlight(box: DOMRect): boolean {
   const region = document.getElementById('table')?.dataset.lessonRegion;
+  const sheet = document.querySelector('.sheet');
   const nodes: Element[] = [...document.querySelectorAll('.is-lesson')];
   if (region === 'feed') nodes.push(...document.querySelectorAll('#feed, #feedbtn'));
   if (region === 'hand') nodes.push(...document.querySelectorAll('#hand'));
+  const stacked = lessonStacked();
   if (region === 'crews' || document.getElementById('table')?.dataset.lessonHero) {
-    nodes.push(...document.querySelectorAll('.lane.them .plate, .live-hp'));
+    nodes.push(...document.querySelectorAll(stacked ? '#table .lane.stacked .lane-status, .live-hp' : '.lane.them .plate, .live-hp'));
   }
-  if (region === 'gas') nodes.push(...document.querySelectorAll('.lane.you .gasbar'));
+  if (region === 'gas') nodes.push(...document.querySelectorAll(stacked ? '#table .lane.stacked.you .lane-gas' : '.lane.you .gasbar'));
+  if (region === 'ledger') nodes.push(...document.querySelectorAll('#ledger, #ticker, #tick-log'));
   if (region === 'cost' || region === 'stats') nodes.push(...document.querySelectorAll('.is-lesson'));
   return nodes.some(node => {
+    if (sheet && !sheet.contains(node)) return false;
     const r = node.getBoundingClientRect();
     if (r.width < 8 || r.height < 8) return false;
     return !(r.right < box.left + 6 || r.left > box.right - 6 || r.bottom < box.top + 6 || r.top > box.bottom - 6);
@@ -188,12 +211,47 @@ export function Sensei({ say, prefer, cue, notion, step, steps, reached = step, 
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [place, setPlace] = useState(prefer);
+  const [lift, setLift] = useState(0);
   const moved = useRef(false);
 
   useLayoutEffect(() => {
     moved.current = false;
-    setPlace(prefer);
-  }, [say, prefer]);
+    // A sheet fills the top of the phone. Start above its buttons, and only
+    // jump up if that would cover the card this beat is pointing at. The sheet
+    // opens without a new line from Sensei, so watch the tree, not just `say`.
+    const pick = () => {
+      const sheet = !!document.querySelector('.sheet');
+      const next = sheet ? 'br' as const : prefer;
+      setPlace(prev => {
+        if (sheet && moved.current) return prev;
+        if (prev === next) return prev;
+        if (!sheet) moved.current = false;
+        return next;
+      });
+    };
+    pick();
+    const obs = new MutationObserver(pick);
+    obs.observe(document.getElementById('root') ?? document.body, { childList: true, subtree: true });
+    return () => obs.disconnect();
+  }, [say, prefer, cue]);
+
+  useLayoutEffect(() => {
+    let frame = 0;
+    const measure = () => {
+      const foot = document.querySelector('.sheet-foot');
+      const next = foot ? Math.ceil(foot.getBoundingClientRect().height) + 12 : 0;
+      setLift(prev => prev === next ? prev : next);
+    };
+    measure();
+    frame = requestAnimationFrame(measure);
+    const again = window.setTimeout(measure, 220);
+    window.addEventListener('resize', measure);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(again);
+      window.removeEventListener('resize', measure);
+    };
+  }, [say, place, prefer]);
 
   useLayoutEffect(() => {
     const el = ref.current;
@@ -201,10 +259,11 @@ export function Sensei({ say, prefer, cue, notion, step, steps, reached = step, 
     if (!coversSpotlight(el.getBoundingClientRect())) return;
     moved.current = true;
     setPlace(FALLBACK[place]);
-  }, [place, say]);
+  }, [place, say, lift]);
 
   return (
-    <div ref={ref} className={`sensei ${place}`} role="dialog" aria-labelledby="sensei-name">
+    <div ref={ref} className={`sensei ${place}`} role="dialog" aria-labelledby="sensei-name"
+         style={lift && place === 'br' ? { bottom: lift } : undefined}>
       <div className="sensei-bubble" onPointerDown={event => event.stopPropagation()}>
         <div className="sensei-head">
           <p id="sensei-name" className="sensei-name">Sensei</p>

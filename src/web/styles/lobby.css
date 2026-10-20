@@ -54,7 +54,9 @@ header .tag.chip b{color:var(--amber);font-weight:600;margin-left:4px}
 .play-modes .mode p + p{margin-top:8px;color:var(--dim)}
 
 div.rules{max-width:min(1280px,100%);margin:0 auto}
-.rules .how-note{max-width:none}
+.rules .how-note{max-width:66ch}
+.rules a:focus-visible,
+.rules-ref summary:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
 .rules-block .loop li{max-width:none;flex:1 1 0}
 .rules [id]{scroll-margin-top:20px}
 .rules a{color:var(--amber);text-decoration:underline;text-underline-offset:2px}
@@ -127,6 +129,15 @@ div.rules{max-width:min(1280px,100%);margin:0 auto}
 .read-callout.ts-board{grid-area:board;border-top-color:var(--bone);color:var(--bone)}
 .read-callout.ts-feed{grid-area:feed;border-top-color:var(--amber);color:var(--amber)}
 .read-callout.ts-hand{grid-area:hand;border-top-color:var(--amber);color:var(--bone)}
+.read-grid .read-callout{background:none;border-color:transparent;border-radius:0;padding:0 2px 2px;box-shadow:none}
+.read-grid .read-callout::before{content:'';display:block;width:28px;height:3px;margin-bottom:8px;background:var(--edge)}
+.read-grid .read-callout.gas::before{background:var(--amber)}
+.read-grid .read-callout.crew::before{background:var(--oxide)}
+.read-grid .read-callout.name::before{background:var(--bone)}
+.read-grid .read-callout.kw::before{background:var(--sulfur)}
+.read-grid .read-callout.rules::before{background:var(--bone2)}
+.read-grid .read-callout.stats::before{background:var(--blood)}
+.read-grid .read-callout b{color:var(--amber)}
 .read-callout.ts-them::after,.read-callout.ts-feed::after{right:-28px;width:28px}
 .read-callout.ts-board::after,.read-callout.ts-hand::after{left:-28px;width:28px}
 .rules-also{margin:16px 0 0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -163,11 +174,11 @@ div.rules{max-width:min(1280px,100%);margin:0 auto}
 @media (min-width:1100px){
   .rules-essentials{grid-template-columns:repeat(4,minmax(0,1fr))}
   .rules-keywords{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .read-grid{grid-template-columns:minmax(0,1fr) 248px minmax(0,1fr);column-gap:44px}
-  .read-specimen .card{width:248px;height:347px}
-  .read-callout::after{width:44px}
-  .read-callout.gas::after,.read-callout.name::after,.read-callout.rules::after{right:-44px}
-  .read-callout.crew::after,.read-callout.kw::after,.read-callout.stats::after{left:-44px}
+  .read-grid{grid-template-columns:minmax(0,1fr) 280px minmax(0,1fr);column-gap:32px}
+  .read-specimen .card{width:280px;height:392px}
+  .read-callout::after{width:32px}
+  .read-callout.gas::after,.read-callout.name::after,.read-callout.rules::after{right:-32px}
+  .read-callout.crew::after,.read-callout.kw::after,.read-callout.stats::after{left:-32px}
 }
 @media (max-width:960px){
   .read-grid{grid-template-columns:1fr;grid-template-areas:"card" "gas" "crew" "name" "kw" "rules" "stats";column-gap:0;row-gap:8px}

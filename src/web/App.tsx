@@ -174,7 +174,7 @@ export function App() {
           onFeedOpen={() => setFeedOpen(true)}
           send={send}
           lesson={beat}
-          spotlight={spotlight?.region ?? null}
+          spotlight={spotlight?.region ?? (ledgerLook ? 'ledger' : null)}
         />
       </div>
 

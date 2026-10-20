@@ -174,9 +174,12 @@
 #root[data-lesson-part="crew"] .is-lesson .card-faction,
 #root[data-lesson-part="consensus"] .is-lesson .card-consensus-row{
  outline:2px solid var(--amber);outline-offset:2px;animation:lesson-blink 1.15s ease-in-out infinite}
-#table[data-lesson-region="crews"] .plate,
-#table[data-lesson-region="gas"] .lane.you .gasbar,
-#table[data-lesson-hero="1"] .lane.them .plate,
+#table[data-lesson-region="crews"] .lane:not(.stacked) .plate,
+#table[data-lesson-region="gas"] .lane.you:not(.stacked) .gasbar,
+#table[data-lesson-hero="1"] .lane.them:not(.stacked) .plate,
+#table[data-lesson-region="crews"] .lane.stacked .lane-status,
+#table[data-lesson-region="gas"] .lane.stacked.you .lane-gas,
+#table[data-lesson-hero="1"] .lane.stacked.them .lane-status,
 #table[data-lesson-seal="1"] button.seal:not(:disabled){
  box-shadow:0 0 0 2px var(--amber), 0 0 20px 3px rgba(224,169,59,.65)}
 #root[data-lesson-card] #feed.claim .fcard:not(.is-lesson){animation:none;outline:none}
